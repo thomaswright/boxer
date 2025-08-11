@@ -9,6 +9,11 @@ module HexColorPicker = {
   external make: (~color: string, ~onChange: string => unit) => React.element = "HexColorPicker"
 }
 
+module Switch = {
+  @module("./Switch.jsx") @react.component
+  external make: (~checked: bool, ~onChange: bool => unit) => React.element = "default"
+}
+
 let defaultBoard = [
   [None, None, None, None],
   [None, None, None, None],
@@ -30,6 +35,7 @@ let make = () => {
   let width = board->Array.length
   let height = board->Array.get(0)->Option.mapOr(0, line => line->Array.length)
   let (maskOff, setMaskOff) = React.useState(() => false)
+  let (showMask, setShowMask, _) = useLocalStorage("show-mask", true)
   let (myColor, setMyColor) = React.useState(() => "blue")
 
   let onMouseMove = _ => setMaskOff(_ => false)
@@ -40,16 +46,7 @@ let make = () => {
     None
   })
 
-  <div className=" ">
-    <div className="mb-5">
-      <HexColorPicker
-        color={myColor}
-        onChange={newColor => {
-          Console.log(newColor)
-          setMyColor(_ => newColor)
-        }}
-      />
-    </div>
+  <div className=" flex flex-row gap-5">
     <div
       className={"border w-fit h-fit"}
       style={{
@@ -75,7 +72,7 @@ let make = () => {
                 backgroundColor: backgroundColor,
               }}
             />
-            {maskOff
+            {maskOff || !showMask
               ? React.null
               : <div
                   className="absolute w-full h-full inset-0 bg-gray-400 opacity-0 group-hover:opacity-50 transition duration-50">
@@ -85,6 +82,18 @@ let make = () => {
         ->React.array
       })
       ->React.array}
+    </div>
+    <div className="flex flex-col gap-5">
+      <HexColorPicker
+        color={myColor}
+        onChange={newColor => {
+          setMyColor(_ => newColor)
+        }}
+      />
+      <div>
+        <div className="flex flex-row"> {"Show Overlay"->React.string} </div>
+        <Switch checked={showMask} onChange={v => setShowMask(_ => v)} />
+      </div>
     </div>
   </div>
 }

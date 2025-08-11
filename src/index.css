@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+.root {
+  isolation: isolate;
+}
+
 @theme {
   --color-rescript-50: oklch(97% 0.02 27);
   --color-rescript-100: oklch(93% 0.04 27);

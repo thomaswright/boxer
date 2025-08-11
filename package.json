@@ -12,6 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@base-ui-components/react": "^1.0.0-beta.2",
     "@rescript/react": "^0.13.1",
     "react": "^18.2.0",
     "react-colorful": "^5.6.1",
