@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
+import * as ReactColorful from "react-colorful";
 import * as JsxRuntime from "react/jsx-runtime";
 import UseLocalStorageJs from "./useLocalStorage.js";
 
@@ -38,59 +39,74 @@ function App(props) {
   let board = match[0];
   let width = board.length;
   let height = Stdlib_Option.mapOr(board[0], 0, line => line.length);
-  console.log(width, height);
   let match$1 = React.useState(() => false);
   let setMaskOff = match$1[1];
   let maskOff = match$1[0];
+  let match$2 = React.useState(() => "blue");
+  let setMyColor = match$2[1];
+  let myColor = match$2[0];
   let onMouseMove = param => setMaskOff(param => false);
   React.useEffect(() => {
     window.addEventListener("mousemove", onMouseMove);
   }, []);
-  return JsxRuntime.jsx("div", {
-    children: JsxRuntime.jsx("div", {
-      children: board.map((line, i) => line.map((cell, j) => {
-        let backgroundColor = Stdlib_Option.getOr(cell, "#f00");
-        return JsxRuntime.jsxs("div", {
-          children: [
-            JsxRuntime.jsx("div", {
-              className: "w-full h-full absolute",
-              style: {
-                backgroundColor: backgroundColor
-              }
-            }),
-            maskOff ? null : JsxRuntime.jsx("div", {
-                className: "absolute w-full h-full inset-0 bg-gray-400 opacity-0 group-hover:opacity-50 "
-              })
-          ],
-          className: "w-full h-full group relative",
-          onClick: param => {
-            setBoard(b => {
-              let f = param => "#0f0";
-              return b.map((row, rowI) => {
-                if (rowI === i) {
-                  return row.map((cell, cellJ) => {
-                    if (cellJ === j) {
-                      return f(cell);
-                    } else {
-                      return cell;
-                    }
-                  });
-                } else {
-                  return row;
-                }
-              });
-            });
-            setMaskOff(param => true);
+  return JsxRuntime.jsxs("div", {
+    children: [
+      JsxRuntime.jsx("div", {
+        children: JsxRuntime.jsx(ReactColorful.HexColorPicker, {
+          color: myColor,
+          onChange: newColor => {
+            console.log(newColor);
+            setMyColor(param => newColor);
           }
-        }, i.toString() + j.toString());
-      })),
-      style: {
-        display: "grid",
-        gridTemplateColumns: "repeat(" + width.toString() + ", 3rem)",
-        gridTemplateRows: "repeat(" + height.toString() + ", 3rem)"
-      }
-    }),
-    className: "m-5 border "
+        }),
+        className: "mb-5"
+      }),
+      JsxRuntime.jsx("div", {
+        children: board.map((line, i) => line.map((cell, j) => {
+          let backgroundColor = Stdlib_Option.getOr(cell, "transparent");
+          return JsxRuntime.jsxs("div", {
+            children: [
+              JsxRuntime.jsx("div", {
+                className: "w-full h-full absolute",
+                style: {
+                  backgroundColor: backgroundColor
+                }
+              }),
+              maskOff ? null : JsxRuntime.jsx("div", {
+                  className: "absolute w-full h-full inset-0 bg-gray-400 opacity-0 group-hover:opacity-50 transition duration-50"
+                })
+            ],
+            className: "w-full h-full group relative",
+            onClick: param => {
+              setBoard(b => {
+                let f = param => myColor;
+                return b.map((row, rowI) => {
+                  if (rowI === i) {
+                    return row.map((cell, cellJ) => {
+                      if (cellJ === j) {
+                        return f(cell);
+                      } else {
+                        return cell;
+                      }
+                    });
+                  } else {
+                    return row;
+                  }
+                });
+              });
+              setMaskOff(param => true);
+            }
+          }, i.toString() + j.toString());
+        })),
+        className: "border w-fit h-fit",
+        style: {
+          display: "grid",
+          gridTemplateColumns: "repeat(" + width.toString() + ", 3rem)",
+          gridTemplateRows: "repeat(" + height.toString() + ", 3rem)"
+        }
+      })
+    ],
+    className: " "
   });
 }
 
