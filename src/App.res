@@ -59,16 +59,16 @@ let useIsMouseDown = () => {
 let make = () => {
   let (board, setBoard, _) = useLocalStorage("board", defaultBoard)
   let (brush, setBrush, _) = useLocalStorage("brush", defaultBrush)
-  let (showMask, setShowMask, _) = useLocalStorage("show-mask", true)
-  let (myColor, setMyColor, _) = useLocalStorage("myColor", "blue")
-  let (maskOff, setMaskOff) = React.useState(() => false)
+  let (showCursorOverlay, setShowCursorOverlay, _) = useLocalStorage("show-cursor-overlay", true)
+  let (myColor, setMyColor, _) = useLocalStorage("my-color", "blue")
+  let (cursoroverlayOff, setCursorOverlayOff) = React.useState(() => false)
 
   let isMouseDown = useIsMouseDown()
 
   let (boardDimI, boardDimJ) = board->Array.dims2D
   let (brushDimI, brushDimJ) = brush->Array.dims2D
 
-  let onMouseMove = _ => setMaskOff(_ => false)
+  let onMouseMove = _ => setCursorOverlayOff(_ => false)
   let applyBrush = (clickI, clickJ) => {
     let brushCenterDimI = brushDimI / 2
     let brushCenterDimJ = brushDimJ / 2
@@ -116,7 +116,7 @@ let make = () => {
             }}
             onClick={_ => {
               setBrush(b => b->Array.update2D(i, j, v => !v))
-              setMaskOff(_ => true)
+              setCursorOverlayOff(_ => true)
             }}>
             <div
               className={"w-full h-full absolute"}
@@ -124,7 +124,7 @@ let make = () => {
                 backgroundColor: cell ? "#00c3ff" : "transparent",
               }}
             />
-            {maskOff || !showMask
+            {cursoroverlayOff || !showCursorOverlay
               ? React.null
               : <div
                   className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
@@ -163,7 +163,7 @@ let make = () => {
             }}
             onClick={_ => {
               applyBrush(i, j)
-              setMaskOff(_ => true)
+              setCursorOverlayOff(_ => true)
             }}>
             <div
               className={"w-full h-full absolute"}
@@ -171,7 +171,7 @@ let make = () => {
                 backgroundColor: backgroundColor,
               }}
             />
-            {maskOff || !showMask
+            {cursoroverlayOff || !showCursorOverlay
               ? React.null
               : <div
                   className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
@@ -191,7 +191,7 @@ let make = () => {
       />
       <div>
         <div className="flex flex-row"> {"Show Overlay"->React.string} </div>
-        <Switch checked={showMask} onChange={v => setShowMask(_ => v)} />
+        <Switch checked={showCursorOverlay} onChange={v => setShowCursorOverlay(_ => v)} />
       </div>
     </div>
   </div>

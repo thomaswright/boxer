@@ -70,21 +70,21 @@ function App(props) {
   let match$1 = UseLocalStorageJs("brush", defaultBrush);
   let setBrush = match$1[1];
   let brush = match$1[0];
-  let match$2 = UseLocalStorageJs("show-mask", true);
-  let setShowMask = match$2[1];
-  let showMask = match$2[0];
-  let match$3 = UseLocalStorageJs("myColor", "blue");
+  let match$2 = UseLocalStorageJs("show-cursor-overlay", true);
+  let setShowCursorOverlay = match$2[1];
+  let showCursorOverlay = match$2[0];
+  let match$3 = UseLocalStorageJs("my-color", "blue");
   let setMyColor = match$3[1];
   let myColor = match$3[0];
   let match$4 = React.useState(() => false);
-  let setMaskOff = match$4[1];
-  let maskOff = match$4[0];
+  let setCursorOverlayOff = match$4[1];
+  let cursoroverlayOff = match$4[0];
   let isMouseDown = useIsMouseDown();
   let match$5 = dims2D(board);
   let match$6 = dims2D(brush);
   let brushDimJ = match$6[1];
   let brushDimI = match$6[0];
-  let onMouseMove = param => setMaskOff(param => false);
+  let onMouseMove = param => setCursorOverlayOff(param => false);
   let applyBrush = (clickI, clickJ) => {
     let brushCenterDimI = brushDimI / 2 | 0;
     let brushCenterDimJ = brushDimJ / 2 | 0;
@@ -114,7 +114,7 @@ function App(props) {
                   backgroundColor: cell ? "#00c3ff" : "transparent"
                 }
               }),
-              maskOff || !showMask ? null : JsxRuntime.jsx("div", {
+              cursoroverlayOff || !showCursorOverlay ? null : JsxRuntime.jsx("div", {
                   className: "absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20"
                 }),
               isCursorCenter ? JsxRuntime.jsx("div", {
@@ -127,7 +127,7 @@ function App(props) {
             className: "w-full h-full group relative ",
             onClick: param => {
               setBrush(b => update2D(b, i, j, v => !v));
-              setMaskOff(param => true);
+              setCursorOverlayOff(param => true);
             },
             onMouseEnter: param => {
               if (isMouseDown) {
@@ -155,14 +155,14 @@ function App(props) {
                   backgroundColor: backgroundColor
                 }
               }),
-              maskOff || !showMask ? null : JsxRuntime.jsx("div", {
+              cursoroverlayOff || !showCursorOverlay ? null : JsxRuntime.jsx("div", {
                   className: "absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20"
                 })
             ],
             className: "w-full h-full group relative",
             onClick: param => {
               applyBrush(i, j);
-              setMaskOff(param => true);
+              setCursorOverlayOff(param => true);
             },
             onMouseEnter: param => {
               if (isMouseDown) {
@@ -192,8 +192,8 @@ function App(props) {
                 className: "flex flex-row"
               }),
               JsxRuntime.jsx(make, {
-                checked: showMask,
-                onChange: v => setShowMask(param => v)
+                checked: showCursorOverlay,
+                onChange: v => setShowCursorOverlay(param => v)
               })
             ]
           })
