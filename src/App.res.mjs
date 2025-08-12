@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import SwitchJsx from "./Switch.jsx";
+import * as Stdlib_Array from "rescript/lib/es6/Stdlib_Array.js";
 import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
 import * as ReactColorful from "react-colorful";
 import * as JsxRuntime from "react/jsx-runtime";
@@ -9,48 +10,60 @@ import UseLocalStorageJs from "./useLocalStorage.js";
 
 let make = SwitchJsx;
 
-let defaultBoard = [
-  [
-    undefined,
-    undefined,
-    undefined,
-    undefined
-  ],
-  [
-    undefined,
-    undefined,
-    undefined,
-    undefined
-  ],
-  [
-    undefined,
-    undefined,
-    undefined,
-    undefined
-  ],
-  [
-    undefined,
-    undefined,
-    undefined,
-    undefined
-  ]
-];
+function update2d(a, i, j, f) {
+  return a.map((row, rowI) => {
+    if (rowI === i) {
+      return row.map((cell, cellJ) => {
+        if (cellJ === j) {
+          return f(cell);
+        } else {
+          return cell;
+        }
+      });
+    } else {
+      return row;
+    }
+  });
+}
+
+function make2D(a, b) {
+  return Stdlib_Array.make(a, Stdlib_Array.make(b, undefined));
+}
+
+let defaultBoard = make2D(12, 12);
+
+function useIsMouseDown() {
+  let match = React.useState(() => false);
+  let setIsMouseDown = match[1];
+  React.useEffect(() => {
+    let downHandler = param => setIsMouseDown(param => true);
+    let upHandler = param => setIsMouseDown(param => false);
+    window.addEventListener("mousedown", downHandler);
+    window.addEventListener("mouseup", upHandler);
+    return () => {
+      window.removeEventListener("mousedown", downHandler);
+      window.removeEventListener("mouseup", upHandler);
+    };
+  }, []);
+  return match[0];
+}
 
 function App(props) {
   let match = UseLocalStorageJs("board", defaultBoard);
   let setBoard = match[1];
   let board = match[0];
+  let match$1 = UseLocalStorageJs("show-mask", true);
+  let setShowMask = match$1[1];
+  let showMask = match$1[0];
+  let match$2 = UseLocalStorageJs("myColor", "blue");
+  let setMyColor = match$2[1];
+  let myColor = match$2[0];
+  let match$3 = React.useState(() => false);
+  let setMaskOff = match$3[1];
+  let maskOff = match$3[0];
+  let isMouseDown = useIsMouseDown();
   let width = board.length;
   let height = Stdlib_Option.mapOr(board[0], 0, line => line.length);
-  let match$1 = React.useState(() => false);
-  let setMaskOff = match$1[1];
-  let maskOff = match$1[0];
-  let match$2 = UseLocalStorageJs("show-mask", true);
-  let setShowMask = match$2[1];
-  let showMask = match$2[0];
-  let match$3 = React.useState(() => "blue");
-  let setMyColor = match$3[1];
-  let myColor = match$3[0];
   let onMouseMove = param => setMaskOff(param => false);
   React.useEffect(() => {
     window.addEventListener("mousemove", onMouseMove);
@@ -69,36 +82,27 @@ function App(props) {
                 }
               }),
               maskOff || !showMask ? null : JsxRuntime.jsx("div", {
-                  className: "absolute w-full h-full inset-0 bg-gray-400 opacity-0 group-hover:opacity-50 transition duration-50"
+                  className: "absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20"
                 })
             ],
             className: "w-full h-full group relative",
             onClick: param => {
-              setBoard(b => {
-                let f = param => myColor;
-                return b.map((row, rowI) => {
-                  if (rowI === i) {
-                    return row.map((cell, cellJ) => {
-                      if (cellJ === j) {
-                        return f(cell);
-                      } else {
-                        return cell;
-                      }
-                    });
-                  } else {
-                    return row;
-                  }
-                });
-              });
+              setBoard(b => update2d(b, i, j, param => myColor));
               setMaskOff(param => true);
+            },
+            onMouseEnter: param => {
+              if (isMouseDown) {
+                return setBoard(b => update2d(b, i, j, param => myColor));
+              }
+              
             }
           }, i.toString() + j.toString());
         })),
         className: "border w-fit h-fit",
         style: {
           display: "grid",
-          gridTemplateColumns: "repeat(" + width.toString() + ", 3rem)",
-          gridTemplateRows: "repeat(" + height.toString() + ", 3rem)"
+          gridTemplateColumns: "repeat(" + width.toString() + ", 1rem)",
+          gridTemplateRows: "repeat(" + height.toString() + ", 1rem)"
         }
       }),
       JsxRuntime.jsxs("div", {

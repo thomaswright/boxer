@@ -14,29 +14,48 @@ module Switch = {
   external make: (~checked: bool, ~onChange: bool => unit) => React.element = "default"
 }
 
-let defaultBoard = [
-  [None, None, None, None],
-  [None, None, None, None],
-  [None, None, None, None],
-  [None, None, None, None],
-]
-
 module Array = {
   include Array
   let update2d = (a, i, j, f) =>
     a->Array.mapWithIndex((row, rowI) =>
       rowI == i ? row->Array.mapWithIndex((cell, cellJ) => cellJ == j ? f(cell) : cell) : row
     )
+  let make2D = (a, b) => Array.make(~length=a, Array.make(~length=b, None))
+}
+
+let defaultBoard = Array.make2D(12, 12)
+
+let useIsMouseDown = () => {
+  let (isMouseDown, setIsMouseDown) = React.useState(() => false)
+
+  React.useEffect0(() => {
+    let downHandler = _ => setIsMouseDown(_ => true)
+    let upHandler = _ => setIsMouseDown(_ => false)
+    window->Window.addMouseDownEventListener(downHandler)
+    window->Window.addMouseUpEventListener(upHandler)
+
+    Some(
+      () => {
+        window->Window.removeMouseDownEventListener(downHandler)
+        window->Window.removeMouseUpEventListener(upHandler)
+      },
+    )
+  })
+
+  isMouseDown
 }
 
 @react.component
 let make = () => {
   let (board, setBoard, _) = useLocalStorage("board", defaultBoard)
+  let (showMask, setShowMask, _) = useLocalStorage("show-mask", true)
+  let (myColor, setMyColor, _) = useLocalStorage("myColor", "blue")
+  let (maskOff, setMaskOff) = React.useState(() => false)
+
+  let isMouseDown = useIsMouseDown()
+
   let width = board->Array.length
   let height = board->Array.get(0)->Option.mapOr(0, line => line->Array.length)
-  let (maskOff, setMaskOff) = React.useState(() => false)
-  let (showMask, setShowMask, _) = useLocalStorage("show-mask", true)
-  let (myColor, setMyColor) = React.useState(() => "blue")
 
   let onMouseMove = _ => setMaskOff(_ => false)
 
@@ -51,8 +70,8 @@ let make = () => {
       className={"border w-fit h-fit"}
       style={{
         display: "grid",
-        gridTemplateColumns: `repeat(${width->Int.toString}, 3rem)`,
-        gridTemplateRows: `repeat(${height->Int.toString}, 3rem)`,
+        gridTemplateColumns: `repeat(${width->Int.toString}, 1rem)`,
+        gridTemplateRows: `repeat(${height->Int.toString}, 1rem)`,
       }}>
       {board
       ->Array.mapWithIndex((line, i) => {
@@ -62,6 +81,11 @@ let make = () => {
           <div
             className={"w-full h-full group relative"}
             key={i->Int.toString ++ j->Int.toString}
+            onMouseEnter={_ => {
+              if isMouseDown {
+                setBoard(b => b->Array.update2d(i, j, _ => Some(myColor)))
+              }
+            }}
             onClick={_ => {
               setBoard(b => b->Array.update2d(i, j, _ => Some(myColor)))
               setMaskOff(_ => true)
@@ -75,7 +99,7 @@ let make = () => {
             {maskOff || !showMask
               ? React.null
               : <div
-                  className="absolute w-full h-full inset-0 bg-gray-400 opacity-0 group-hover:opacity-50 transition duration-50">
+                  className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
                 </div>}
           </div>
         })
