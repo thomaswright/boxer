@@ -31,11 +31,11 @@ function make2D(a, b, f) {
 }
 
 function dims2D(a) {
-  let boardWidth = a.length;
-  let boardHeight = Stdlib_Option.mapOr(a[0], 0, line => line.length);
+  let boardDimI = a.length;
+  let boardDimJ = Stdlib_Option.mapOr(a[0], 0, line => line.length);
   return [
-    boardWidth,
-    boardHeight
+    boardDimI,
+    boardDimJ
   ];
 }
 
@@ -82,15 +82,15 @@ function App(props) {
   let isMouseDown = useIsMouseDown();
   let match$5 = dims2D(board);
   let match$6 = dims2D(brush);
-  let brushHeight = match$6[1];
-  let brushWidth = match$6[0];
+  let brushDimJ = match$6[1];
+  let brushDimI = match$6[0];
   let onMouseMove = param => setMaskOff(param => false);
   let applyBrush = (clickI, clickJ) => {
-    let brushCenterWidth = brushWidth / 2 | 0;
-    let brushCenterHeight = brushHeight / 2 | 0;
+    let brushCenterDimI = brushDimI / 2 | 0;
+    let brushCenterDimJ = brushDimJ / 2 | 0;
     setBoard(b => b.map((row, boardI) => row.map((cell, boardJ) => {
-      let brushPosI = (boardI - clickI | 0) + brushCenterWidth | 0;
-      let brushPosJ = (boardJ - clickJ | 0) + brushCenterHeight | 0;
+      let brushPosI = (boardI - clickI | 0) + brushCenterDimI | 0;
+      let brushPosJ = (boardJ - clickJ | 0) + brushCenterDimJ | 0;
       if (Stdlib_Option.getOr(check2D(brush, brushPosI, brushPosJ), false)) {
         return myColor;
       } else {
@@ -105,7 +105,7 @@ function App(props) {
     children: [
       JsxRuntime.jsx("div", {
         children: brush.map((line, i) => line.map((cell, j) => {
-          let isCursorCenter = (brushWidth / 2 | 0) === i && (brushHeight / 2 | 0) === j;
+          let isCursorCenter = (brushDimI / 2 | 0) === i && (brushDimJ / 2 | 0) === j;
           return JsxRuntime.jsxs("div", {
             children: [
               JsxRuntime.jsx("div", {
@@ -140,8 +140,8 @@ function App(props) {
         className: "border w-fit h-fit",
         style: {
           display: "grid",
-          gridTemplateColumns: "repeat(" + brushWidth.toString() + ", 1rem)",
-          gridTemplateRows: "repeat(" + brushHeight.toString() + ", 1rem)"
+          gridTemplateColumns: "repeat(" + brushDimI.toString() + ", 1rem)",
+          gridTemplateRows: "repeat(" + brushDimJ.toString() + ", 1rem)"
         }
       }),
       JsxRuntime.jsx("div", {

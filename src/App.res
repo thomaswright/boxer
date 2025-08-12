@@ -22,9 +22,9 @@ module Array = {
     )
   let make2D = (a, b, f) => Array.make(~length=a, Array.make(~length=b, f()))
   let dims2D = a => {
-    let boardWidth = a->Array.length
-    let boardHeight = a->Array.get(0)->Option.mapOr(0, line => line->Array.length)
-    (boardWidth, boardHeight)
+    let boardDimI = a->Array.length
+    let boardDimJ = a->Array.get(0)->Option.mapOr(0, line => line->Array.length)
+    (boardDimI, boardDimJ)
   }
   let check2D = (a, i, j) => {
     a->Array.get(i)->Option.flatMap(row => row->Array.get(j))
@@ -65,20 +65,20 @@ let make = () => {
 
   let isMouseDown = useIsMouseDown()
 
-  let (boardWidth, boardHeight) = board->Array.dims2D
-  let (brushWidth, brushHeight) = brush->Array.dims2D
+  let (boardDimI, boardDimJ) = board->Array.dims2D
+  let (brushDimI, brushDimJ) = brush->Array.dims2D
 
   let onMouseMove = _ => setMaskOff(_ => false)
   let applyBrush = (clickI, clickJ) => {
-    let brushCenterWidth = brushWidth / 2
-    let brushCenterHeight = brushHeight / 2
+    let brushCenterDimI = brushDimI / 2
+    let brushCenterDimJ = brushDimJ / 2
 
     setBoard(b =>
       b->Array.mapWithIndex((row, boardI) =>
         row->Array.mapWithIndex(
           (cell, boardJ) => {
-            let brushPosI = boardI - clickI + brushCenterWidth
-            let brushPosJ = boardJ - clickJ + brushCenterHeight
+            let brushPosI = boardI - clickI + brushCenterDimI
+            let brushPosJ = boardJ - clickJ + brushCenterDimJ
 
             Array.check2D(brush, brushPosI, brushPosJ)->Option.getOr(false) ? Some(myColor) : cell
           },
@@ -98,14 +98,14 @@ let make = () => {
       className={"border w-fit h-fit"}
       style={{
         display: "grid",
-        gridTemplateColumns: `repeat(${brushWidth->Int.toString}, 1rem)`,
-        gridTemplateRows: `repeat(${brushHeight->Int.toString}, 1rem)`,
+        gridTemplateColumns: `repeat(${brushDimI->Int.toString}, 1rem)`,
+        gridTemplateRows: `repeat(${brushDimJ->Int.toString}, 1rem)`,
       }}>
       {brush
       ->Array.mapWithIndex((line, i) => {
         line
         ->Array.mapWithIndex((cell, j) => {
-          let isCursorCenter = brushWidth / 2 == i && brushHeight / 2 == j
+          let isCursorCenter = brushDimI / 2 == i && brushDimJ / 2 == j
           <div
             className={"w-full h-full group relative "}
             key={i->Int.toString ++ j->Int.toString}
@@ -145,8 +145,8 @@ let make = () => {
       className={"border w-fit h-fit"}
       style={{
         display: "grid",
-        gridTemplateColumns: `repeat(${boardWidth->Int.toString}, 1rem)`,
-        gridTemplateRows: `repeat(${boardHeight->Int.toString}, 1rem)`,
+        gridTemplateColumns: `repeat(${boardDimI->Int.toString}, 1rem)`,
+        gridTemplateRows: `repeat(${boardDimJ->Int.toString}, 1rem)`,
       }}>
       {board
       ->Array.mapWithIndex((line, i) => {
