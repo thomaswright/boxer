@@ -1,22 +1,6 @@
 @@warning("-44")
 open Webapi.Dom
 
-module WebapiAdditions = {
-  @send
-  external addMouseLeaveEventListener: (
-    Window.t,
-    @as("mouseleave") _,
-    Dom.mouseEvent => unit,
-  ) => unit = "addEventListener"
-
-  @send
-  external removeMouseLeaveEventListener: (
-    Window.t,
-    @as("mouseleave") _,
-    Dom.mouseEvent => unit,
-  ) => unit = "removeEventListener"
-}
-
 @module("./useLocalStorage.js")
 external useLocalStorage: (string, 'a) => ('a, ('a => 'a) => unit, unit => 'a) = "default"
 
@@ -71,21 +55,6 @@ let useIsMouseDown = () => {
   isMouseDown
 }
 
-// let useOnMouseEnter = (enterHandler, leaveHandler) => {
-
-//   React.useEffect0(() => {
-//     window->Window.addMouseEnterEventListener(enterHandler)
-//     window->WebapiAdditions.addMouseLeaveEventListener(leaveHandler)
-
-//     Some(
-//       () => {
-//         window->Window.removeMouseEnterEventListener(enterHandler)
-//         window->WebapiAdditions.removeMouseLeaveEventListener(leaveHandler)
-//       },
-//     )
-//   })
-// }
-
 @set @scope("style") external setStyleDisplay: (Dom.element, string) => unit = "display"
 
 let getOverlayId = (i, j) => "canvas-overlay" ++ i->Int.toString ++ j->Int.toString
@@ -104,29 +73,30 @@ let make = () => {
 
   let (boardDimI, boardDimJ) = board->Array.dims2D
   let (brushDimI, brushDimJ) = brush->Array.dims2D
+  let brushCenterDimI = brushDimI / 2
+  let brushCenterDimJ = brushDimJ / 2
   let (tileMaskDimI, tileMaskDimJ) = tileMask->Array.dims2D
 
   let onMouseMove = _ => setCursorOverlayOff(_ => false)
 
-  let applyOverlay = (clickI, clickJ, f) => {
-    let brushCenterDimI = brushDimI / 2
-    let brushCenterDimJ = brushDimJ / 2
+  let canApply = (boardI, boardJ, clickI, clickJ) => {
+    let brushPosI = boardI - clickI + brushCenterDimI
+    let brushPosJ = boardJ - clickJ + brushCenterDimJ
 
+    let brushAllows = Array.check2D(brush, brushPosI, brushPosJ)->Option.getOr(false)
+
+    let maskAllows =
+      Array.check2D(tileMask, mod(boardI, tileMaskDimI), mod(boardJ, tileMaskDimJ))->Option.getOr(
+        false,
+      )
+
+    brushAllows && maskAllows
+  }
+
+  let applyOverlay = (clickI, clickJ, f) => {
     board->Array.forEachWithIndex((row, boardI) =>
       row->Array.forEachWithIndex((_, boardJ) => {
-        let brushPosI = boardI - clickI + brushCenterDimI
-        let brushPosJ = boardJ - clickJ + brushCenterDimJ
-
-        let brushAllows = Array.check2D(brush, brushPosI, brushPosJ)->Option.getOr(false)
-
-        let maskAllows =
-          Array.check2D(
-            tileMask,
-            mod(boardI, tileMaskDimI),
-            mod(boardJ, tileMaskDimJ),
-          )->Option.getOr(false)
-
-        if brushAllows && maskAllows {
+        if canApply(boardI, boardJ, clickI, clickJ) {
           let id = getOverlayId(boardI, boardJ)
           document
           ->Document.getElementById(id)
@@ -135,27 +105,13 @@ let make = () => {
       })
     )
   }
-  let applyBrush = (clickI, clickJ) => {
-    let brushCenterDimI = brushDimI / 2
-    let brushCenterDimJ = brushDimJ / 2
 
+  let applyBrush = (clickI, clickJ) => {
     setBoard(b =>
       b->Array.mapWithIndex((row, boardI) =>
         row->Array.mapWithIndex(
           (cell, boardJ) => {
-            let brushPosI = boardI - clickI + brushCenterDimI
-            let brushPosJ = boardJ - clickJ + brushCenterDimJ
-
-            let brushAllows = Array.check2D(brush, brushPosI, brushPosJ)->Option.getOr(false)
-
-            let maskAllows =
-              Array.check2D(
-                tileMask,
-                mod(boardI, tileMaskDimI),
-                mod(boardJ, tileMaskDimJ),
-              )->Option.getOr(false)
-
-            brushAllows && maskAllows ? Some(myColor) : cell
+            canApply(boardI, boardJ, clickI, clickJ) ? Some(myColor) : cell
           },
         )
       )

@@ -95,20 +95,27 @@ function App(props) {
   let match$7 = dims2D(brush);
   let brushDimJ = match$7[1];
   let brushDimI = match$7[0];
+  let brushCenterDimI = brushDimI / 2 | 0;
+  let brushCenterDimJ = brushDimJ / 2 | 0;
   let match$8 = dims2D(tileMask);
   let tileMaskDimJ = match$8[1];
   let tileMaskDimI = match$8[0];
   let onMouseMove = param => setCursorOverlayOff(param => false);
+  let canApply = (boardI, boardJ, clickI, clickJ) => {
+    let brushPosI = (boardI - clickI | 0) + brushCenterDimI | 0;
+    let brushPosJ = (boardJ - clickJ | 0) + brushCenterDimJ | 0;
+    let brushAllows = Stdlib_Option.getOr(check2D(brush, brushPosI, brushPosJ), false);
+    let maskAllows = Stdlib_Option.getOr(check2D(tileMask, Primitive_int.mod_(boardI, tileMaskDimI), Primitive_int.mod_(boardJ, tileMaskDimJ)), false);
+    if (brushAllows) {
+      return maskAllows;
+    } else {
+      return false;
+    }
+  };
   let applyOverlay = (clickI, clickJ, f) => {
-    let brushCenterDimI = brushDimI / 2 | 0;
-    let brushCenterDimJ = brushDimJ / 2 | 0;
     board.forEach((row, boardI) => {
       row.forEach((param, boardJ) => {
-        let brushPosI = (boardI - clickI | 0) + brushCenterDimI | 0;
-        let brushPosJ = (boardJ - clickJ | 0) + brushCenterDimJ | 0;
-        let brushAllows = Stdlib_Option.getOr(check2D(brush, brushPosI, brushPosJ), false);
-        let maskAllows = Stdlib_Option.getOr(check2D(tileMask, Primitive_int.mod_(boardI, tileMaskDimI), Primitive_int.mod_(boardJ, tileMaskDimJ)), false);
-        if (!(brushAllows && maskAllows)) {
+        if (!canApply(boardI, boardJ, clickI, clickJ)) {
           return;
         }
         let id = getOverlayId(boardI, boardJ);
@@ -116,21 +123,13 @@ function App(props) {
       });
     });
   };
-  let applyBrush = (clickI, clickJ) => {
-    let brushCenterDimI = brushDimI / 2 | 0;
-    let brushCenterDimJ = brushDimJ / 2 | 0;
-    setBoard(b => b.map((row, boardI) => row.map((cell, boardJ) => {
-      let brushPosI = (boardI - clickI | 0) + brushCenterDimI | 0;
-      let brushPosJ = (boardJ - clickJ | 0) + brushCenterDimJ | 0;
-      let brushAllows = Stdlib_Option.getOr(check2D(brush, brushPosI, brushPosJ), false);
-      let maskAllows = Stdlib_Option.getOr(check2D(tileMask, Primitive_int.mod_(boardI, tileMaskDimI), Primitive_int.mod_(boardJ, tileMaskDimJ)), false);
-      if (brushAllows && maskAllows) {
-        return myColor;
-      } else {
-        return cell;
-      }
-    })));
-  };
+  let applyBrush = (clickI, clickJ) => setBoard(b => b.map((row, boardI) => row.map((cell, boardJ) => {
+    if (canApply(boardI, boardJ, clickI, clickJ)) {
+      return myColor;
+    } else {
+      return cell;
+    }
+  })));
   React.useEffect(() => {
     window.addEventListener("mousemove", onMouseMove);
   }, []);
