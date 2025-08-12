@@ -16,14 +16,21 @@ module Switch = {
 
 module Array = {
   include Array
-  let update2d = (a, i, j, f) =>
+  let update2D = (a, i, j, f) =>
     a->Array.mapWithIndex((row, rowI) =>
       rowI == i ? row->Array.mapWithIndex((cell, cellJ) => cellJ == j ? f(cell) : cell) : row
     )
-  let make2D = (a, b) => Array.make(~length=a, Array.make(~length=b, None))
+  let make2D = (a, b, f) => Array.make(~length=a, Array.make(~length=b, f()))
+  let dims2D = a => {
+    let boardWidth = a->Array.length
+    let boardHeight = a->Array.get(0)->Option.mapOr(0, line => line->Array.length)
+    (boardWidth, boardHeight)
+  }
 }
 
-let defaultBoard = Array.make2D(12, 12)
+let defaultBoard = Array.make2D(12, 12, () => None)
+
+let defaultBrush = Array.make2D(3, 3, () => false)
 
 let useIsMouseDown = () => {
   let (isMouseDown, setIsMouseDown) = React.useState(() => false)
@@ -48,14 +55,15 @@ let useIsMouseDown = () => {
 @react.component
 let make = () => {
   let (board, setBoard, _) = useLocalStorage("board", defaultBoard)
+  let (brush, setBrush, _) = useLocalStorage("brush", defaultBrush)
   let (showMask, setShowMask, _) = useLocalStorage("show-mask", true)
   let (myColor, setMyColor, _) = useLocalStorage("myColor", "blue")
   let (maskOff, setMaskOff) = React.useState(() => false)
 
   let isMouseDown = useIsMouseDown()
 
-  let width = board->Array.length
-  let height = board->Array.get(0)->Option.mapOr(0, line => line->Array.length)
+  let (boardWidth, boardHeight) = board->Array.dims2D
+  let (brushWidth, brushHeight) = brush->Array.dims2D
 
   let onMouseMove = _ => setMaskOff(_ => false)
 
@@ -70,8 +78,55 @@ let make = () => {
       className={"border w-fit h-fit"}
       style={{
         display: "grid",
-        gridTemplateColumns: `repeat(${width->Int.toString}, 1rem)`,
-        gridTemplateRows: `repeat(${height->Int.toString}, 1rem)`,
+        gridTemplateColumns: `repeat(${brushWidth->Int.toString}, 1rem)`,
+        gridTemplateRows: `repeat(${brushHeight->Int.toString}, 1rem)`,
+      }}>
+      {brush
+      ->Array.mapWithIndex((line, i) => {
+        line
+        ->Array.mapWithIndex((cell, j) => {
+          let isCursorCenter = brushWidth / 2 == i && brushHeight / 2 == j
+          <div
+            className={"w-full h-full group relative "}
+            key={i->Int.toString ++ j->Int.toString}
+            onMouseEnter={_ => {
+              if isMouseDown {
+                setBrush(b => b->Array.update2D(i, j, v => !v))
+              }
+            }}
+            onClick={_ => {
+              setBrush(b => b->Array.update2D(i, j, v => !v))
+              setMaskOff(_ => true)
+            }}>
+            <div
+              className={"w-full h-full absolute"}
+              style={{
+                backgroundColor: cell ? "#00c3ff" : "transparent",
+              }}
+            />
+            {maskOff || !showMask
+              ? React.null
+              : <div
+                  className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
+                </div>}
+            {!isCursorCenter
+              ? React.null
+              : <div className="absolute w-full h-full flex flex-row items-center justify-center ">
+                  <div className=" w-1/2 h-1/2 bg-red-500 rounded-full"></div>
+                </div>}
+          </div>
+        })
+        ->React.array
+      })
+      ->React.array}
+    </div>
+
+    <div
+      className={"border w-fit h-fit"}
+      style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(${boardWidth->Int.toString}, 1rem)`,
+        gridTemplateRows: `repeat(${boardHeight->Int.toString}, 1rem)`,
       }}>
       {board
       ->Array.mapWithIndex((line, i) => {
@@ -83,11 +138,11 @@ let make = () => {
             key={i->Int.toString ++ j->Int.toString}
             onMouseEnter={_ => {
               if isMouseDown {
-                setBoard(b => b->Array.update2d(i, j, _ => Some(myColor)))
+                setBoard(b => b->Array.update2D(i, j, _ => Some(myColor)))
               }
             }}
             onClick={_ => {
-              setBoard(b => b->Array.update2d(i, j, _ => Some(myColor)))
+              setBoard(b => b->Array.update2D(i, j, _ => Some(myColor)))
               setMaskOff(_ => true)
             }}>
             <div

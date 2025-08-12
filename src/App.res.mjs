@@ -10,7 +10,7 @@ import UseLocalStorageJs from "./useLocalStorage.js";
 
 let make = SwitchJsx;
 
-function update2d(a, i, j, f) {
+function update2D(a, i, j, f) {
   return a.map((row, rowI) => {
     if (rowI === i) {
       return row.map((cell, cellJ) => {
@@ -26,11 +26,22 @@ function update2d(a, i, j, f) {
   });
 }
 
-function make2D(a, b) {
-  return Stdlib_Array.make(a, Stdlib_Array.make(b, undefined));
+function make2D(a, b, f) {
+  return Stdlib_Array.make(a, Stdlib_Array.make(b, f()));
 }
 
-let defaultBoard = make2D(12, 12);
+function dims2D(a) {
+  let boardWidth = a.length;
+  let boardHeight = Stdlib_Option.mapOr(a[0], 0, line => line.length);
+  return [
+    boardWidth,
+    boardHeight
+  ];
+}
+
+let defaultBoard = make2D(12, 12, () => {});
+
+let defaultBrush = make2D(3, 3, () => false);
 
 function useIsMouseDown() {
   let match = React.useState(() => false);
@@ -52,24 +63,70 @@ function App(props) {
   let match = UseLocalStorageJs("board", defaultBoard);
   let setBoard = match[1];
   let board = match[0];
-  let match$1 = UseLocalStorageJs("show-mask", true);
-  let setShowMask = match$1[1];
-  let showMask = match$1[0];
-  let match$2 = UseLocalStorageJs("myColor", "blue");
-  let setMyColor = match$2[1];
-  let myColor = match$2[0];
-  let match$3 = React.useState(() => false);
-  let setMaskOff = match$3[1];
-  let maskOff = match$3[0];
+  let match$1 = UseLocalStorageJs("brush", defaultBrush);
+  let setBrush = match$1[1];
+  let brush = match$1[0];
+  let match$2 = UseLocalStorageJs("show-mask", true);
+  let setShowMask = match$2[1];
+  let showMask = match$2[0];
+  let match$3 = UseLocalStorageJs("myColor", "blue");
+  let setMyColor = match$3[1];
+  let myColor = match$3[0];
+  let match$4 = React.useState(() => false);
+  let setMaskOff = match$4[1];
+  let maskOff = match$4[0];
   let isMouseDown = useIsMouseDown();
-  let width = board.length;
-  let height = Stdlib_Option.mapOr(board[0], 0, line => line.length);
+  let match$5 = dims2D(board);
+  let match$6 = dims2D(brush);
+  let brushHeight = match$6[1];
+  let brushWidth = match$6[0];
   let onMouseMove = param => setMaskOff(param => false);
   React.useEffect(() => {
     window.addEventListener("mousemove", onMouseMove);
   }, []);
   return JsxRuntime.jsxs("div", {
     children: [
+      JsxRuntime.jsx("div", {
+        children: brush.map((line, i) => line.map((cell, j) => {
+          let isCursorCenter = (brushWidth / 2 | 0) === i && (brushHeight / 2 | 0) === j;
+          return JsxRuntime.jsxs("div", {
+            children: [
+              JsxRuntime.jsx("div", {
+                className: "w-full h-full absolute",
+                style: {
+                  backgroundColor: cell ? "#00c3ff" : "transparent"
+                }
+              }),
+              maskOff || !showMask ? null : JsxRuntime.jsx("div", {
+                  className: "absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20"
+                }),
+              isCursorCenter ? JsxRuntime.jsx("div", {
+                  children: JsxRuntime.jsx("div", {
+                    className: " w-1/2 h-1/2 bg-red-500 rounded-full"
+                  }),
+                  className: "absolute w-full h-full flex flex-row items-center justify-center "
+                }) : null
+            ],
+            className: "w-full h-full group relative ",
+            onClick: param => {
+              setBrush(b => update2D(b, i, j, v => !v));
+              setMaskOff(param => true);
+            },
+            onMouseEnter: param => {
+              if (isMouseDown) {
+                return setBrush(b => update2D(b, i, j, v => !v));
+              }
+              
+            }
+          }, i.toString() + j.toString());
+        })),
+        className: "border w-fit h-fit",
+        style: {
+          display: "grid",
+          gridTemplateColumns: "repeat(" + brushWidth.toString() + ", 1rem)",
+          gridTemplateRows: "repeat(" + brushHeight.toString() + ", 1rem)"
+        }
+      }),
       JsxRuntime.jsx("div", {
         children: board.map((line, i) => line.map((cell, j) => {
           let backgroundColor = Stdlib_Option.getOr(cell, "transparent");
@@ -87,12 +144,12 @@ function App(props) {
             ],
             className: "w-full h-full group relative",
             onClick: param => {
-              setBoard(b => update2d(b, i, j, param => myColor));
+              setBoard(b => update2D(b, i, j, param => myColor));
               setMaskOff(param => true);
             },
             onMouseEnter: param => {
               if (isMouseDown) {
-                return setBoard(b => update2d(b, i, j, param => myColor));
+                return setBoard(b => update2D(b, i, j, param => myColor));
               }
               
             }
@@ -101,8 +158,8 @@ function App(props) {
         className: "border w-fit h-fit",
         style: {
           display: "grid",
-          gridTemplateColumns: "repeat(" + width.toString() + ", 1rem)",
-          gridTemplateRows: "repeat(" + height.toString() + ", 1rem)"
+          gridTemplateColumns: "repeat(" + match$5[0].toString() + ", 1rem)",
+          gridTemplateRows: "repeat(" + match$5[1].toString() + ", 1rem)"
         }
       }),
       JsxRuntime.jsxs("div", {
