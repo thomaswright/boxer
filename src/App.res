@@ -26,6 +26,9 @@ module Array = {
     let boardHeight = a->Array.get(0)->Option.mapOr(0, line => line->Array.length)
     (boardWidth, boardHeight)
   }
+  let check2D = (a, i, j) => {
+    a->Array.get(i)->Option.flatMap(row => row->Array.get(j))
+  }
 }
 
 let defaultBoard = Array.make2D(12, 12, () => None)
@@ -66,6 +69,23 @@ let make = () => {
   let (brushWidth, brushHeight) = brush->Array.dims2D
 
   let onMouseMove = _ => setMaskOff(_ => false)
+  let applyBrush = (clickI, clickJ) => {
+    let brushCenterWidth = brushWidth / 2
+    let brushCenterHeight = brushHeight / 2
+
+    setBoard(b =>
+      b->Array.mapWithIndex((row, boardI) =>
+        row->Array.mapWithIndex(
+          (cell, boardJ) => {
+            let brushPosI = boardI - clickI + brushCenterWidth
+            let brushPosJ = boardJ - clickJ + brushCenterHeight
+
+            Array.check2D(brush, brushPosI, brushPosJ)->Option.getOr(false) ? Some(myColor) : cell
+          },
+        )
+      )
+    )
+  }
 
   React.useEffect0(() => {
     window->Window.addMouseMoveEventListener(onMouseMove)
@@ -138,11 +158,11 @@ let make = () => {
             key={i->Int.toString ++ j->Int.toString}
             onMouseEnter={_ => {
               if isMouseDown {
-                setBoard(b => b->Array.update2D(i, j, _ => Some(myColor)))
+                applyBrush(i, j)
               }
             }}
             onClick={_ => {
-              setBoard(b => b->Array.update2D(i, j, _ => Some(myColor)))
+              applyBrush(i, j)
               setMaskOff(_ => true)
             }}>
             <div

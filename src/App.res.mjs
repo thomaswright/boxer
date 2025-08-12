@@ -39,6 +39,10 @@ function dims2D(a) {
   ];
 }
 
+function check2D(a, i, j) {
+  return Stdlib_Option.flatMap(a[i], row => row[j]);
+}
+
 let defaultBoard = make2D(12, 12, () => {});
 
 let defaultBrush = make2D(3, 3, () => false);
@@ -81,6 +85,19 @@ function App(props) {
   let brushHeight = match$6[1];
   let brushWidth = match$6[0];
   let onMouseMove = param => setMaskOff(param => false);
+  let applyBrush = (clickI, clickJ) => {
+    let brushCenterWidth = brushWidth / 2 | 0;
+    let brushCenterHeight = brushHeight / 2 | 0;
+    setBoard(b => b.map((row, boardI) => row.map((cell, boardJ) => {
+      let brushPosI = (boardI - clickI | 0) + brushCenterWidth | 0;
+      let brushPosJ = (boardJ - clickJ | 0) + brushCenterHeight | 0;
+      if (Stdlib_Option.getOr(check2D(brush, brushPosI, brushPosJ), false)) {
+        return myColor;
+      } else {
+        return cell;
+      }
+    })));
+  };
   React.useEffect(() => {
     window.addEventListener("mousemove", onMouseMove);
   }, []);
@@ -144,12 +161,12 @@ function App(props) {
             ],
             className: "w-full h-full group relative",
             onClick: param => {
-              setBoard(b => update2D(b, i, j, param => myColor));
+              applyBrush(i, j);
               setMaskOff(param => true);
             },
             onMouseEnter: param => {
               if (isMouseDown) {
-                return setBoard(b => update2D(b, i, j, param => myColor));
+                return applyBrush(i, j);
               }
               
             }
