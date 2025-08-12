@@ -1,6 +1,22 @@
 @@warning("-44")
 open Webapi.Dom
 
+module WebapiAdditions = {
+  @send
+  external addMouseLeaveEventListener: (
+    Window.t,
+    @as("mouseleave") _,
+    Dom.mouseEvent => unit,
+  ) => unit = "addEventListener"
+
+  @send
+  external removeMouseLeaveEventListener: (
+    Window.t,
+    @as("mouseleave") _,
+    Dom.mouseEvent => unit,
+  ) => unit = "removeEventListener"
+}
+
 @module("./useLocalStorage.js")
 external useLocalStorage: (string, 'a) => ('a, ('a => 'a) => unit, unit => 'a) = "default"
 
@@ -55,6 +71,25 @@ let useIsMouseDown = () => {
   isMouseDown
 }
 
+// let useOnMouseEnter = (enterHandler, leaveHandler) => {
+
+//   React.useEffect0(() => {
+//     window->Window.addMouseEnterEventListener(enterHandler)
+//     window->WebapiAdditions.addMouseLeaveEventListener(leaveHandler)
+
+//     Some(
+//       () => {
+//         window->Window.removeMouseEnterEventListener(enterHandler)
+//         window->WebapiAdditions.removeMouseLeaveEventListener(leaveHandler)
+//       },
+//     )
+//   })
+// }
+
+@set @scope("style") external setStyleDisplay: (Dom.element, string) => unit = "display"
+
+let getOverlayId = (i, j) => "canvas-overlay" ++ i->Int.toString ++ j->Int.toString
+
 @react.component
 let make = () => {
   let (board, setBoard, _) = useLocalStorage("board", defaultBoard)
@@ -63,7 +98,7 @@ let make = () => {
 
   let (showCursorOverlay, setShowCursorOverlay, _) = useLocalStorage("show-cursor-overlay", true)
   let (myColor, setMyColor, _) = useLocalStorage("my-color", "blue")
-  let (cursoroverlayOff, setCursorOverlayOff) = React.useState(() => false)
+  let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
 
   let isMouseDown = useIsMouseDown()
 
@@ -72,6 +107,34 @@ let make = () => {
   let (tileMaskDimI, tileMaskDimJ) = tileMask->Array.dims2D
 
   let onMouseMove = _ => setCursorOverlayOff(_ => false)
+
+  let applyOverlay = (clickI, clickJ, f) => {
+    let brushCenterDimI = brushDimI / 2
+    let brushCenterDimJ = brushDimJ / 2
+
+    board->Array.forEachWithIndex((row, boardI) =>
+      row->Array.forEachWithIndex((_, boardJ) => {
+        let brushPosI = boardI - clickI + brushCenterDimI
+        let brushPosJ = boardJ - clickJ + brushCenterDimJ
+
+        let brushAllows = Array.check2D(brush, brushPosI, brushPosJ)->Option.getOr(false)
+
+        let maskAllows =
+          Array.check2D(
+            tileMask,
+            mod(boardI, tileMaskDimI),
+            mod(boardJ, tileMaskDimJ),
+          )->Option.getOr(false)
+
+        if brushAllows && maskAllows {
+          let id = getOverlayId(boardI, boardJ)
+          document
+          ->Document.getElementById(id)
+          ->Option.mapOr((), f)
+        }
+      })
+    )
+  }
   let applyBrush = (clickI, clickJ) => {
     let brushCenterDimI = brushDimI / 2
     let brushCenterDimJ = brushDimJ / 2
@@ -136,7 +199,7 @@ let make = () => {
                   backgroundColor: cell ? "#ffa700" : "transparent",
                 }}
               />
-              {cursoroverlayOff || !showCursorOverlay
+              {cursorOverlayOff || !showCursorOverlay
                 ? React.null
                 : <div
                     className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
@@ -178,7 +241,7 @@ let make = () => {
                   backgroundColor: cell ? "#00c3ff" : "transparent",
                 }}
               />
-              {cursoroverlayOff || !showCursorOverlay
+              {cursorOverlayOff || !showCursorOverlay
                 ? React.null
                 : <div
                     className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
@@ -213,9 +276,26 @@ let make = () => {
             className={"w-full h-full group relative"}
             key={i->Int.toString ++ j->Int.toString}
             onMouseEnter={_ => {
+              applyOverlay(
+                i,
+                j,
+                el => {
+                  el->setStyleDisplay("block")
+                },
+              )
+
               if isMouseDown {
                 applyBrush(i, j)
               }
+            }}
+            onMouseLeave={_ => {
+              applyOverlay(
+                i,
+                j,
+                el => {
+                  el->setStyleDisplay("none")
+                },
+              )
             }}
             onClick={_ => {
               applyBrush(i, j)
@@ -227,10 +307,12 @@ let make = () => {
                 backgroundColor: backgroundColor,
               }}
             />
-            {cursoroverlayOff || !showCursorOverlay
+            {cursorOverlayOff || !showCursorOverlay
               ? React.null
               : <div
-                  className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
+                  style={{display: "none"}}
+                  id={getOverlayId(i, j)}
+                  className="absolute w-full h-full inset-0 bg-black opacity-20">
                 </div>}
           </div>
         })
@@ -246,7 +328,7 @@ let make = () => {
         }}
       />
       <div>
-        <div className="flex flex-row"> {"Show Overlay"->React.string} </div>
+        <div className="flex flex-row"> {"Show Brush Overlay"->React.string} </div>
         <Switch checked={showCursorOverlay} onChange={v => setShowCursorOverlay(_ => v)} />
       </div>
     </div>

@@ -6,6 +6,7 @@ import * as Stdlib_Array from "rescript/lib/es6/Stdlib_Array.js";
 import * as Primitive_int from "rescript/lib/es6/Primitive_int.js";
 import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
 import * as ReactColorful from "react-colorful";
+import * as Primitive_option from "rescript/lib/es6/Primitive_option.js";
 import * as JsxRuntime from "react/jsx-runtime";
 import UseLocalStorageJs from "./useLocalStorage.js";
 
@@ -66,6 +67,10 @@ function useIsMouseDown() {
   return match[0];
 }
 
+function getOverlayId(i, j) {
+  return "canvas-overlay" + i.toString() + j.toString();
+}
+
 function App(props) {
   let match = UseLocalStorageJs("board", defaultBoard);
   let setBoard = match[1];
@@ -84,7 +89,7 @@ function App(props) {
   let myColor = match$4[0];
   let match$5 = React.useState(() => false);
   let setCursorOverlayOff = match$5[1];
-  let cursoroverlayOff = match$5[0];
+  let cursorOverlayOff = match$5[0];
   let isMouseDown = useIsMouseDown();
   let match$6 = dims2D(board);
   let match$7 = dims2D(brush);
@@ -94,6 +99,23 @@ function App(props) {
   let tileMaskDimJ = match$8[1];
   let tileMaskDimI = match$8[0];
   let onMouseMove = param => setCursorOverlayOff(param => false);
+  let applyOverlay = (clickI, clickJ, f) => {
+    let brushCenterDimI = brushDimI / 2 | 0;
+    let brushCenterDimJ = brushDimJ / 2 | 0;
+    board.forEach((row, boardI) => {
+      row.forEach((param, boardJ) => {
+        let brushPosI = (boardI - clickI | 0) + brushCenterDimI | 0;
+        let brushPosJ = (boardJ - clickJ | 0) + brushCenterDimJ | 0;
+        let brushAllows = Stdlib_Option.getOr(check2D(brush, brushPosI, brushPosJ), false);
+        let maskAllows = Stdlib_Option.getOr(check2D(tileMask, Primitive_int.mod_(boardI, tileMaskDimI), Primitive_int.mod_(boardJ, tileMaskDimJ)), false);
+        if (!(brushAllows && maskAllows)) {
+          return;
+        }
+        let id = getOverlayId(boardI, boardJ);
+        Stdlib_Option.mapOr(Primitive_option.fromNullable(document.getElementById(id)), undefined, f);
+      });
+    });
+  };
   let applyBrush = (clickI, clickJ) => {
     let brushCenterDimI = brushDimI / 2 | 0;
     let brushCenterDimJ = brushDimJ / 2 | 0;
@@ -125,7 +147,7 @@ function App(props) {
                     backgroundColor: cell ? "#ffa700" : "transparent"
                   }
                 }),
-                cursoroverlayOff || !showCursorOverlay ? null : JsxRuntime.jsx("div", {
+                cursorOverlayOff || !showCursorOverlay ? null : JsxRuntime.jsx("div", {
                     className: "absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20"
                   })
               ],
@@ -159,7 +181,7 @@ function App(props) {
                       backgroundColor: cell ? "#00c3ff" : "transparent"
                     }
                   }),
-                  cursoroverlayOff || !showCursorOverlay ? null : JsxRuntime.jsx("div", {
+                  cursorOverlayOff || !showCursorOverlay ? null : JsxRuntime.jsx("div", {
                       className: "absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20"
                     }),
                   isCursorCenter ? JsxRuntime.jsx("div", {
@@ -202,8 +224,12 @@ function App(props) {
                   backgroundColor: backgroundColor
                 }
               }),
-              cursoroverlayOff || !showCursorOverlay ? null : JsxRuntime.jsx("div", {
-                  className: "absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20"
+              cursorOverlayOff || !showCursorOverlay ? null : JsxRuntime.jsx("div", {
+                  className: "absolute w-full h-full inset-0 bg-black opacity-20",
+                  id: getOverlayId(i, j),
+                  style: {
+                    display: "none"
+                  }
                 })
             ],
             className: "w-full h-full group relative",
@@ -212,11 +238,17 @@ function App(props) {
               setCursorOverlayOff(param => true);
             },
             onMouseEnter: param => {
+              applyOverlay(i, j, el => {
+                el.style.display = "block";
+              });
               if (isMouseDown) {
                 return applyBrush(i, j);
               }
               
-            }
+            },
+            onMouseLeave: param => applyOverlay(i, j, el => {
+              el.style.display = "none";
+            })
           }, i.toString() + j.toString());
         })),
         className: "border w-fit h-fit",
@@ -235,7 +267,7 @@ function App(props) {
           JsxRuntime.jsxs("div", {
             children: [
               JsxRuntime.jsx("div", {
-                children: "Show Overlay",
+                children: "Show Brush Overlay",
                 className: "flex flex-row"
               }),
               JsxRuntime.jsx(make, {
