@@ -287,10 +287,24 @@ let make = () => {
       })
       ->React.array}
     </div>
-    <div className="flex flex-col gap-5">
-      <div>
-        <button onClick={_ => setBrushMode(_ => Color)}> {"Color"->React.string} </button>
-        <button onClick={_ => setBrushMode(_ => Erase)}> {"Erase"->React.string} </button>
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-row gap-2">
+        <button
+          className={[
+            brushMode == Color ? " bg-blue-500 text-white" : "bg-gray-200",
+            "px-2 font-medium rounded",
+          ]->Array.join(" ")}
+          onClick={_ => setBrushMode(_ => Color)}>
+          {"Color"->React.string}
+        </button>
+        <button
+          className={[
+            brushMode == Erase ? " bg-blue-500 text-white" : "bg-gray-200",
+            "px-2 font-medium rounded",
+          ]->Array.join(" ")}
+          onClick={_ => setBrushMode(_ => Erase)}>
+          {"Erase"->React.string}
+        </button>
       </div>
       <HexColorPicker
         color={myColor}

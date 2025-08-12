@@ -272,13 +272,22 @@ function App(props) {
             children: [
               JsxRuntime.jsx("button", {
                 children: "Color",
+                className: [
+                  brushMode === "Color" ? " bg-blue-500 text-white" : "bg-gray-200",
+                  "px-2 font-medium rounded"
+                ].join(" "),
                 onClick: param => setBrushMode(param => "Color")
               }),
               JsxRuntime.jsx("button", {
                 children: "Erase",
+                className: [
+                  brushMode === "Erase" ? " bg-blue-500 text-white" : "bg-gray-200",
+                  "px-2 font-medium rounded"
+                ].join(" "),
                 onClick: param => setBrushMode(param => "Erase")
               })
-            ]
+            ],
+            className: "flex flex-row gap-2"
           }),
           JsxRuntime.jsx(ReactColorful.HexColorPicker, {
             color: myColor,
@@ -297,7 +306,7 @@ function App(props) {
             ]
           })
         ],
-        className: "flex flex-col gap-5"
+        className: "flex flex-col gap-2"
       })
     ],
     className: " flex flex-row gap-5"
