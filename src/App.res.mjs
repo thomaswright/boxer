@@ -72,34 +72,37 @@ function getOverlayId(i, j) {
 }
 
 function App(props) {
-  let match = UseLocalStorageJs("board", defaultBoard);
-  let setBoard = match[1];
-  let board = match[0];
-  let match$1 = UseLocalStorageJs("brush", defaultBrush);
-  let setBrush = match$1[1];
-  let brush = match$1[0];
-  let match$2 = UseLocalStorageJs("tile-mask", defaultTileMask);
-  let setTileMask = match$2[1];
-  let tileMask = match$2[0];
-  let match$3 = UseLocalStorageJs("show-cursor-overlay", true);
-  let setShowCursorOverlay = match$3[1];
-  let showCursorOverlay = match$3[0];
-  let match$4 = UseLocalStorageJs("my-color", "blue");
-  let setMyColor = match$4[1];
-  let myColor = match$4[0];
-  let match$5 = React.useState(() => false);
-  let setCursorOverlayOff = match$5[1];
-  let cursorOverlayOff = match$5[0];
+  let match = UseLocalStorageJs("brush-mode", "Color");
+  let setBrushMode = match[1];
+  let brushMode = match[0];
+  let match$1 = UseLocalStorageJs("board", defaultBoard);
+  let setBoard = match$1[1];
+  let board = match$1[0];
+  let match$2 = UseLocalStorageJs("brush", defaultBrush);
+  let setBrush = match$2[1];
+  let brush = match$2[0];
+  let match$3 = UseLocalStorageJs("tile-mask", defaultTileMask);
+  let setTileMask = match$3[1];
+  let tileMask = match$3[0];
+  let match$4 = UseLocalStorageJs("show-cursor-overlay", true);
+  let setShowCursorOverlay = match$4[1];
+  let showCursorOverlay = match$4[0];
+  let match$5 = UseLocalStorageJs("my-color", "blue");
+  let setMyColor = match$5[1];
+  let myColor = match$5[0];
+  let match$6 = React.useState(() => false);
+  let setCursorOverlayOff = match$6[1];
+  let cursorOverlayOff = match$6[0];
   let isMouseDown = useIsMouseDown();
-  let match$6 = dims2D(board);
-  let match$7 = dims2D(brush);
-  let brushDimJ = match$7[1];
-  let brushDimI = match$7[0];
+  let match$7 = dims2D(board);
+  let match$8 = dims2D(brush);
+  let brushDimJ = match$8[1];
+  let brushDimI = match$8[0];
   let brushCenterDimI = brushDimI / 2 | 0;
   let brushCenterDimJ = brushDimJ / 2 | 0;
-  let match$8 = dims2D(tileMask);
-  let tileMaskDimJ = match$8[1];
-  let tileMaskDimI = match$8[0];
+  let match$9 = dims2D(tileMask);
+  let tileMaskDimJ = match$9[1];
+  let tileMaskDimI = match$9[0];
   let onMouseMove = param => setCursorOverlayOff(param => false);
   let canApply = (boardI, boardJ, clickI, clickJ) => {
     let brushPosI = (boardI - clickI | 0) + brushCenterDimI | 0;
@@ -123,9 +126,15 @@ function App(props) {
       });
     });
   };
+  let getBrushColor = () => {
+    if (brushMode === "Color") {
+      return myColor;
+    }
+    
+  };
   let applyBrush = (clickI, clickJ) => setBoard(b => b.map((row, boardI) => row.map((cell, boardJ) => {
     if (canApply(boardI, boardJ, clickI, clickJ)) {
-      return myColor;
+      return getBrushColor();
     } else {
       return cell;
     }
@@ -253,12 +262,24 @@ function App(props) {
         className: "border w-fit h-fit",
         style: {
           display: "grid",
-          gridTemplateColumns: "repeat(" + match$6[0].toString() + ", 1rem)",
-          gridTemplateRows: "repeat(" + match$6[1].toString() + ", 1rem)"
+          gridTemplateColumns: "repeat(" + match$7[0].toString() + ", 1rem)",
+          gridTemplateRows: "repeat(" + match$7[1].toString() + ", 1rem)"
         }
       }),
       JsxRuntime.jsxs("div", {
         children: [
+          JsxRuntime.jsxs("div", {
+            children: [
+              JsxRuntime.jsx("button", {
+                children: "Color",
+                onClick: param => setBrushMode(param => "Color")
+              }),
+              JsxRuntime.jsx("button", {
+                children: "Erase",
+                onClick: param => setBrushMode(param => "Erase")
+              })
+            ]
+          }),
           JsxRuntime.jsx(ReactColorful.HexColorPicker, {
             color: myColor,
             onChange: newColor => setMyColor(param => newColor)

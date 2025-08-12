@@ -59,8 +59,12 @@ let useIsMouseDown = () => {
 
 let getOverlayId = (i, j) => "canvas-overlay" ++ i->Int.toString ++ j->Int.toString
 
+type brushMode = | @as("Color") Color | @as("Erase") Erase
+
 @react.component
 let make = () => {
+  let (brushMode, setBrushMode, _) = useLocalStorage("brush-mode", Color)
+
   let (board, setBoard, _) = useLocalStorage("board", defaultBoard)
   let (brush, setBrush, _) = useLocalStorage("brush", defaultBrush)
   let (tileMask, setTileMask, _) = useLocalStorage("tile-mask", defaultTileMask)
@@ -106,12 +110,19 @@ let make = () => {
     )
   }
 
+  let getBrushColor = () => {
+    switch brushMode {
+    | Color => Some(myColor)
+    | Erase => None
+    }
+  }
+
   let applyBrush = (clickI, clickJ) => {
     setBoard(b =>
       b->Array.mapWithIndex((row, boardI) =>
         row->Array.mapWithIndex(
           (cell, boardJ) => {
-            canApply(boardI, boardJ, clickI, clickJ) ? Some(myColor) : cell
+            canApply(boardI, boardJ, clickI, clickJ) ? getBrushColor() : cell
           },
         )
       )
@@ -277,6 +288,10 @@ let make = () => {
       ->React.array}
     </div>
     <div className="flex flex-col gap-5">
+      <div>
+        <button onClick={_ => setBrushMode(_ => Color)}> {"Color"->React.string} </button>
+        <button onClick={_ => setBrushMode(_ => Erase)}> {"Erase"->React.string} </button>
+      </div>
       <HexColorPicker
         color={myColor}
         onChange={newColor => {
