@@ -3,6 +3,7 @@
 import * as React from "react";
 import SwitchJsx from "./Switch.jsx";
 import * as Stdlib_Array from "rescript/lib/es6/Stdlib_Array.js";
+import * as Primitive_int from "rescript/lib/es6/Primitive_int.js";
 import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
 import * as ReactColorful from "react-colorful";
 import * as JsxRuntime from "react/jsx-runtime";
@@ -47,6 +48,8 @@ let defaultBoard = make2D(12, 12, () => {});
 
 let defaultBrush = make2D(3, 3, () => false);
 
+let defaultTileMask = make2D(4, 4, () => true);
+
 function useIsMouseDown() {
   let match = React.useState(() => false);
   let setIsMouseDown = match[1];
@@ -70,20 +73,26 @@ function App(props) {
   let match$1 = UseLocalStorageJs("brush", defaultBrush);
   let setBrush = match$1[1];
   let brush = match$1[0];
-  let match$2 = UseLocalStorageJs("show-cursor-overlay", true);
-  let setShowCursorOverlay = match$2[1];
-  let showCursorOverlay = match$2[0];
-  let match$3 = UseLocalStorageJs("my-color", "blue");
-  let setMyColor = match$3[1];
-  let myColor = match$3[0];
-  let match$4 = React.useState(() => false);
-  let setCursorOverlayOff = match$4[1];
-  let cursoroverlayOff = match$4[0];
+  let match$2 = UseLocalStorageJs("tile-mask", defaultTileMask);
+  let setTileMask = match$2[1];
+  let tileMask = match$2[0];
+  let match$3 = UseLocalStorageJs("show-cursor-overlay", true);
+  let setShowCursorOverlay = match$3[1];
+  let showCursorOverlay = match$3[0];
+  let match$4 = UseLocalStorageJs("my-color", "blue");
+  let setMyColor = match$4[1];
+  let myColor = match$4[0];
+  let match$5 = React.useState(() => false);
+  let setCursorOverlayOff = match$5[1];
+  let cursoroverlayOff = match$5[0];
   let isMouseDown = useIsMouseDown();
-  let match$5 = dims2D(board);
-  let match$6 = dims2D(brush);
-  let brushDimJ = match$6[1];
-  let brushDimI = match$6[0];
+  let match$6 = dims2D(board);
+  let match$7 = dims2D(brush);
+  let brushDimJ = match$7[1];
+  let brushDimI = match$7[0];
+  let match$8 = dims2D(tileMask);
+  let tileMaskDimJ = match$8[1];
+  let tileMaskDimI = match$8[0];
   let onMouseMove = param => setCursorOverlayOff(param => false);
   let applyBrush = (clickI, clickJ) => {
     let brushCenterDimI = brushDimI / 2 | 0;
@@ -91,7 +100,9 @@ function App(props) {
     setBoard(b => b.map((row, boardI) => row.map((cell, boardJ) => {
       let brushPosI = (boardI - clickI | 0) + brushCenterDimI | 0;
       let brushPosJ = (boardJ - clickJ | 0) + brushCenterDimJ | 0;
-      if (Stdlib_Option.getOr(check2D(brush, brushPosI, brushPosJ), false)) {
+      let brushAllows = Stdlib_Option.getOr(check2D(brush, brushPosI, brushPosJ), false);
+      let maskAllows = Stdlib_Option.getOr(check2D(tileMask, Primitive_int.mod_(boardI, tileMaskDimI), Primitive_int.mod_(boardJ, tileMaskDimJ)), false);
+      if (brushAllows && maskAllows) {
         return myColor;
       } else {
         return cell;
@@ -103,46 +114,82 @@ function App(props) {
   }, []);
   return JsxRuntime.jsxs("div", {
     children: [
-      JsxRuntime.jsx("div", {
-        children: brush.map((line, i) => line.map((cell, j) => {
-          let isCursorCenter = (brushDimI / 2 | 0) === i && (brushDimJ / 2 | 0) === j;
-          return JsxRuntime.jsxs("div", {
-            children: [
-              JsxRuntime.jsx("div", {
-                className: "w-full h-full absolute",
-                style: {
-                  backgroundColor: cell ? "#00c3ff" : "transparent"
-                }
-              }),
-              cursoroverlayOff || !showCursorOverlay ? null : JsxRuntime.jsx("div", {
-                  className: "absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20"
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsx("div", {
+            children: tileMask.map((line, i) => line.map((cell, j) => JsxRuntime.jsxs("div", {
+              children: [
+                JsxRuntime.jsx("div", {
+                  className: "w-full h-full absolute",
+                  style: {
+                    backgroundColor: cell ? "#ffa700" : "transparent"
+                  }
                 }),
-              isCursorCenter ? JsxRuntime.jsx("div", {
-                  children: JsxRuntime.jsx("div", {
-                    className: " w-1/2 h-1/2 bg-red-500 rounded-full"
-                  }),
-                  className: "absolute w-full h-full flex flex-row items-center justify-center "
-                }) : null
-            ],
-            className: "w-full h-full group relative ",
-            onClick: param => {
-              setBrush(b => update2D(b, i, j, v => !v));
-              setCursorOverlayOff(param => true);
-            },
-            onMouseEnter: param => {
-              if (isMouseDown) {
-                return setBrush(b => update2D(b, i, j, v => !v));
+                cursoroverlayOff || !showCursorOverlay ? null : JsxRuntime.jsx("div", {
+                    className: "absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20"
+                  })
+              ],
+              className: "w-full h-full group relative ",
+              onClick: param => {
+                setTileMask(b => update2D(b, i, j, v => !v));
+                setCursorOverlayOff(param => true);
+              },
+              onMouseEnter: param => {
+                if (isMouseDown) {
+                  return setTileMask(b => update2D(b, i, j, v => !v));
+                }
+                
               }
-              
+            }, i.toString() + j.toString()))),
+            className: "border w-fit h-fit",
+            style: {
+              display: "grid",
+              gridTemplateColumns: "repeat(" + tileMaskDimI.toString() + ", 1rem)",
+              gridTemplateRows: "repeat(" + tileMaskDimJ.toString() + ", 1rem)"
             }
-          }, i.toString() + j.toString());
-        })),
-        className: "border w-fit h-fit",
-        style: {
-          display: "grid",
-          gridTemplateColumns: "repeat(" + brushDimI.toString() + ", 1rem)",
-          gridTemplateRows: "repeat(" + brushDimJ.toString() + ", 1rem)"
-        }
+          }),
+          JsxRuntime.jsx("div", {
+            children: brush.map((line, i) => line.map((cell, j) => {
+              let isCursorCenter = (brushDimI / 2 | 0) === i && (brushDimJ / 2 | 0) === j;
+              return JsxRuntime.jsxs("div", {
+                children: [
+                  JsxRuntime.jsx("div", {
+                    className: "w-full h-full absolute",
+                    style: {
+                      backgroundColor: cell ? "#00c3ff" : "transparent"
+                    }
+                  }),
+                  cursoroverlayOff || !showCursorOverlay ? null : JsxRuntime.jsx("div", {
+                      className: "absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20"
+                    }),
+                  isCursorCenter ? JsxRuntime.jsx("div", {
+                      children: JsxRuntime.jsx("div", {
+                        className: " w-1/2 h-1/2 bg-red-500 rounded-full"
+                      }),
+                      className: "absolute w-full h-full flex flex-row items-center justify-center "
+                    }) : null
+                ],
+                className: "w-full h-full group relative ",
+                onClick: param => {
+                  setBrush(b => update2D(b, i, j, v => !v));
+                  setCursorOverlayOff(param => true);
+                },
+                onMouseEnter: param => {
+                  if (isMouseDown) {
+                    return setBrush(b => update2D(b, i, j, v => !v));
+                  }
+                  
+                }
+              }, i.toString() + j.toString());
+            })),
+            className: "border w-fit h-fit",
+            style: {
+              display: "grid",
+              gridTemplateColumns: "repeat(" + brushDimI.toString() + ", 1rem)",
+              gridTemplateRows: "repeat(" + brushDimJ.toString() + ", 1rem)"
+            }
+          })
+        ]
       }),
       JsxRuntime.jsx("div", {
         children: board.map((line, i) => line.map((cell, j) => {
@@ -175,8 +222,8 @@ function App(props) {
         className: "border w-fit h-fit",
         style: {
           display: "grid",
-          gridTemplateColumns: "repeat(" + match$5[0].toString() + ", 1rem)",
-          gridTemplateRows: "repeat(" + match$5[1].toString() + ", 1rem)"
+          gridTemplateColumns: "repeat(" + match$6[0].toString() + ", 1rem)",
+          gridTemplateRows: "repeat(" + match$6[1].toString() + ", 1rem)"
         }
       }),
       JsxRuntime.jsxs("div", {

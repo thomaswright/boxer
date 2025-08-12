@@ -32,8 +32,8 @@ module Array = {
 }
 
 let defaultBoard = Array.make2D(12, 12, () => None)
-
 let defaultBrush = Array.make2D(3, 3, () => false)
+let defaultTileMask = Array.make2D(4, 4, () => true)
 
 let useIsMouseDown = () => {
   let (isMouseDown, setIsMouseDown) = React.useState(() => false)
@@ -59,6 +59,8 @@ let useIsMouseDown = () => {
 let make = () => {
   let (board, setBoard, _) = useLocalStorage("board", defaultBoard)
   let (brush, setBrush, _) = useLocalStorage("brush", defaultBrush)
+  let (tileMask, setTileMask, _) = useLocalStorage("tile-mask", defaultTileMask)
+
   let (showCursorOverlay, setShowCursorOverlay, _) = useLocalStorage("show-cursor-overlay", true)
   let (myColor, setMyColor, _) = useLocalStorage("my-color", "blue")
   let (cursoroverlayOff, setCursorOverlayOff) = React.useState(() => false)
@@ -67,6 +69,7 @@ let make = () => {
 
   let (boardDimI, boardDimJ) = board->Array.dims2D
   let (brushDimI, brushDimJ) = brush->Array.dims2D
+  let (tileMaskDimI, tileMaskDimJ) = tileMask->Array.dims2D
 
   let onMouseMove = _ => setCursorOverlayOff(_ => false)
   let applyBrush = (clickI, clickJ) => {
@@ -80,7 +83,16 @@ let make = () => {
             let brushPosI = boardI - clickI + brushCenterDimI
             let brushPosJ = boardJ - clickJ + brushCenterDimJ
 
-            Array.check2D(brush, brushPosI, brushPosJ)->Option.getOr(false) ? Some(myColor) : cell
+            let brushAllows = Array.check2D(brush, brushPosI, brushPosJ)->Option.getOr(false)
+
+            let maskAllows =
+              Array.check2D(
+                tileMask,
+                mod(boardI, tileMaskDimI),
+                mod(boardJ, tileMaskDimJ),
+              )->Option.getOr(false)
+
+            brushAllows && maskAllows ? Some(myColor) : cell
           },
         )
       )
@@ -94,51 +106,95 @@ let make = () => {
   })
 
   <div className=" flex flex-row gap-5">
-    <div
-      className={"border w-fit h-fit"}
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${brushDimI->Int.toString}, 1rem)`,
-        gridTemplateRows: `repeat(${brushDimJ->Int.toString}, 1rem)`,
-      }}>
-      {brush
-      ->Array.mapWithIndex((line, i) => {
-        line
-        ->Array.mapWithIndex((cell, j) => {
-          let isCursorCenter = brushDimI / 2 == i && brushDimJ / 2 == j
-          <div
-            className={"w-full h-full group relative "}
-            key={i->Int.toString ++ j->Int.toString}
-            onMouseEnter={_ => {
-              if isMouseDown {
-                setBrush(b => b->Array.update2D(i, j, v => !v))
-              }
-            }}
-            onClick={_ => {
-              setBrush(b => b->Array.update2D(i, j, v => !v))
-              setCursorOverlayOff(_ => true)
-            }}>
+    <div>
+      <div
+        className={"border w-fit h-fit"}
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${tileMaskDimI->Int.toString}, 1rem)`,
+          gridTemplateRows: `repeat(${tileMaskDimJ->Int.toString}, 1rem)`,
+        }}>
+        {tileMask
+        ->Array.mapWithIndex((line, i) => {
+          line
+          ->Array.mapWithIndex((cell, j) => {
             <div
-              className={"w-full h-full absolute"}
-              style={{
-                backgroundColor: cell ? "#00c3ff" : "transparent",
+              className={"w-full h-full group relative "}
+              key={i->Int.toString ++ j->Int.toString}
+              onMouseEnter={_ => {
+                if isMouseDown {
+                  setTileMask(b => b->Array.update2D(i, j, v => !v))
+                }
               }}
-            />
-            {cursoroverlayOff || !showCursorOverlay
-              ? React.null
-              : <div
-                  className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
-                </div>}
-            {!isCursorCenter
-              ? React.null
-              : <div className="absolute w-full h-full flex flex-row items-center justify-center ">
-                  <div className=" w-1/2 h-1/2 bg-red-500 rounded-full"></div>
-                </div>}
-          </div>
+              onClick={_ => {
+                setTileMask(b => b->Array.update2D(i, j, v => !v))
+                setCursorOverlayOff(_ => true)
+              }}>
+              <div
+                className={"w-full h-full absolute"}
+                style={{
+                  backgroundColor: cell ? "#ffa700" : "transparent",
+                }}
+              />
+              {cursoroverlayOff || !showCursorOverlay
+                ? React.null
+                : <div
+                    className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
+                  </div>}
+            </div>
+          })
+          ->React.array
         })
-        ->React.array
-      })
-      ->React.array}
+        ->React.array}
+      </div>
+
+      <div
+        className={"border w-fit h-fit"}
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${brushDimI->Int.toString}, 1rem)`,
+          gridTemplateRows: `repeat(${brushDimJ->Int.toString}, 1rem)`,
+        }}>
+        {brush
+        ->Array.mapWithIndex((line, i) => {
+          line
+          ->Array.mapWithIndex((cell, j) => {
+            let isCursorCenter = brushDimI / 2 == i && brushDimJ / 2 == j
+            <div
+              className={"w-full h-full group relative "}
+              key={i->Int.toString ++ j->Int.toString}
+              onMouseEnter={_ => {
+                if isMouseDown {
+                  setBrush(b => b->Array.update2D(i, j, v => !v))
+                }
+              }}
+              onClick={_ => {
+                setBrush(b => b->Array.update2D(i, j, v => !v))
+                setCursorOverlayOff(_ => true)
+              }}>
+              <div
+                className={"w-full h-full absolute"}
+                style={{
+                  backgroundColor: cell ? "#00c3ff" : "transparent",
+                }}
+              />
+              {cursoroverlayOff || !showCursorOverlay
+                ? React.null
+                : <div
+                    className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
+                  </div>}
+              {!isCursorCenter
+                ? React.null
+                : <div
+                    className="absolute w-full h-full flex flex-row items-center justify-center ">
+                    <div className=" w-1/2 h-1/2 bg-red-500 rounded-full"></div>
+                  </div>}
+            </div>
+          })
+          ->React.array
+        })
+        ->React.array}
+      </div>
     </div>
 
     <div
