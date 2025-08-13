@@ -2,10 +2,12 @@
 
 import * as React from "react";
 import SwitchJsx from "./Switch.jsx";
+import * as Color from "@texel/color";
 import * as Stdlib_Array from "rescript/lib/es6/Stdlib_Array.js";
 import * as Primitive_int from "rescript/lib/es6/Primitive_int.js";
 import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
 import * as ReactColorful from "react-colorful";
+import * as Stdlib_Nullable from "rescript/lib/es6/Stdlib_Nullable.js";
 import * as Primitive_option from "rescript/lib/es6/Primitive_option.js";
 import * as JsxRuntime from "react/jsx-runtime";
 import UseLocalStorageJs from "./useLocalStorage.js";
@@ -45,7 +47,7 @@ function check2D(a, i, j) {
   return Stdlib_Option.flatMap(a[i], row => row[j]);
 }
 
-let defaultBoard = make2D(12, 12, () => {});
+let defaultBoard = make2D(12, 12, () => null);
 
 let defaultBrush = make2D(3, 3, () => false);
 
@@ -69,6 +71,11 @@ function useIsMouseDown() {
 
 function getOverlayId(i, j) {
   return "canvas-overlay" + i.toString() + j.toString();
+}
+
+function isLight(color) {
+  let match = Color.convert(Color.hexToRGB(color), Color.sRGB, Color.OKHSL);
+  return match[2] > 0.5;
 }
 
 function App(props) {
@@ -129,8 +136,9 @@ function App(props) {
   let getBrushColor = () => {
     if (brushMode === "Color") {
       return myColor;
+    } else {
+      return null;
     }
-    
   };
   let applyBrush = (clickI, clickJ) => setBoard(b => b.map((row, boardI) => row.map((cell, boardJ) => {
     if (canApply(boardI, boardJ, clickI, clickJ)) {
@@ -142,6 +150,7 @@ function App(props) {
   React.useEffect(() => {
     window.addEventListener("mousemove", onMouseMove);
   }, []);
+  console.log(board);
   return JsxRuntime.jsxs("div", {
     children: [
       JsxRuntime.jsxs("div", {
@@ -223,7 +232,14 @@ function App(props) {
       }),
       JsxRuntime.jsx("div", {
         children: board.map((line, i) => line.map((cell, j) => {
-          let backgroundColor = Stdlib_Option.getOr(cell, "transparent");
+          let backgroundColor = Stdlib_Nullable.getOr(cell, "transparent");
+          let overlayBackgroundColor = Stdlib_Nullable.mapOr(cell, "black", v => {
+            if (isLight(v)) {
+              return "black";
+            } else {
+              return "white";
+            }
+          });
           return JsxRuntime.jsxs("div", {
             children: [
               JsxRuntime.jsx("div", {
@@ -233,9 +249,10 @@ function App(props) {
                 }
               }),
               cursorOverlayOff || !showCursorOverlay ? null : JsxRuntime.jsx("div", {
-                  className: "absolute w-full h-full inset-0 bg-black opacity-20",
+                  className: "absolute w-full h-full inset-0 opacity-20",
                   id: getOverlayId(i, j),
                   style: {
+                    backgroundColor: overlayBackgroundColor,
                     display: "none"
                   }
                 })

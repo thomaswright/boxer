@@ -31,7 +31,9 @@ module Array = {
   }
 }
 
-let defaultBoard = Array.make2D(12, 12, () => None)
+type brushMode = | @as("Color") Color | @as("Erase") Erase
+
+let defaultBoard = Array.make2D(12, 12, () => Nullable.null)
 let defaultBrush = Array.make2D(3, 3, () => false)
 let defaultTileMask = Array.make2D(4, 4, () => true)
 
@@ -59,7 +61,10 @@ let useIsMouseDown = () => {
 
 let getOverlayId = (i, j) => "canvas-overlay" ++ i->Int.toString ++ j->Int.toString
 
-type brushMode = | @as("Color") Color | @as("Erase") Erase
+let isLight = color => {
+  let (_, _, l) = Texel.convert(color->Texel.hexToRgb, Texel.srgb, Texel.okhsl)
+  l > 0.5
+}
 
 @react.component
 let make = () => {
@@ -112,8 +117,8 @@ let make = () => {
 
   let getBrushColor = () => {
     switch brushMode {
-    | Color => Some(myColor)
-    | Erase => None
+    | Color => Nullable.Value(myColor)
+    | Erase => Nullable.null
     }
   }
 
@@ -134,7 +139,7 @@ let make = () => {
 
     None
   })
-
+  Console.log(board)
   <div className=" flex flex-row gap-5">
     <div>
       <div
@@ -238,7 +243,10 @@ let make = () => {
       ->Array.mapWithIndex((line, i) => {
         line
         ->Array.mapWithIndex((cell, j) => {
-          let backgroundColor = cell->Option.getOr("transparent")
+          let backgroundColor = cell->Nullable.getOr("transparent")
+          let overlayBackgroundColor =
+            cell->Nullable.mapOr("black", v => v->isLight ? "black" : "white")
+
           <div
             className={"w-full h-full group relative"}
             key={i->Int.toString ++ j->Int.toString}
@@ -277,9 +285,12 @@ let make = () => {
             {cursorOverlayOff || !showCursorOverlay
               ? React.null
               : <div
-                  style={{display: "none"}}
+                  style={{
+                    display: "none",
+                    backgroundColor: overlayBackgroundColor,
+                  }}
                   id={getOverlayId(i, j)}
-                  className="absolute w-full h-full inset-0 bg-black opacity-20">
+                  className="absolute w-full h-full inset-0 opacity-20">
                 </div>}
           </div>
         })
