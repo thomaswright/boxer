@@ -150,7 +150,6 @@ function App(props) {
   React.useEffect(() => {
     window.addEventListener("mousemove", onMouseMove);
   }, []);
-  console.log(board);
   return JsxRuntime.jsxs("div", {
     children: [
       JsxRuntime.jsxs("div", {
@@ -169,7 +168,7 @@ function App(props) {
                   })
               ],
               className: "w-full h-full group relative ",
-              onClick: param => {
+              onMouseDown: param => {
                 setTileMask(b => update2D(b, i, j, v => !v));
                 setCursorOverlayOff(param => true);
               },
@@ -209,7 +208,7 @@ function App(props) {
                     }) : null
                 ],
                 className: "w-full h-full group relative ",
-                onClick: param => {
+                onMouseDown: param => {
                   setBrush(b => update2D(b, i, j, v => !v));
                   setCursorOverlayOff(param => true);
                 },
@@ -258,7 +257,7 @@ function App(props) {
                 })
             ],
             className: "w-full h-full group relative",
-            onClick: param => {
+            onMouseDown: param => {
               applyBrush(i, j);
               setCursorOverlayOff(param => true);
             },

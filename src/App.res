@@ -139,7 +139,6 @@ let make = () => {
 
     None
   })
-  Console.log(board)
   <div className=" flex flex-row gap-5">
     <div>
       <div
@@ -161,7 +160,7 @@ let make = () => {
                   setTileMask(b => b->Array.update2D(i, j, v => !v))
                 }
               }}
-              onClick={_ => {
+              onMouseDown={_ => {
                 setTileMask(b => b->Array.update2D(i, j, v => !v))
                 setCursorOverlayOff(_ => true)
               }}>
@@ -203,7 +202,7 @@ let make = () => {
                   setBrush(b => b->Array.update2D(i, j, v => !v))
                 }
               }}
-              onClick={_ => {
+              onMouseDown={_ => {
                 setBrush(b => b->Array.update2D(i, j, v => !v))
                 setCursorOverlayOff(_ => true)
               }}>
@@ -272,7 +271,7 @@ let make = () => {
                 },
               )
             }}
-            onClick={_ => {
+            onMouseDown={_ => {
               applyBrush(i, j)
               setCursorOverlayOff(_ => true)
             }}>
