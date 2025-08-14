@@ -17,4 +17,8 @@
   --color-rescript-900: oklch(31% 0.09 27);
   --color-rescript-950: oklch(23% 0.06 27);
   --font-inter: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --text-2xs: 0.7rem;
+  --text-2xs--line-height: 0.85rem;
+  --text-3xs: 0.6rem;
+  --text-3xs--line-height: 0.75rem;
 }

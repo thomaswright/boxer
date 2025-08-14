@@ -47,12 +47,6 @@ function check2D(a, i, j) {
   return Stdlib_Option.flatMap(a[i], row => row[j]);
 }
 
-let defaultBoard = make2D(12, 12, () => null);
-
-let defaultBrush = make2D(3, 3, () => false);
-
-let defaultTileMask = make2D(4, 4, () => true);
-
 function useIsMouseDown() {
   let match = React.useState(() => false);
   let setIsMouseDown = match[1];
@@ -78,38 +72,153 @@ function isLight(color) {
   return match[2] > 0.5;
 }
 
+let defaultTileMasks = [
+  [
+    [
+      true,
+      false
+    ],
+    [
+      false,
+      true
+    ]
+  ],
+  [
+    [
+      false,
+      true
+    ],
+    [
+      true,
+      false
+    ]
+  ],
+  [
+    [
+      false,
+      true
+    ],
+    [
+      false,
+      true
+    ]
+  ],
+  [
+    [
+      true,
+      false
+    ],
+    [
+      true,
+      false
+    ]
+  ],
+  [
+    [
+      false,
+      false
+    ],
+    [
+      true,
+      true
+    ]
+  ],
+  [
+    [
+      true,
+      true
+    ],
+    [
+      false,
+      false
+    ]
+  ],
+  [
+    [
+      true,
+      false
+    ],
+    [
+      false,
+      false
+    ]
+  ],
+  [
+    [
+      false,
+      true
+    ],
+    [
+      false,
+      false
+    ]
+  ],
+  [
+    [
+      false,
+      false
+    ],
+    [
+      true,
+      false
+    ]
+  ],
+  [
+    [
+      false,
+      false
+    ],
+    [
+      false,
+      true
+    ]
+  ]
+];
+
+let defaultBrushes = [
+  make2D(1, 1, () => true),
+  make2D(2, 2, () => true),
+  make2D(3, 3, () => true),
+  make2D(4, 4, () => true),
+  make2D(8, 8, () => true),
+  make2D(12, 12, () => true),
+  make2D(16, 16, () => true)
+];
+
 function App(props) {
   let match = UseLocalStorageJs("brush-mode", "Color");
   let setBrushMode = match[1];
   let brushMode = match[0];
-  let match$1 = UseLocalStorageJs("board", defaultBoard);
+  let match$1 = UseLocalStorageJs("board", make2D(12, 12, () => null));
   let setBoard = match$1[1];
   let board = match$1[0];
-  let match$2 = UseLocalStorageJs("brush", defaultBrush);
+  let match$2 = UseLocalStorageJs("brush", make2D(3, 3, () => true));
   let setBrush = match$2[1];
   let brush = match$2[0];
-  let match$3 = UseLocalStorageJs("tile-mask", defaultTileMask);
-  let setTileMask = match$3[1];
-  let tileMask = match$3[0];
-  let match$4 = UseLocalStorageJs("show-cursor-overlay", true);
-  let setShowCursorOverlay = match$4[1];
-  let showCursorOverlay = match$4[0];
-  let match$5 = UseLocalStorageJs("my-color", "blue");
-  let setMyColor = match$5[1];
-  let myColor = match$5[0];
-  let match$6 = React.useState(() => false);
-  let setCursorOverlayOff = match$6[1];
-  let cursorOverlayOff = match$6[0];
+  let match$3 = UseLocalStorageJs("saved-brushes", defaultBrushes);
+  let match$4 = UseLocalStorageJs("saved-tile-masks", defaultTileMasks);
+  let match$5 = UseLocalStorageJs("tile-mask", make2D(4, 4, () => true));
+  let setTileMask = match$5[1];
+  let tileMask = match$5[0];
+  let match$6 = UseLocalStorageJs("show-cursor-overlay", true);
+  let setShowCursorOverlay = match$6[1];
+  let showCursorOverlay = match$6[0];
+  let match$7 = UseLocalStorageJs("my-color", "blue");
+  let setMyColor = match$7[1];
+  let myColor = match$7[0];
+  let match$8 = React.useState(() => false);
+  let setCursorOverlayOff = match$8[1];
+  let cursorOverlayOff = match$8[0];
   let isMouseDown = useIsMouseDown();
-  let match$7 = dims2D(board);
-  let match$8 = dims2D(brush);
-  let brushDimJ = match$8[1];
-  let brushDimI = match$8[0];
+  let match$9 = dims2D(board);
+  let match$10 = dims2D(brush);
+  let brushDimJ = match$10[1];
+  let brushDimI = match$10[0];
   let brushCenterDimI = brushDimI / 2 | 0;
   let brushCenterDimJ = brushDimJ / 2 | 0;
-  let match$9 = dims2D(tileMask);
-  let tileMaskDimJ = match$9[1];
-  let tileMaskDimI = match$9[0];
+  let match$11 = dims2D(tileMask);
+  let tileMaskDimJ = match$11[1];
+  let tileMaskDimI = match$11[0];
   let onMouseMove = param => setCursorOverlayOff(param => false);
   let canApply = (boardI, boardJ, clickI, clickJ) => {
     let brushPosI = (boardI - clickI | 0) + brushCenterDimI | 0;
@@ -155,38 +264,6 @@ function App(props) {
       JsxRuntime.jsxs("div", {
         children: [
           JsxRuntime.jsx("div", {
-            children: tileMask.map((line, i) => line.map((cell, j) => JsxRuntime.jsxs("div", {
-              children: [
-                JsxRuntime.jsx("div", {
-                  className: "w-full h-full absolute",
-                  style: {
-                    backgroundColor: cell ? "#ffa700" : "transparent"
-                  }
-                }),
-                cursorOverlayOff || !showCursorOverlay ? null : JsxRuntime.jsx("div", {
-                    className: "absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20"
-                  })
-              ],
-              className: "w-full h-full group relative ",
-              onMouseDown: param => {
-                setTileMask(b => update2D(b, i, j, v => !v));
-                setCursorOverlayOff(param => true);
-              },
-              onMouseEnter: param => {
-                if (isMouseDown) {
-                  return setTileMask(b => update2D(b, i, j, v => !v));
-                }
-                
-              }
-            }, i.toString() + j.toString()))),
-            className: "border w-fit h-fit",
-            style: {
-              display: "grid",
-              gridTemplateColumns: "repeat(" + tileMaskDimI.toString() + ", 1rem)",
-              gridTemplateRows: "repeat(" + tileMaskDimJ.toString() + ", 1rem)"
-            }
-          }),
-          JsxRuntime.jsx("div", {
             children: brush.map((line, i) => line.map((cell, j) => {
               let isCursorCenter = (brushDimI / 2 | 0) === i && (brushDimJ / 2 | 0) === j;
               return JsxRuntime.jsxs("div", {
@@ -220,14 +297,99 @@ function App(props) {
                 }
               }, i.toString() + j.toString());
             })),
-            className: "border w-fit h-fit",
+            className: "border w-20 h-20",
             style: {
               display: "grid",
-              gridTemplateColumns: "repeat(" + brushDimI.toString() + ", 1rem)",
-              gridTemplateRows: "repeat(" + brushDimJ.toString() + ", 1rem)"
+              gridTemplateColumns: "repeat(" + brushDimI.toString() + ", auto)",
+              gridTemplateRows: "repeat(" + brushDimJ.toString() + ", auto)"
             }
+          }),
+          JsxRuntime.jsx("div", {
+            children: match$3[0].map(savedBrush => {
+              let match = dims2D(savedBrush);
+              let dimJ = match[1];
+              let dimI = match[0];
+              return JsxRuntime.jsxs("div", {
+                children: [
+                  JsxRuntime.jsx("div", {
+                    children: dimI.toString() + ":" + dimJ.toString(),
+                    className: " text-3xs font-bold border border-b-0 w-8 text-center"
+                  }),
+                  JsxRuntime.jsx("button", {
+                    children: savedBrush.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
+                      className: "w-full h-full ",
+                      style: {
+                        backgroundColor: cell ? "#00c3ff" : "transparent"
+                      }
+                    }, i.toString() + j.toString()))),
+                    className: "h-8 w-8 border",
+                    style: {
+                      display: "grid",
+                      gridTemplateColumns: "repeat(" + dimI.toString() + ", auto)",
+                      gridTemplateRows: "repeat(" + dimJ.toString() + ", auto)"
+                    },
+                    onClick: param => setBrush(param => savedBrush)
+                  })
+                ]
+              });
+            }),
+            className: "flex flex-row flex-wrap gap-1 w-32"
+          }),
+          JsxRuntime.jsx("div", {
+            children: tileMask.map((line, i) => line.map((cell, j) => JsxRuntime.jsxs("div", {
+              children: [
+                JsxRuntime.jsx("div", {
+                  className: "w-full h-full absolute",
+                  style: {
+                    backgroundColor: cell ? "#ffa700" : "transparent"
+                  }
+                }),
+                cursorOverlayOff || !showCursorOverlay ? null : JsxRuntime.jsx("div", {
+                    className: "absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20"
+                  })
+              ],
+              className: "w-full h-full group relative ",
+              onMouseDown: param => {
+                setTileMask(b => update2D(b, i, j, v => !v));
+                setCursorOverlayOff(param => true);
+              },
+              onMouseEnter: param => {
+                if (isMouseDown) {
+                  return setTileMask(b => update2D(b, i, j, v => !v));
+                }
+                
+              }
+            }, i.toString() + j.toString()))),
+            className: "border w-20 h-20",
+            style: {
+              display: "grid",
+              gridTemplateColumns: "repeat(" + tileMaskDimI.toString() + ", auto)",
+              gridTemplateRows: "repeat(" + tileMaskDimJ.toString() + ", auto)"
+            }
+          }),
+          JsxRuntime.jsx("div", {
+            children: match$4[0].map(savedTileMask => {
+              let match = dims2D(savedTileMask);
+              return JsxRuntime.jsx("button", {
+                children: savedTileMask.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
+                  className: "w-full h-full ",
+                  style: {
+                    backgroundColor: cell ? "#ffa700" : "transparent"
+                  }
+                }, i.toString() + j.toString()))),
+                className: "h-5 w-5 border",
+                style: {
+                  display: "grid",
+                  gridTemplateColumns: "repeat(" + match[0].toString() + ", auto)",
+                  gridTemplateRows: "repeat(" + match[1].toString() + ", auto)"
+                },
+                onClick: param => setTileMask(param => savedTileMask)
+              });
+            }),
+            className: "flex flex-row flex-wrap gap-1 w-20"
           })
-        ]
+        ],
+        className: "flex flex-row gap-2"
       }),
       JsxRuntime.jsx("div", {
         children: board.map((line, i) => line.map((cell, j) => {
@@ -278,8 +440,8 @@ function App(props) {
         className: "border w-fit h-fit",
         style: {
           display: "grid",
-          gridTemplateColumns: "repeat(" + match$7[0].toString() + ", 1rem)",
-          gridTemplateRows: "repeat(" + match$7[1].toString() + ", 1rem)"
+          gridTemplateColumns: "repeat(" + match$9[0].toString() + ", 1rem)",
+          gridTemplateRows: "repeat(" + match$9[1].toString() + ", 1rem)"
         }
       }),
       JsxRuntime.jsxs("div", {
@@ -325,7 +487,7 @@ function App(props) {
         className: "flex flex-col gap-2"
       })
     ],
-    className: " flex flex-row gap-5"
+    className: " flex flex-col gap-5 p-5"
   });
 }
 

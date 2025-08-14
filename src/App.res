@@ -30,12 +30,14 @@ module Array = {
     a->Array.get(i)->Option.flatMap(row => row->Array.get(j))
   }
 }
-
+type brush = array<array<bool>>
 type brushMode = | @as("Color") Color | @as("Erase") Erase
 
-let defaultBoard = Array.make2D(12, 12, () => Nullable.null)
-let defaultBrush = Array.make2D(3, 3, () => false)
-let defaultTileMask = Array.make2D(4, 4, () => true)
+// type toolTray = | @as("Hidden") Hidden | @as("Brush") Brush | @as("TileMask") TileMask
+
+let makeBoard = (i, j) => Array.make2D(i, j, () => Nullable.null)
+let makeBrush = (i, j) => Array.make2D(i, j, () => true)
+let makeTileMask = (i, j) => Array.make2D(i, j, () => true)
 
 let useIsMouseDown = () => {
   let (isMouseDown, setIsMouseDown) = React.useState(() => false)
@@ -66,13 +68,58 @@ let isLight = color => {
   l > 0.5
 }
 
+type tileMask = {
+  name: string,
+  value: array<array<bool>>,
+}
+
+let defaultTileMasks = [
+  [[true, false], [false, true]],
+  [[false, true], [true, false]],
+  [[false, true], [false, true]],
+  [[true, false], [true, false]],
+  [[false, false], [true, true]],
+  [[true, true], [false, false]],
+  [[true, false], [false, false]],
+  [[false, true], [false, false]],
+  [[false, false], [true, false]],
+  [[false, false], [false, true]],
+]
+
+let defaultBrushes = [
+  makeBrush(1, 1),
+  makeBrush(2, 2),
+  makeBrush(3, 3),
+  makeBrush(4, 4),
+  makeBrush(8, 8),
+  makeBrush(12, 12),
+  makeBrush(16, 16),
+]
+
+//  <div>
+//           {[1, 2, 3, 4, 5, 8, 12, 16, 24]
+//           ->Array.map(dim => {
+//             let dimString = dim->Int.toString
+//             <button
+//               onClick={_ => setBrush(_ => makeBrush(dim, dim))}
+//               className={"px-1 bg-gray-300 rounded text-xs"}>
+//               {`${dimString}`->React.string}
+//             </button>
+//           })
+//           ->React.array}
+//         </div>
+
 @react.component
 let make = () => {
   let (brushMode, setBrushMode, _) = useLocalStorage("brush-mode", Color)
+  // let (toolTrayMode, setToolTrayMode, _) = useLocalStorage("tool-tray-mode", Brush)
 
-  let (board, setBoard, _) = useLocalStorage("board", defaultBoard)
-  let (brush, setBrush, _) = useLocalStorage("brush", defaultBrush)
-  let (tileMask, setTileMask, _) = useLocalStorage("tile-mask", defaultTileMask)
+  let (board, setBoard, _) = useLocalStorage("board", makeBoard(12, 12))
+  let (brush, setBrush, _) = useLocalStorage("brush", makeBrush(3, 3))
+  let (savedBrushes, setSavedBrushes, _) = useLocalStorage("saved-brushes", defaultBrushes)
+  let (savedTileMasks, setSavedTileMasks, _) = useLocalStorage("saved-tile-masks", defaultTileMasks)
+
+  let (tileMask, setTileMask, _) = useLocalStorage("tile-mask", makeTileMask(4, 4))
 
   let (showCursorOverlay, setShowCursorOverlay, _) = useLocalStorage("show-cursor-overlay", true)
   let (myColor, setMyColor, _) = useLocalStorage("my-color", "blue")
@@ -139,55 +186,14 @@ let make = () => {
 
     None
   })
-  <div className=" flex flex-row gap-5">
-    <div>
+  <div className=" flex flex-col gap-5 p-5">
+    <div className="flex flex-row gap-2">
       <div
-        className={"border w-fit h-fit"}
+        className={"border w-20 h-20"}
         style={{
           display: "grid",
-          gridTemplateColumns: `repeat(${tileMaskDimI->Int.toString}, 1rem)`,
-          gridTemplateRows: `repeat(${tileMaskDimJ->Int.toString}, 1rem)`,
-        }}>
-        {tileMask
-        ->Array.mapWithIndex((line, i) => {
-          line
-          ->Array.mapWithIndex((cell, j) => {
-            <div
-              className={"w-full h-full group relative "}
-              key={i->Int.toString ++ j->Int.toString}
-              onMouseEnter={_ => {
-                if isMouseDown {
-                  setTileMask(b => b->Array.update2D(i, j, v => !v))
-                }
-              }}
-              onMouseDown={_ => {
-                setTileMask(b => b->Array.update2D(i, j, v => !v))
-                setCursorOverlayOff(_ => true)
-              }}>
-              <div
-                className={"w-full h-full absolute"}
-                style={{
-                  backgroundColor: cell ? "#ffa700" : "transparent",
-                }}
-              />
-              {cursorOverlayOff || !showCursorOverlay
-                ? React.null
-                : <div
-                    className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
-                  </div>}
-            </div>
-          })
-          ->React.array
-        })
-        ->React.array}
-      </div>
-
-      <div
-        className={"border w-fit h-fit"}
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${brushDimI->Int.toString}, 1rem)`,
-          gridTemplateRows: `repeat(${brushDimJ->Int.toString}, 1rem)`,
+          gridTemplateColumns: `repeat(${brushDimI->Int.toString}, auto)`,
+          gridTemplateRows: `repeat(${brushDimJ->Int.toString}, auto)`,
         }}>
         {brush
         ->Array.mapWithIndex((line, i) => {
@@ -229,7 +235,128 @@ let make = () => {
         })
         ->React.array}
       </div>
+      <div className={"flex flex-row flex-wrap gap-1 w-32"}>
+        {savedBrushes
+        ->Array.map(savedBrush => {
+          let (dimI, dimJ) = savedBrush->Array.dims2D
+          <div>
+            <div className={" text-3xs font-bold border border-b-0 w-8 text-center"}>
+              {`${dimI->Int.toString}:${dimJ->Int.toString}`->React.string}
+            </div>
+
+            <button
+              onClick={_ => setBrush(_ => savedBrush)}
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${dimI->Int.toString}, auto)`,
+                gridTemplateRows: `repeat(${dimJ->Int.toString}, auto)`,
+              }}
+              className={"h-8 w-8 border"}>
+              {savedBrush
+              ->Array.mapWithIndex((line, i) => {
+                line
+                ->Array.mapWithIndex(
+                  (cell, j) => {
+                    <div
+                      className={"w-full h-full "}
+                      key={i->Int.toString ++ j->Int.toString}
+                      style={{
+                        backgroundColor: cell ? "#00c3ff" : "transparent",
+                      }}>
+                    </div>
+                  },
+                )
+                ->React.array
+              })
+              ->React.array}
+            </button>
+          </div>
+        })
+        ->React.array}
+      </div>
+      <div
+        className={"border w-20 h-20"}
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${tileMaskDimI->Int.toString}, auto)`,
+          gridTemplateRows: `repeat(${tileMaskDimJ->Int.toString}, auto)`,
+        }}>
+        {tileMask
+        ->Array.mapWithIndex((line, i) => {
+          line
+          ->Array.mapWithIndex((cell, j) => {
+            <div
+              className={"w-full h-full group relative "}
+              key={i->Int.toString ++ j->Int.toString}
+              onMouseEnter={_ => {
+                if isMouseDown {
+                  setTileMask(b => b->Array.update2D(i, j, v => !v))
+                }
+              }}
+              onMouseDown={_ => {
+                setTileMask(b => b->Array.update2D(i, j, v => !v))
+                setCursorOverlayOff(_ => true)
+              }}>
+              <div
+                className={"w-full h-full absolute"}
+                style={{
+                  backgroundColor: cell ? "#ffa700" : "transparent",
+                }}
+              />
+              {cursorOverlayOff || !showCursorOverlay
+                ? React.null
+                : <div
+                    className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
+                  </div>}
+            </div>
+          })
+          ->React.array
+        })
+        ->React.array}
+      </div>
+
+      <div className={"flex flex-row flex-wrap gap-1 w-20"}>
+        {savedTileMasks
+        ->Array.map(savedTileMask => {
+          let (dimI, dimJ) = savedTileMask->Array.dims2D
+          <button
+            onClick={_ => setTileMask(_ => savedTileMask)}
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${dimI->Int.toString}, auto)`,
+              gridTemplateRows: `repeat(${dimJ->Int.toString}, auto)`,
+            }}
+            className={"h-5 w-5 border"}>
+            {savedTileMask
+            ->Array.mapWithIndex((line, i) => {
+              line
+              ->Array.mapWithIndex(
+                (cell, j) => {
+                  <div
+                    className={"w-full h-full "}
+                    key={i->Int.toString ++ j->Int.toString}
+                    style={{
+                      backgroundColor: cell ? "#ffa700" : "transparent",
+                    }}>
+                  </div>
+                },
+              )
+              ->React.array
+            })
+            ->React.array}
+          </button>
+        })
+        ->React.array}
+      </div>
     </div>
+
+    // <div>
+    //   {switch toolTrayMode {
+    //   | Hidden => React.null
+    //   | Brush => "Brush"->React.string
+    //   | TileMask => "TileMask"->React.string
+    //   }}
+    // </div>
 
     <div
       className={"border w-fit h-fit"}
