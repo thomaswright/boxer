@@ -127,16 +127,22 @@ let make = () => {
   zoomRef.current = zoom
 
   let clampZoom = value => {
-    let cappedMax = if value > 4. { 4. } else { value }
-    if cappedMax < 0.25 { 0.25 } else { cappedMax }
+    let cappedMax = if value > 4. {
+      4.
+    } else {
+      value
+    }
+    if cappedMax < 0.25 {
+      0.25
+    } else {
+      cappedMax
+    }
   }
 
-  let adjustZoomByFactor = factor =>
-    setZoom(prev => clampZoom(prev *. factor))
+  let adjustZoomByFactor = factor => setZoom(prev => clampZoom(prev *. factor))
 
   let (pan, setPan) = React.useState(() => (0., 0.))
-  let adjustPan = (deltaX, deltaY) =>
-    setPan(((prevX, prevY)) => (prevX +. deltaX, prevY +. deltaY))
+  let adjustPan = (deltaX, deltaY) => setPan(((prevX, prevY)) => (prevX +. deltaX, prevY +. deltaY))
 
   let isMouseDown = useIsMouseDown()
 
@@ -319,13 +325,13 @@ let make = () => {
           adjustPan(0., step)
         | "ArrowDown" =>
           event->KeyboardEvent.preventDefault
-          adjustPan(0., -. step)
+          adjustPan(0., -.step)
         | "ArrowLeft" =>
           event->KeyboardEvent.preventDefault
           adjustPan(step, 0.)
         | "ArrowRight" =>
           event->KeyboardEvent.preventDefault
-          adjustPan(-. step, 0.)
+          adjustPan(-.step, 0.)
         | _ => ()
         }
       }
@@ -353,8 +359,12 @@ let make = () => {
     let offsetXString = offsetX->Js.Float.toString
     let offsetYString = offsetY->Js.Float.toString
     let zoomString = zoom->Js.Float.toString
-    "translate3d(" ++ offsetXString ++ "px, " ++ offsetYString ++ "px, 0) scale("
-    ++ zoomString ++ ")"
+    "translate3d(" ++
+    offsetXString ++
+    "px, " ++
+    offsetYString ++
+    "px, 0) scale(" ++
+    zoomString ++ ")"
   }
   <div className=" flex flex-row gap-5 p-5">
     <div className="flex flex-row h-lg">
@@ -499,7 +509,7 @@ let make = () => {
         }}
         onWheel={handleCanvasWheel}>
         <div
-          className={"absolute top-0 left-0"}
+          className={"absolute top-0 left-0 border"}
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${boardDimI->Int.toString}, 1rem)`,

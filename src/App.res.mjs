@@ -561,7 +561,7 @@ function App(props) {
                   onMouseLeave: param => setHoveredCell(param => {})
                 }, i.toString() + j.toString());
               })),
-              className: "absolute top-0 left-0",
+              className: "absolute top-0 left-0 border",
               style: {
                 display: "grid",
                 gridTemplateColumns: "repeat(" + boardDimI.toString() + ", 1rem)",
