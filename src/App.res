@@ -199,6 +199,29 @@ let make = () => {
 
   let canDeleteCanvas = canvasCount > 1
 
+  let selectedSavedBrushIndex =
+    savedBrushes->Belt.Array.getIndexBy(savedBrush => Array.isEqual2D(savedBrush, brush))
+
+  let selectedSavedTileMaskIndex =
+    savedTileMasks->Belt.Array.getIndexBy(savedTileMask => Array.isEqual2D(savedTileMask, tileMask))
+
+  let canDeleteSelectedBrush = selectedSavedBrushIndex->Option.isSome
+  let canDeleteSelectedTileMask = selectedSavedTileMaskIndex->Option.isSome
+
+  let handleDeleteSelectedBrush = () =>
+    switch selectedSavedBrushIndex {
+    | Some(selectedIndex) =>
+      setSavedBrushes(prev => prev->Belt.Array.keepWithIndex((_, idx) => idx != selectedIndex))
+    | None => ()
+    }
+
+  let handleDeleteSelectedTileMask = () =>
+    switch selectedSavedTileMaskIndex {
+    | Some(selectedIndex) =>
+      setSavedTileMasks(prev => prev->Belt.Array.keepWithIndex((_, idx) => idx != selectedIndex))
+    | None => ()
+    }
+
   let handleAddCanvas = () => {
     let newCanvas = makeBoard(boardDimI, boardDimJ)
     setCanvases(prev => prev->Array.concat([newCanvas]))
@@ -315,6 +338,7 @@ let make = () => {
         {savedTileMasks
         ->Array.map(savedTileMask => {
           let (dimI, dimJ) = savedTileMask->Array.dims2D
+          let selected = Array.isEqual2D(tileMask, savedTileMask)
           <button
             onClick={_ => setTileMask(_ => savedTileMask)}
             style={{
@@ -322,7 +346,10 @@ let make = () => {
               gridTemplateColumns: `repeat(${dimI->Int.toString}, auto)`,
               gridTemplateRows: `repeat(${dimJ->Int.toString}, auto)`,
             }}
-            className={"h-5 w-5 border"}>
+            className={[
+              "h-5 w-5 border",
+              selected ? "bg-orange-100 border-orange-500" : "border-gray-200",
+            ]->Array.join(" ")}>
             {savedTileMask
             ->Array.mapWithIndex((line, i) => {
               line
@@ -344,6 +371,31 @@ let make = () => {
         })
         ->React.array}
       </div>
+    </div>
+
+    <div className="flex flex-row gap-2">
+      <button
+        className={[
+          "rounded px-2 h-fit w-fit",
+          canDeleteSelectedBrush
+            ? "bg-red-500 text-white"
+            : "bg-gray-200 text-gray-500 cursor-not-allowed",
+        ]->Array.join(" ")}
+        disabled={!canDeleteSelectedBrush}
+        onClick={_ => handleDeleteSelectedBrush()}>
+        {"delete selected brush"->React.string}
+      </button>
+      <button
+        className={[
+          "rounded px-2 h-fit w-fit",
+          canDeleteSelectedTileMask
+            ? "bg-red-500 text-white"
+            : "bg-gray-200 text-gray-500 cursor-not-allowed",
+        ]->Array.join(" ")}
+        disabled={!canDeleteSelectedTileMask}
+        onClick={_ => handleDeleteSelectedTileMask()}>
+        {"delete selected tile mask"->React.string}
+      </button>
     </div>
 
     <button

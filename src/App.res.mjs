@@ -169,8 +169,10 @@ function App(props) {
   let brush = match$3[0];
   let match$4 = UseLocalStorageJs("saved-brushes", defaultBrushes);
   let setSavedBrushes = match$4[1];
+  let savedBrushes = match$4[0];
   let match$5 = UseLocalStorageJs("saved-tile-masks", defaultTileMasks);
   let setSavedTileMasks = match$5[1];
+  let savedTileMasks = match$5[0];
   let match$6 = UseLocalStorageJs("tile-mask", make2D(4, 4, () => true));
   let setTileMask = match$6[1];
   let tileMask = match$6[0];
@@ -254,6 +256,22 @@ function App(props) {
   let match$18 = parsePositiveInt(resizeColsInput);
   let canSubmitResize = match$17 !== undefined && match$18 !== undefined ? match$17 !== boardDimI || match$18 !== boardDimJ : false;
   let canDeleteCanvas = canvasCount > 1;
+  let selectedSavedBrushIndex = Belt_Array.getIndexBy(savedBrushes, savedBrush => OtherJs.isEqual2D(savedBrush, brush));
+  let selectedSavedTileMaskIndex = Belt_Array.getIndexBy(savedTileMasks, savedTileMask => OtherJs.isEqual2D(savedTileMask, tileMask));
+  let canDeleteSelectedBrush = Stdlib_Option.isSome(selectedSavedBrushIndex);
+  let canDeleteSelectedTileMask = Stdlib_Option.isSome(selectedSavedTileMaskIndex);
+  let handleDeleteSelectedBrush = () => {
+    if (selectedSavedBrushIndex !== undefined) {
+      return setSavedBrushes(prev => Belt_Array.keepWithIndex(prev, (param, idx) => idx !== selectedSavedBrushIndex));
+    }
+    
+  };
+  let handleDeleteSelectedTileMask = () => {
+    if (selectedSavedTileMaskIndex !== undefined) {
+      return setSavedTileMasks(prev => Belt_Array.keepWithIndex(prev, (param, idx) => idx !== selectedSavedTileMaskIndex));
+    }
+    
+  };
   let handleAddCanvas = () => {
     let newCanvas = make2D(boardDimI, boardDimJ, () => null);
     setCanvases(prev => prev.concat([newCanvas]));
@@ -310,7 +328,7 @@ function App(props) {
       JsxRuntime.jsxs("div", {
         children: [
           JsxRuntime.jsx("div", {
-            children: match$4[0].map(savedBrush => {
+            children: savedBrushes.map(savedBrush => {
               let match = dims2D(savedBrush);
               let dimJ = match[1];
               let dimI = match[0];
@@ -343,8 +361,9 @@ function App(props) {
             className: "flex flex-row flex-wrap gap-1 w-32 h-fit"
           }),
           JsxRuntime.jsx("div", {
-            children: match$5[0].map(savedTileMask => {
+            children: savedTileMasks.map(savedTileMask => {
               let match = dims2D(savedTileMask);
+              let selected = OtherJs.isEqual2D(tileMask, savedTileMask);
               return JsxRuntime.jsx("button", {
                 children: savedTileMask.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
                   className: "w-full h-full ",
@@ -352,7 +371,10 @@ function App(props) {
                     backgroundColor: cell ? "#ffa700" : "transparent"
                   }
                 }, i.toString() + j.toString()))),
-                className: "h-5 w-5 border",
+                className: [
+                  "h-5 w-5 border",
+                  selected ? "bg-orange-100 border-orange-500" : "border-gray-200"
+                ].join(" "),
                 style: {
                   display: "grid",
                   gridTemplateColumns: "repeat(" + match[0].toString() + ", auto)",
@@ -362,6 +384,29 @@ function App(props) {
               });
             }),
             className: "flex flex-row flex-wrap gap-1 w-20 h-fit"
+          })
+        ],
+        className: "flex flex-row gap-2"
+      }),
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsx("button", {
+            children: "delete selected brush",
+            className: [
+              "rounded px-2 h-fit w-fit",
+              canDeleteSelectedBrush ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            ].join(" "),
+            disabled: !canDeleteSelectedBrush,
+            onClick: param => handleDeleteSelectedBrush()
+          }),
+          JsxRuntime.jsx("button", {
+            children: "delete selected tile mask",
+            className: [
+              "rounded px-2 h-fit w-fit",
+              canDeleteSelectedTileMask ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            ].join(" "),
+            disabled: !canDeleteSelectedTileMask,
+            onClick: param => handleDeleteSelectedTileMask()
           })
         ],
         className: "flex flex-row gap-2"
