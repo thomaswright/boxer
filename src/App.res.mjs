@@ -9,14 +9,13 @@ import * as Primitive_int from "rescript/lib/es6/Primitive_int.js";
 import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
 import * as ReactColorful from "react-colorful";
 import * as Stdlib_Nullable from "rescript/lib/es6/Stdlib_Nullable.js";
-import * as Primitive_option from "rescript/lib/es6/Primitive_option.js";
 import * as JsxRuntime from "react/jsx-runtime";
 import UseLocalStorageJs from "./useLocalStorage.js";
 
 let make = SwitchJsx;
 
-function make2D(a, b, f) {
-  return Stdlib_Array.make(a, Stdlib_Array.make(b, f()));
+function make2D(rows, cols, f) {
+  return Stdlib_Array.make(rows, undefined).map(() => Stdlib_Array.make(cols, f()));
 }
 
 function dims2D(a) {
@@ -46,10 +45,6 @@ function useIsMouseDown() {
     };
   }, []);
   return match[0];
-}
-
-function getOverlayId(i, j) {
-  return "canvas-overlay" + i.toString() + j.toString();
 }
 
 function isLight(color) {
@@ -183,14 +178,17 @@ function App(props) {
   let match$8 = React.useState(() => false);
   let setCursorOverlayOff = match$8[1];
   let cursorOverlayOff = match$8[0];
+  let match$9 = React.useState(() => {});
+  let setHoveredCell = match$9[1];
+  let hoveredCell = match$9[0];
   let isMouseDown = useIsMouseDown();
-  let match$9 = dims2D(board);
-  let match$10 = dims2D(brush);
-  let brushCenterDimI = match$10[0] / 2 | 0;
-  let brushCenterDimJ = match$10[1] / 2 | 0;
-  let match$11 = dims2D(tileMask);
-  let tileMaskDimJ = match$11[1];
-  let tileMaskDimI = match$11[0];
+  let match$10 = dims2D(board);
+  let match$11 = dims2D(brush);
+  let brushCenterDimI = match$11[0] / 2 | 0;
+  let brushCenterDimJ = match$11[1] / 2 | 0;
+  let match$12 = dims2D(tileMask);
+  let tileMaskDimJ = match$12[1];
+  let tileMaskDimI = match$12[0];
   let onMouseMove = param => setCursorOverlayOff(param => false);
   let canApply = (boardI, boardJ, clickI, clickJ) => {
     let brushPosI = (boardI - clickI | 0) + brushCenterDimI | 0;
@@ -202,17 +200,6 @@ function App(props) {
     } else {
       return false;
     }
-  };
-  let applyOverlay = (clickI, clickJ, f) => {
-    board.forEach((row, boardI) => {
-      row.forEach((param, boardJ) => {
-        if (!canApply(boardI, boardJ, clickI, clickJ)) {
-          return;
-        }
-        let id = getOverlayId(boardI, boardJ);
-        Stdlib_Option.mapOr(Primitive_option.fromNullable(document.getElementById(id)), undefined, f);
-      });
-    });
   };
   let getBrushColor = () => {
     if (brushMode === "Color") {
@@ -230,6 +217,9 @@ function App(props) {
   })));
   React.useEffect(() => {
     window.addEventListener("mousemove", onMouseMove);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+    };
   }, []);
   return JsxRuntime.jsxs("div", {
     children: [
@@ -328,14 +318,12 @@ function App(props) {
                   backgroundColor: backgroundColor
                 }
               }),
-              cursorOverlayOff || !showCursorOverlay ? null : JsxRuntime.jsx("div", {
+              hoveredCell !== undefined && !(cursorOverlayOff || !showCursorOverlay || !canApply(i, j, hoveredCell[0], hoveredCell[1])) ? JsxRuntime.jsx("div", {
                   className: "absolute w-full h-full inset-0 opacity-20",
-                  id: getOverlayId(i, j),
                   style: {
-                    backgroundColor: overlayBackgroundColor,
-                    display: "none"
+                    backgroundColor: overlayBackgroundColor
                   }
-                })
+                }) : null
             ],
             className: "w-full h-full group relative",
             onMouseDown: param => {
@@ -343,24 +331,23 @@ function App(props) {
               setCursorOverlayOff(param => true);
             },
             onMouseEnter: param => {
-              applyOverlay(i, j, el => {
-                el.style.display = "block";
-              });
+              setHoveredCell(param => [
+                i,
+                j
+              ]);
               if (isMouseDown) {
                 return applyBrush(i, j);
               }
               
             },
-            onMouseLeave: param => applyOverlay(i, j, el => {
-              el.style.display = "none";
-            })
+            onMouseLeave: param => setHoveredCell(param => {})
           }, i.toString() + j.toString());
         })),
         className: "border w-fit h-fit",
         style: {
           display: "grid",
-          gridTemplateColumns: "repeat(" + match$9[0].toString() + ", 1rem)",
-          gridTemplateRows: "repeat(" + match$9[1].toString() + ", 1rem)"
+          gridTemplateColumns: "repeat(" + match$10[0].toString() + ", 1rem)",
+          gridTemplateRows: "repeat(" + match$10[1].toString() + ", 1rem)"
         }
       }),
       JsxRuntime.jsxs("div", {

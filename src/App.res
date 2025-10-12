@@ -20,7 +20,8 @@ module Array = {
     a->Array.mapWithIndex((row, rowI) =>
       rowI == i ? row->Array.mapWithIndex((cell, cellJ) => cellJ == j ? f(cell) : cell) : row
     )
-  let make2D = (a, b, f) => Array.make(~length=a, Array.make(~length=b, f()))
+  let make2D = (rows, cols, f) =>
+    Array.make(~length=rows, ())->Array.map(_ => Array.make(~length=cols, f()))
   let dims2D = a => {
     let boardDimI = a->Array.length
     let boardDimJ = a->Array.get(0)->Option.mapOr(0, line => line->Array.length)
@@ -63,18 +64,9 @@ let useIsMouseDown = () => {
   isMouseDown
 }
 
-@set @scope("style") external setStyleDisplay: (Dom.element, string) => unit = "display"
-
-let getOverlayId = (i, j) => "canvas-overlay" ++ i->Int.toString ++ j->Int.toString
-
 let isLight = color => {
   let (_, _, l) = Texel.convert(color->Texel.hexToRgb, Texel.srgb, Texel.okhsl)
   l > 0.5
-}
-
-type tileMask = {
-  name: string,
-  value: array<array<bool>>,
 }
 
 let defaultTileMasks = [
@@ -126,6 +118,7 @@ let make = () => {
   let (showCursorOverlay, setShowCursorOverlay, _) = useLocalStorage("show-cursor-overlay", true)
   let (myColor, setMyColor, _) = useLocalStorage("my-color", "blue")
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
+  let (hoveredCell, setHoveredCell) = React.useState(() => None)
 
   let isMouseDown = useIsMouseDown()
 
@@ -151,19 +144,6 @@ let make = () => {
     brushAllows && maskAllows
   }
 
-  let applyOverlay = (clickI, clickJ, f) => {
-    board->Array.forEachWithIndex((row, boardI) =>
-      row->Array.forEachWithIndex((_, boardJ) => {
-        if canApply(boardI, boardJ, clickI, clickJ) {
-          let id = getOverlayId(boardI, boardJ)
-          document
-          ->Document.getElementById(id)
-          ->Option.mapOr((), f)
-        }
-      })
-    )
-  }
-
   let getBrushColor = () => {
     switch brushMode {
     | Color => Nullable.Value(myColor)
@@ -186,7 +166,7 @@ let make = () => {
   React.useEffect0(() => {
     window->Window.addMouseMoveEventListener(onMouseMove)
 
-    None
+    Some(() => window->Window.removeMouseMoveEventListener(onMouseMove))
   })
   <div className=" flex flex-col gap-5 p-5">
     <div className="flex flex-row gap-2">
@@ -326,26 +306,13 @@ let make = () => {
             className={"w-full h-full group relative"}
             key={i->Int.toString ++ j->Int.toString}
             onMouseEnter={_ => {
-              applyOverlay(
-                i,
-                j,
-                el => {
-                  el->setStyleDisplay("block")
-                },
-              )
-
+              setHoveredCell(_ => Some((i, j)))
               if isMouseDown {
                 applyBrush(i, j)
               }
             }}
             onMouseLeave={_ => {
-              applyOverlay(
-                i,
-                j,
-                el => {
-                  el->setStyleDisplay("none")
-                },
-              )
+              setHoveredCell(_ => None)
             }}
             onMouseDown={_ => {
               applyBrush(i, j)
@@ -357,16 +324,18 @@ let make = () => {
                 backgroundColor: backgroundColor,
               }}
             />
-            {cursorOverlayOff || !showCursorOverlay
-              ? React.null
-              : <div
-                  style={{
-                    display: "none",
-                    backgroundColor: overlayBackgroundColor,
-                  }}
-                  id={getOverlayId(i, j)}
-                  className="absolute w-full h-full inset-0 opacity-20">
-                </div>}
+            {switch hoveredCell {
+            | Some((hoverI, hoverJ)) =>
+              cursorOverlayOff || !showCursorOverlay || !canApply(i, j, hoverI, hoverJ)
+                ? React.null
+                : <div
+                    style={{
+                      backgroundColor: overlayBackgroundColor,
+                    }}
+                    className="absolute w-full h-full inset-0 opacity-20">
+                  </div>
+            | None => React.null
+            }}
           </div>
         })
         ->React.array
