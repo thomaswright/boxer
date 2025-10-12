@@ -108,7 +108,10 @@ let make = () => {
   let (brushMode, setBrushMode, _) = useLocalStorage("brush-mode", Color)
   // let (toolTrayMode, setToolTrayMode, _) = useLocalStorage("tool-tray-mode", Brush)
 
-  let (board, setBoard, _) = useLocalStorage("board", makeBoard(12, 12))
+  let makeDefaultCanvas = () => makeBoard(12, 12)
+  let (canvases, setCanvases, _) = useLocalStorage("canvases", [makeDefaultCanvas()])
+  let (selectedCanvasIndex, setSelectedCanvasIndex, _) =
+    useLocalStorage("selected-canvas-index", 0)
   let (brush, setBrush, _) = useLocalStorage("brush", makeBrush(3, 3))
   let (savedBrushes, setSavedBrushes, _) = useLocalStorage("saved-brushes", defaultBrushes)
   let (savedTileMasks, setSavedTileMasks, _) = useLocalStorage("saved-tile-masks", defaultTileMasks)
@@ -121,6 +124,49 @@ let make = () => {
   let (hoveredCell, setHoveredCell) = React.useState(() => None)
 
   let isMouseDown = useIsMouseDown()
+
+  let canvasCount = canvases->Array.length
+
+  React.useEffect0(() => {
+    if canvasCount == 0 {
+      setCanvases(_ => [makeDefaultCanvas()])
+    }
+    None
+  })
+
+  React.useEffect0(() => {
+    if canvasCount > 0 && selectedCanvasIndex >= canvasCount {
+      setSelectedCanvasIndex(_ => canvasCount - 1)
+    }
+    None
+  })
+
+  let currentCanvasIndex =
+    if canvasCount == 0 {
+      0
+    } else if selectedCanvasIndex >= canvasCount {
+      canvasCount - 1
+    } else {
+      selectedCanvasIndex
+    }
+
+  let board =
+    switch canvases->Array.get(currentCanvasIndex) {
+    | Some(canvas) => canvas
+    | None =>
+      canvases->Array.get(0)->Option.getOr(makeDefaultCanvas())
+    }
+
+  let updateCanvasAtIndex = (index, updater) =>
+    setCanvases(prev =>
+      if prev->Array.length == 0 {
+        [updater(makeDefaultCanvas())]
+      } else {
+        prev->Array.mapWithIndex((canvas, idx) => idx == index ? updater(canvas) : canvas)
+      }
+    )
+
+  let setBoard = updater => updateCanvasAtIndex(currentCanvasIndex, updater)
 
   let (boardDimI, boardDimJ) = board->Array.dims2D
   let (brushDimI, brushDimJ) = brush->Array.dims2D
@@ -147,8 +193,35 @@ let make = () => {
     parsePositiveInt(resizeRowsInput),
     parsePositiveInt(resizeColsInput),
   ) {
-  | (Some(nextRows), Some(nextCols)) => nextRows != boardDimI || nextCols != boardDimJ
-  | _ => false
+    | (Some(nextRows), Some(nextCols)) => nextRows != boardDimI || nextCols != boardDimJ
+    | _ => false
+    }
+
+  let canDeleteCanvas = canvasCount > 1
+
+  let handleAddCanvas = () => {
+    let newCanvas = makeBoard(boardDimI, boardDimJ)
+    setCanvases(prev => prev->Array.concat([newCanvas]))
+    setSelectedCanvasIndex(_ => canvasCount)
+    setHoveredCell(_ => None)
+    setCursorOverlayOff(_ => true)
+  }
+
+  let handleDeleteCanvas = () => {
+    if canDeleteCanvas {
+      let nextSelected =
+        if selectedCanvasIndex >= canvasCount - 1 {
+          selectedCanvasIndex == 0 ? 0 : selectedCanvasIndex - 1
+        } else {
+          selectedCanvasIndex
+        }
+      setCanvases(prev =>
+        Belt.Array.keepWithIndex(prev, (_canvas, idx) => idx != selectedCanvasIndex)
+      )
+      setSelectedCanvasIndex(_ => nextSelected)
+      setHoveredCell(_ => None)
+      setCursorOverlayOff(_ => true)
+    }
   }
 
   let onMouseMove = _ => setCursorOverlayOff(_ => false)
@@ -428,6 +501,66 @@ let make = () => {
         ->React.array
       })
       ->React.array}
+    </div>
+    <div className="flex flex-col gap-3 w-full">
+      <div className="flex flex-row items-start gap-3 overflow-x-auto py-2">
+        {canvases
+        ->Array.mapWithIndex((canvasBoard, canvasIndex) => {
+          let (thumbDimI, thumbDimJ) = canvasBoard->Array.dims2D
+          let isSelectedCanvas = canvasIndex == currentCanvasIndex
+          <button
+            key={canvasIndex->Int.toString}
+            onClick={_ => {
+              setSelectedCanvasIndex(_ => canvasIndex)
+              setHoveredCell(_ => None)
+              setCursorOverlayOff(_ => true)
+            }}
+            className={[
+              "flex-shrink-0 rounded border p-1",
+              isSelectedCanvas ? "border-blue-500" : "border-gray-200",
+            ]->Array.join(" ")}>
+            <div
+              className="h-16 w-16 grid"
+              style={{
+                gridTemplateColumns: `repeat(${thumbDimI->Int.toString}, minmax(0, 1fr))`,
+                gridTemplateRows: `repeat(${thumbDimJ->Int.toString}, minmax(0, 1fr))`,
+              }}>
+              {canvasBoard
+              ->Array.mapWithIndex((line, i) => {
+                line
+                ->Array.mapWithIndex(
+                  (cell, j) => {
+                    <div
+                      key={i->Int.toString ++ j->Int.toString}
+                      className="w-full h-full"
+                      style={{
+                        backgroundColor: cell->Nullable.getOr("transparent"),
+                      }}>
+                    </div>
+                  },
+                )
+                ->React.array
+              })
+              ->React.array}
+            </div>
+          </button>
+        })
+        ->React.array}
+        <button
+          onClick={_ => handleAddCanvas()}
+          className="flex-shrink-0 h-16 w-16 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-3xl text-gray-400">
+          {"+"->React.string}
+        </button>
+      </div>
+      <button
+        className={[
+          "self-start rounded px-3 py-1 text-sm font-medium",
+          canDeleteCanvas ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed",
+        ]->Array.join(" ")}
+        disabled={!canDeleteCanvas}
+        onClick={_ => handleDeleteCanvas()}>
+        {"Delete Canvas"->React.string}
+      </button>
     </div>
     <div className="flex flex-col gap-2">
       <div className="flex flex-row gap-2">

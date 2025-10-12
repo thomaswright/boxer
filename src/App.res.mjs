@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import * as OtherJs from "./other.js";
+import * as Belt_Array from "rescript/lib/es6/Belt_Array.js";
 import * as Stdlib_Int from "rescript/lib/es6/Stdlib_Int.js";
 import SwitchJsx from "./Switch.jsx";
 import * as Color from "@texel/color";
@@ -157,50 +158,84 @@ function App(props) {
   let match = UseLocalStorageJs("brush-mode", "Color");
   let setBrushMode = match[1];
   let brushMode = match[0];
-  let match$1 = UseLocalStorageJs("board", make2D(12, 12, () => null));
-  let setBoard = match$1[1];
-  let board = match$1[0];
-  let match$2 = UseLocalStorageJs("brush", make2D(3, 3, () => true));
-  let setBrush = match$2[1];
-  let brush = match$2[0];
-  let match$3 = UseLocalStorageJs("saved-brushes", defaultBrushes);
-  let setSavedBrushes = match$3[1];
-  let match$4 = UseLocalStorageJs("saved-tile-masks", defaultTileMasks);
-  let setSavedTileMasks = match$4[1];
-  let match$5 = UseLocalStorageJs("tile-mask", make2D(4, 4, () => true));
-  let setTileMask = match$5[1];
-  let tileMask = match$5[0];
-  let match$6 = UseLocalStorageJs("show-cursor-overlay", true);
-  let setShowCursorOverlay = match$6[1];
-  let showCursorOverlay = match$6[0];
-  let match$7 = UseLocalStorageJs("my-color", "blue");
-  let setMyColor = match$7[1];
-  let myColor = match$7[0];
-  let match$8 = React.useState(() => false);
-  let setCursorOverlayOff = match$8[1];
-  let cursorOverlayOff = match$8[0];
-  let match$9 = React.useState(() => {});
-  let setHoveredCell = match$9[1];
-  let hoveredCell = match$9[0];
+  let match$1 = UseLocalStorageJs("canvases", [make2D(12, 12, () => null)]);
+  let setCanvases = match$1[1];
+  let canvases = match$1[0];
+  let match$2 = UseLocalStorageJs("selected-canvas-index", 0);
+  let setSelectedCanvasIndex = match$2[1];
+  let selectedCanvasIndex = match$2[0];
+  let match$3 = UseLocalStorageJs("brush", make2D(3, 3, () => true));
+  let setBrush = match$3[1];
+  let brush = match$3[0];
+  let match$4 = UseLocalStorageJs("saved-brushes", defaultBrushes);
+  let setSavedBrushes = match$4[1];
+  let match$5 = UseLocalStorageJs("saved-tile-masks", defaultTileMasks);
+  let setSavedTileMasks = match$5[1];
+  let match$6 = UseLocalStorageJs("tile-mask", make2D(4, 4, () => true));
+  let setTileMask = match$6[1];
+  let tileMask = match$6[0];
+  let match$7 = UseLocalStorageJs("show-cursor-overlay", true);
+  let setShowCursorOverlay = match$7[1];
+  let showCursorOverlay = match$7[0];
+  let match$8 = UseLocalStorageJs("my-color", "blue");
+  let setMyColor = match$8[1];
+  let myColor = match$8[0];
+  let match$9 = React.useState(() => false);
+  let setCursorOverlayOff = match$9[1];
+  let cursorOverlayOff = match$9[0];
+  let match$10 = React.useState(() => {});
+  let setHoveredCell = match$10[1];
+  let hoveredCell = match$10[0];
   let isMouseDown = useIsMouseDown();
-  let match$10 = dims2D(board);
-  let boardDimJ = match$10[1];
-  let boardDimI = match$10[0];
-  let match$11 = dims2D(brush);
-  let brushCenterDimI = match$11[0] / 2 | 0;
-  let brushCenterDimJ = match$11[1] / 2 | 0;
-  let match$12 = dims2D(tileMask);
-  let tileMaskDimJ = match$12[1];
-  let tileMaskDimI = match$12[0];
-  let match$13 = React.useState(() => false);
-  let setIsResizeOpen = match$13[1];
-  let isResizeOpen = match$13[0];
-  let match$14 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$14[1];
-  let resizeRowsInput = match$14[0];
-  let match$15 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$15[1];
-  let resizeColsInput = match$15[0];
+  let canvasCount = canvases.length;
+  React.useEffect(() => {
+    if (canvasCount === 0) {
+      setCanvases(param => [make2D(12, 12, () => null)]);
+    }
+    
+  }, []);
+  React.useEffect(() => {
+    if (canvasCount > 0 && selectedCanvasIndex >= canvasCount) {
+      setSelectedCanvasIndex(param => canvasCount - 1 | 0);
+    }
+    
+  }, []);
+  let currentCanvasIndex = canvasCount === 0 ? 0 : (
+      selectedCanvasIndex >= canvasCount ? canvasCount - 1 | 0 : selectedCanvasIndex
+    );
+  let canvas = canvases[currentCanvasIndex];
+  let board = canvas !== undefined ? canvas : Stdlib_Option.getOr(canvases[0], make2D(12, 12, () => null));
+  let updateCanvasAtIndex = (index, updater) => setCanvases(prev => {
+    if (prev.length === 0) {
+      return [updater(make2D(12, 12, () => null))];
+    } else {
+      return prev.map((canvas, idx) => {
+        if (idx === index) {
+          return updater(canvas);
+        } else {
+          return canvas;
+        }
+      });
+    }
+  });
+  let match$11 = dims2D(board);
+  let boardDimJ = match$11[1];
+  let boardDimI = match$11[0];
+  let match$12 = dims2D(brush);
+  let brushCenterDimI = match$12[0] / 2 | 0;
+  let brushCenterDimJ = match$12[1] / 2 | 0;
+  let match$13 = dims2D(tileMask);
+  let tileMaskDimJ = match$13[1];
+  let tileMaskDimI = match$13[0];
+  let match$14 = React.useState(() => false);
+  let setIsResizeOpen = match$14[1];
+  let isResizeOpen = match$14[0];
+  let match$15 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$15[1];
+  let resizeRowsInput = match$15[0];
+  let match$16 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$16[1];
+  let resizeColsInput = match$16[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -215,9 +250,29 @@ function App(props) {
     }
     
   };
-  let match$16 = parsePositiveInt(resizeRowsInput);
-  let match$17 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$16 !== undefined && match$17 !== undefined ? match$16 !== boardDimI || match$17 !== boardDimJ : false;
+  let match$17 = parsePositiveInt(resizeRowsInput);
+  let match$18 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$17 !== undefined && match$18 !== undefined ? match$17 !== boardDimI || match$18 !== boardDimJ : false;
+  let canDeleteCanvas = canvasCount > 1;
+  let handleAddCanvas = () => {
+    let newCanvas = make2D(boardDimI, boardDimJ, () => null);
+    setCanvases(prev => prev.concat([newCanvas]));
+    setSelectedCanvasIndex(param => canvasCount);
+    setHoveredCell(param => {});
+    setCursorOverlayOff(param => true);
+  };
+  let handleDeleteCanvas = () => {
+    if (!canDeleteCanvas) {
+      return;
+    }
+    let nextSelected = selectedCanvasIndex >= (canvasCount - 1 | 0) ? (
+        selectedCanvasIndex === 0 ? 0 : selectedCanvasIndex - 1 | 0
+      ) : selectedCanvasIndex;
+    setCanvases(prev => Belt_Array.keepWithIndex(prev, (_canvas, idx) => idx !== selectedCanvasIndex));
+    setSelectedCanvasIndex(param => nextSelected);
+    setHoveredCell(param => {});
+    setCursorOverlayOff(param => true);
+  };
   let onMouseMove = param => setCursorOverlayOff(param => false);
   let canApply = (boardI, boardJ, clickI, clickJ) => {
     let brushPosI = (boardI - clickI | 0) + brushCenterDimI | 0;
@@ -237,7 +292,7 @@ function App(props) {
       return null;
     }
   };
-  let applyBrush = (clickI, clickJ) => setBoard(b => b.map((row, boardI) => row.map((cell, boardJ) => {
+  let applyBrush = (clickI, clickJ) => updateCanvasAtIndex(currentCanvasIndex, b => b.map((row, boardI) => row.map((cell, boardJ) => {
     if (canApply(boardI, boardJ, clickI, clickJ)) {
       return getBrushColor();
     } else {
@@ -255,7 +310,7 @@ function App(props) {
       JsxRuntime.jsxs("div", {
         children: [
           JsxRuntime.jsx("div", {
-            children: match$3[0].map(savedBrush => {
+            children: match$4[0].map(savedBrush => {
               let match = dims2D(savedBrush);
               let dimJ = match[1];
               let dimI = match[0];
@@ -288,7 +343,7 @@ function App(props) {
             className: "flex flex-row flex-wrap gap-1 w-32 h-fit"
           }),
           JsxRuntime.jsx("div", {
-            children: match$4[0].map(savedTileMask => {
+            children: match$5[0].map(savedTileMask => {
               let match = dims2D(savedTileMask);
               return JsxRuntime.jsx("button", {
                 children: savedTileMask.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
@@ -382,7 +437,7 @@ function App(props) {
                     let match = parsePositiveInt(resizeRowsInput);
                     let match$1 = parsePositiveInt(resizeColsInput);
                     if (match !== undefined && match$1 !== undefined) {
-                      setBoard(prev => make2D(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => Stdlib_Option.getOr(check2D(prev, rowI, colJ), null))));
+                      updateCanvasAtIndex(currentCanvasIndex, prev => make2D(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => Stdlib_Option.getOr(check2D(prev, rowI, colJ), null))));
                       setHoveredCell(param => {});
                       setCursorOverlayOff(param => true);
                       return setIsResizeOpen(param => false);
@@ -445,6 +500,58 @@ function App(props) {
           gridTemplateColumns: "repeat(" + boardDimI.toString() + ", 1rem)",
           gridTemplateRows: "repeat(" + boardDimJ.toString() + ", 1rem)"
         }
+      }),
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsxs("div", {
+            children: [
+              canvases.map((canvasBoard, canvasIndex) => {
+                let match = dims2D(canvasBoard);
+                let isSelectedCanvas = canvasIndex === currentCanvasIndex;
+                return JsxRuntime.jsx("button", {
+                  children: JsxRuntime.jsx("div", {
+                    children: canvasBoard.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
+                      className: "w-full h-full",
+                      style: {
+                        backgroundColor: Stdlib_Nullable.getOr(cell, "transparent")
+                      }
+                    }, i.toString() + j.toString()))),
+                    className: "h-16 w-16 grid",
+                    style: {
+                      gridTemplateColumns: "repeat(" + match[0].toString() + ", minmax(0, 1fr))",
+                      gridTemplateRows: "repeat(" + match[1].toString() + ", minmax(0, 1fr))"
+                    }
+                  }),
+                  className: [
+                    "flex-shrink-0 rounded border p-1",
+                    isSelectedCanvas ? "border-blue-500" : "border-gray-200"
+                  ].join(" "),
+                  onClick: param => {
+                    setSelectedCanvasIndex(param => canvasIndex);
+                    setHoveredCell(param => {});
+                    setCursorOverlayOff(param => true);
+                  }
+                }, canvasIndex.toString());
+              }),
+              JsxRuntime.jsx("button", {
+                children: "+",
+                className: "flex-shrink-0 h-16 w-16 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-3xl text-gray-400",
+                onClick: param => handleAddCanvas()
+              })
+            ],
+            className: "flex flex-row items-start gap-3 overflow-x-auto py-2"
+          }),
+          JsxRuntime.jsx("button", {
+            children: "Delete Canvas",
+            className: [
+              "self-start rounded px-3 py-1 text-sm font-medium",
+              canDeleteCanvas ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            ].join(" "),
+            disabled: !canDeleteCanvas,
+            onClick: param => handleDeleteCanvas()
+          })
+        ],
+        className: "flex flex-col gap-3 w-full"
       }),
       JsxRuntime.jsxs("div", {
         children: [
