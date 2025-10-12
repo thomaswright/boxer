@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import * as OtherJs from "./other.js";
+import * as Stdlib_Int from "rescript/lib/es6/Stdlib_Int.js";
 import SwitchJsx from "./Switch.jsx";
 import * as Color from "@texel/color";
 import * as Stdlib_Array from "rescript/lib/es6/Stdlib_Array.js";
@@ -183,12 +184,40 @@ function App(props) {
   let hoveredCell = match$9[0];
   let isMouseDown = useIsMouseDown();
   let match$10 = dims2D(board);
+  let boardDimJ = match$10[1];
+  let boardDimI = match$10[0];
   let match$11 = dims2D(brush);
   let brushCenterDimI = match$11[0] / 2 | 0;
   let brushCenterDimJ = match$11[1] / 2 | 0;
   let match$12 = dims2D(tileMask);
   let tileMaskDimJ = match$12[1];
   let tileMaskDimI = match$12[0];
+  let match$13 = React.useState(() => false);
+  let setIsResizeOpen = match$13[1];
+  let isResizeOpen = match$13[0];
+  let match$14 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$14[1];
+  let resizeRowsInput = match$14[0];
+  let match$15 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$15[1];
+  let resizeColsInput = match$15[0];
+  React.useEffect(() => {
+    setResizeRowsInput(param => boardDimI.toString());
+    setResizeColsInput(param => boardDimJ.toString());
+  }, [
+    boardDimI,
+    boardDimJ
+  ]);
+  let parsePositiveInt = value => {
+    let parsed = Stdlib_Int.fromString(value, undefined);
+    if (parsed !== undefined && parsed > 0) {
+      return parsed;
+    }
+    
+  };
+  let match$16 = parsePositiveInt(resizeRowsInput);
+  let match$17 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$16 !== undefined && match$17 !== undefined ? match$16 !== boardDimI || match$17 !== boardDimJ : false;
   let onMouseMove = param => setCursorOverlayOff(param => false);
   let canApply = (boardI, boardJ, clickI, clickJ) => {
     let brushPosI = (boardI - clickI | 0) + brushCenterDimI | 0;
@@ -300,6 +329,73 @@ function App(props) {
           setTileMask(param => newTileMask);
         }
       }),
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsxs("button", {
+            children: [
+              "Canvas Size",
+              JsxRuntime.jsx("span", {
+                children: isResizeOpen ? "-" : "+"
+              })
+            ],
+            className: [
+              "flex flex-row items-center justify-between font-medium",
+              "w-full"
+            ].join(" "),
+            onClick: param => setIsResizeOpen(v => !v)
+          }),
+          isResizeOpen ? JsxRuntime.jsxs("div", {
+              children: [
+                JsxRuntime.jsxs("div", {
+                  children: [
+                    JsxRuntime.jsx("input", {
+                      className: "border rounded px-2 py-1 text-sm flex-1 min-w-0",
+                      value: resizeRowsInput,
+                      onChange: event => {
+                        let value = event.target.value;
+                        setResizeRowsInput(param => value);
+                      }
+                    }),
+                    JsxRuntime.jsx("span", {
+                      children: "x",
+                      className: "flex-none px-1"
+                    }),
+                    JsxRuntime.jsx("input", {
+                      className: "border rounded px-2 py-1 text-sm flex-1  min-w-0",
+                      value: resizeColsInput,
+                      onChange: event => {
+                        let value = event.target.value;
+                        setResizeColsInput(param => value);
+                      }
+                    })
+                  ],
+                  className: "flex flex-row w-full gap-2"
+                }),
+                JsxRuntime.jsx("button", {
+                  children: "Save",
+                  className: [
+                    "rounded px-2 py-1 text-sm font-medium",
+                    canSubmitResize ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  ].join(" "),
+                  disabled: !canSubmitResize,
+                  onClick: param => {
+                    let match = parsePositiveInt(resizeRowsInput);
+                    let match$1 = parsePositiveInt(resizeColsInput);
+                    if (match !== undefined && match$1 !== undefined) {
+                      setBoard(prev => make2D(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => Stdlib_Option.getOr(check2D(prev, rowI, colJ), null))));
+                      setHoveredCell(param => {});
+                      setCursorOverlayOff(param => true);
+                      return setIsResizeOpen(param => false);
+                    }
+                    
+                  }
+                })
+              ],
+              className: "flex flex-col gap-2"
+            }) : null
+        ],
+        className: "border rounded p-2 flex flex-col gap-2 w-48"
+      }),
       JsxRuntime.jsx("div", {
         children: board.map((line, i) => line.map((cell, j) => {
           let backgroundColor = Stdlib_Nullable.getOr(cell, "transparent");
@@ -346,8 +442,8 @@ function App(props) {
         className: "border w-fit h-fit",
         style: {
           display: "grid",
-          gridTemplateColumns: "repeat(" + match$10[0].toString() + ", 1rem)",
-          gridTemplateRows: "repeat(" + match$10[1].toString() + ", 1rem)"
+          gridTemplateColumns: "repeat(" + boardDimI.toString() + ", 1rem)",
+          gridTemplateRows: "repeat(" + boardDimJ.toString() + ", 1rem)"
         }
       }),
       JsxRuntime.jsxs("div", {

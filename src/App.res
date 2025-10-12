@@ -127,6 +127,29 @@ let make = () => {
   let brushCenterDimI = brushDimI / 2
   let brushCenterDimJ = brushDimJ / 2
   let (tileMaskDimI, tileMaskDimJ) = tileMask->Array.dims2D
+  let (isResizeOpen, setIsResizeOpen) = React.useState(() => false)
+  let (resizeRowsInput, setResizeRowsInput) = React.useState(() => boardDimI->Int.toString)
+  let (resizeColsInput, setResizeColsInput) = React.useState(() => boardDimJ->Int.toString)
+
+  React.useEffect2(() => {
+    setResizeRowsInput(_ => boardDimI->Int.toString)
+    setResizeColsInput(_ => boardDimJ->Int.toString)
+    None
+  }, (boardDimI, boardDimJ))
+
+  let parsePositiveInt = value =>
+    switch value->Int.fromString {
+    | Some(parsed) if parsed > 0 => Some(parsed)
+    | _ => None
+    }
+
+  let canSubmitResize = switch (
+    parsePositiveInt(resizeRowsInput),
+    parsePositiveInt(resizeColsInput),
+  ) {
+  | (Some(nextRows), Some(nextCols)) => nextRows != boardDimI || nextCols != boardDimJ
+  | _ => false
+  }
 
   let onMouseMove = _ => setCursorOverlayOff(_ => false)
 
@@ -270,6 +293,70 @@ let make = () => {
       }}>
       {"dither mask from canvas"->React.string}
     </button>
+    <div className="border rounded p-2 flex flex-col gap-2 w-48">
+      <button
+        onClick={_ => setIsResizeOpen(v => !v)}
+        className={["flex flex-row items-center justify-between font-medium", "w-full"]->Array.join(
+          " ",
+        )}>
+        {"Canvas Size"->React.string}
+        <span> {isResizeOpen ? "-"->React.string : "+"->React.string} </span>
+      </button>
+
+      {isResizeOpen
+        ? <div className="flex flex-col gap-2">
+            <div className="flex flex-row w-full gap-2">
+              <input
+                className="border rounded px-2 py-1 text-sm flex-1 min-w-0"
+                value={resizeRowsInput}
+                onChange={event => {
+                  let value = ReactEvent.Form.target(event)["value"]
+                  setResizeRowsInput(_ => value)
+                }}
+              />
+              <span className={"flex-none px-1"}> {"x"->React.string} </span>
+              <input
+                className="border rounded px-2 py-1 text-sm flex-1  min-w-0"
+                value={resizeColsInput}
+                onChange={event => {
+                  let value = ReactEvent.Form.target(event)["value"]
+                  setResizeColsInput(_ => value)
+                }}
+              />
+            </div>
+
+            <button
+              className={[
+                "rounded px-2 py-1 text-sm font-medium",
+                canSubmitResize
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-gray-500 cursor-not-allowed",
+              ]->Array.join(" ")}
+              disabled={!canSubmitResize}
+              onClick={_ => {
+                switch (parsePositiveInt(resizeRowsInput), parsePositiveInt(resizeColsInput)) {
+                | (Some(nextRows), Some(nextCols)) =>
+                  setBoard(prev =>
+                    Array.make2D(nextRows, nextCols, () => Nullable.null)->Array.mapWithIndex((
+                      row,
+                      rowI,
+                    ) =>
+                      row->Array.mapWithIndex(
+                        (_, colJ) => prev->Array.check2D(rowI, colJ)->Option.getOr(Nullable.null),
+                      )
+                    )
+                  )
+                  setHoveredCell(_ => None)
+                  setCursorOverlayOff(_ => true)
+                  setIsResizeOpen(_ => false)
+                | _ => ()
+                }
+              }}>
+              {"Save"->React.string}
+            </button>
+          </div>
+        : React.null}
+    </div>
 
     //    <button
     //   className={"bg-gray-200 rounded px-2 h-fit w-fit"}
@@ -374,92 +461,3 @@ let make = () => {
     </div>
   </div>
 }
-
-// <div
-//   className={"border w-20 h-20"}
-//   style={{
-//     display: "grid",
-//     gridTemplateColumns: `repeat(${brushDimI->Int.toString}, auto)`,
-//     gridTemplateRows: `repeat(${brushDimJ->Int.toString}, auto)`,
-//   }}>
-//   {brush
-//   ->Array.mapWithIndex((line, i) => {
-//     line
-//     ->Array.mapWithIndex((cell, j) => {
-//       let isCursorCenter = brushDimI / 2 == i && brushDimJ / 2 == j
-//       <div
-//         className={"w-full h-full group relative "}
-//         key={i->Int.toString ++ j->Int.toString}
-//         onMouseEnter={_ => {
-//           if isMouseDown {
-//             setBrush(b => b->Array.update2D(i, j, v => !v))
-//           }
-//         }}
-//         onMouseDown={_ => {
-//           setBrush(b => b->Array.update2D(i, j, v => !v))
-//           setCursorOverlayOff(_ => true)
-//         }}>
-//         <div
-//           className={"w-full h-full absolute"}
-//           style={{
-//             backgroundColor: cell ? "#00c3ff" : "transparent",
-//           }}
-//         />
-//         {cursorOverlayOff || !showCursorOverlay
-//           ? React.null
-//           : <div
-//               className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
-//             </div>}
-//         {!isCursorCenter
-//           ? React.null
-//           : <div
-//               className="absolute w-full h-full flex flex-row items-center justify-center ">
-//               <div className=" w-1/2 h-1/2 bg-red-500 rounded-full"></div>
-//             </div>}
-//       </div>
-//     })
-//     ->React.array
-//   })
-//   ->React.array}
-// </div>
-
-// <div
-//   className={"border w-20 h-20"}
-//   style={{
-//     display: "grid",
-//     gridTemplateColumns: `repeat(${tileMaskDimI->Int.toString}, auto)`,
-//     gridTemplateRows: `repeat(${tileMaskDimJ->Int.toString}, auto)`,
-//   }}>
-//   {tileMask
-//   ->Array.mapWithIndex((line, i) => {
-//     line
-//     ->Array.mapWithIndex((cell, j) => {
-//       <div
-//         className={"w-full h-full group relative "}
-//         key={i->Int.toString ++ j->Int.toString}
-//         onMouseEnter={_ => {
-//           if isMouseDown {
-//             setTileMask(b => b->Array.update2D(i, j, v => !v))
-//           }
-//         }}
-//         onMouseDown={_ => {
-//           setTileMask(b => b->Array.update2D(i, j, v => !v))
-//           setCursorOverlayOff(_ => true)
-//         }}>
-//         <div
-//           className={"w-full h-full absolute"}
-//           style={{
-//             backgroundColor: cell ? "#ffa700" : "transparent",
-//           }}
-//         />
-//         {cursorOverlayOff || !showCursorOverlay
-//           ? React.null
-//           : <div
-//               className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
-//             </div>}
-//       </div>
-//     })
-//     ->React.array
-//   })
-//   ->React.array}
-// </div>
