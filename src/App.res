@@ -544,7 +544,7 @@ let make = () => {
         ->Array.mapWithIndex((canvasBoard, canvasIndex) => {
           let (thumbDimI, thumbDimJ) = canvasBoard->Array.dims2D
           let isSelectedCanvas = canvasIndex == currentCanvasIndex
-          <div className="relative flex-shrink-0">
+          <div className="relative">
             <button
               key={canvasIndex->Int.toString}
               onClick={_ => {
@@ -553,7 +553,7 @@ let make = () => {
                 setCursorOverlayOff(_ => true)
               }}
               className={[
-                " border",
+                " border w-fit h-fit",
                 isSelectedCanvas ? "border-blue-500" : "border-gray-200",
               ]->Array.join(" ")}>
               <div

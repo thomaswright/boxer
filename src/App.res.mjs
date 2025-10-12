@@ -579,7 +579,7 @@ function App(props) {
                       }
                     }),
                     className: [
-                      " border",
+                      " border w-fit h-fit",
                       isSelectedCanvas ? "border-blue-500" : "border-gray-200"
                     ].join(" "),
                     onClick: param => {
@@ -601,7 +601,7 @@ function App(props) {
                     }
                   })
                 ],
-                className: "relative flex-shrink-0"
+                className: "relative"
               });
             }),
             JsxRuntime.jsx("button", {
