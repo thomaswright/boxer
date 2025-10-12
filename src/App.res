@@ -282,7 +282,7 @@ let make = () => {
 
     Some(() => window->Window.removeMouseMoveEventListener(onMouseMove))
   })
-  <div className=" flex flex-col gap-5 p-5">
+  <div className=" flex flex-row gap-5 p-5">
     <div className="flex flex-row h-lg">
       <div className={"flex flex-col "}>
         <div>
@@ -416,195 +416,135 @@ let make = () => {
       </div>
     </div>
 
-    <div className="flex flex-row gap-2"></div>
+    <div className="flex flex-col gap-2">
+      <div
+        className={"border w-fit h-fit"}
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${boardDimI->Int.toString}, 1rem)`,
+          gridTemplateRows: `repeat(${boardDimJ->Int.toString}, 1rem)`,
+        }}>
+        {board
+        ->Array.mapWithIndex((line, i) => {
+          line
+          ->Array.mapWithIndex((cell, j) => {
+            let backgroundColor = cell->Nullable.getOr("transparent")
+            let overlayBackgroundColor =
+              cell->Nullable.mapOr("black", v => v->isLight ? "black" : "white")
 
-    <div className="border rounded p-2 flex flex-col gap-2 w-48">
-      <button
-        onClick={_ => setIsResizeOpen(v => !v)}
-        className={["flex flex-row items-center justify-between font-medium", "w-full"]->Array.join(
-          " ",
-        )}>
-        {"Canvas Size"->React.string}
-        <span> {isResizeOpen ? "-"->React.string : "+"->React.string} </span>
-      </button>
-
-      {isResizeOpen
-        ? <div className="flex flex-col gap-2">
-            <div className="flex flex-row w-full gap-2">
-              <input
-                className="border rounded px-2 py-1 text-sm flex-1 min-w-0"
-                value={resizeRowsInput}
-                onChange={event => {
-                  let value = ReactEvent.Form.target(event)["value"]
-                  setResizeRowsInput(_ => value)
-                }}
-              />
-              <span className={"flex-none px-1"}> {"x"->React.string} </span>
-              <input
-                className="border rounded px-2 py-1 text-sm flex-1  min-w-0"
-                value={resizeColsInput}
-                onChange={event => {
-                  let value = ReactEvent.Form.target(event)["value"]
-                  setResizeColsInput(_ => value)
-                }}
-              />
-            </div>
-
-            <button
-              className={[
-                "rounded px-2 py-1 text-sm font-medium",
-                canSubmitResize
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-500 cursor-not-allowed",
-              ]->Array.join(" ")}
-              disabled={!canSubmitResize}
-              onClick={_ => {
-                switch (parsePositiveInt(resizeRowsInput), parsePositiveInt(resizeColsInput)) {
-                | (Some(nextRows), Some(nextCols)) =>
-                  setBoard(prev =>
-                    Array.make2D(nextRows, nextCols, () => Nullable.null)->Array.mapWithIndex((
-                      row,
-                      rowI,
-                    ) =>
-                      row->Array.mapWithIndex(
-                        (_, colJ) => prev->Array.check2D(rowI, colJ)->Option.getOr(Nullable.null),
-                      )
-                    )
-                  )
-                  setHoveredCell(_ => None)
-                  setCursorOverlayOff(_ => true)
-                  setIsResizeOpen(_ => false)
-                | _ => ()
-                }
-              }}>
-              {"Save"->React.string}
-            </button>
-          </div>
-        : React.null}
-    </div>
-
-    <div
-      className={"border w-fit h-fit"}
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${boardDimI->Int.toString}, 1rem)`,
-        gridTemplateRows: `repeat(${boardDimJ->Int.toString}, 1rem)`,
-      }}>
-      {board
-      ->Array.mapWithIndex((line, i) => {
-        line
-        ->Array.mapWithIndex((cell, j) => {
-          let backgroundColor = cell->Nullable.getOr("transparent")
-          let overlayBackgroundColor =
-            cell->Nullable.mapOr("black", v => v->isLight ? "black" : "white")
-
-          <div
-            className={"w-full h-full group relative"}
-            key={i->Int.toString ++ j->Int.toString}
-            onMouseEnter={_ => {
-              setHoveredCell(_ => Some((i, j)))
-              if isMouseDown {
-                applyBrush(i, j)
-              }
-            }}
-            onMouseLeave={_ => {
-              setHoveredCell(_ => None)
-            }}
-            onMouseDown={_ => {
-              applyBrush(i, j)
-              setCursorOverlayOff(_ => true)
-            }}>
             <div
-              className={"w-full h-full absolute"}
-              style={{
-                backgroundColor: backgroundColor,
+              className={"w-full h-full group relative"}
+              key={i->Int.toString ++ j->Int.toString}
+              onMouseEnter={_ => {
+                setHoveredCell(_ => Some((i, j)))
+                if isMouseDown {
+                  applyBrush(i, j)
+                }
               }}
-            />
-            {switch hoveredCell {
-            | Some((hoverI, hoverJ)) =>
-              cursorOverlayOff || !showCursorOverlay || !canApply(i, j, hoverI, hoverJ)
-                ? React.null
-                : <div
-                    style={{
-                      backgroundColor: overlayBackgroundColor,
-                    }}
-                    className="absolute w-full h-full inset-0 opacity-20">
-                  </div>
-            | None => React.null
-            }}
-          </div>
-        })
-        ->React.array
-      })
-      ->React.array}
-    </div>
-    <div className="flex flex-col gap-3 w-full">
-      <div className="flex flex-row items-start gap-3 overflow-x-auto">
-        {canvases
-        ->Array.mapWithIndex((canvasBoard, canvasIndex) => {
-          let (thumbDimI, thumbDimJ) = canvasBoard->Array.dims2D
-          let isSelectedCanvas = canvasIndex == currentCanvasIndex
-          <div className="relative">
-            <button
-              key={canvasIndex->Int.toString}
-              onClick={_ => {
-                setSelectedCanvasIndex(_ => canvasIndex)
+              onMouseLeave={_ => {
                 setHoveredCell(_ => None)
-                setCursorOverlayOff(_ => true)
               }}
-              className={[
-                " border w-fit h-fit",
-                isSelectedCanvas ? "border-blue-500" : "border-gray-200",
-              ]->Array.join(" ")}>
-              <div
-                className="h-16 w-16 grid"
-                style={{
-                  gridTemplateColumns: `repeat(${thumbDimI->Int.toString}, minmax(0, 1fr))`,
-                  gridTemplateRows: `repeat(${thumbDimJ->Int.toString}, minmax(0, 1fr))`,
-                }}>
-                {canvasBoard
-                ->Array.mapWithIndex((line, i) => {
-                  line
-                  ->Array.mapWithIndex(
-                    (cell, j) => {
-                      <div
-                        key={i->Int.toString ++ j->Int.toString}
-                        className="w-full h-full"
-                        style={{
-                          backgroundColor: cell->Nullable.getOr("transparent"),
-                        }}>
-                      </div>
-                    },
-                  )
-                  ->React.array
-                })
-                ->React.array}
-              </div>
-            </button>
-            <button
-              className={[
-                " w-4 h-4 leading-none text-sm font-medium absolute right-0 bottom-0",
-                canDeleteCanvas
-                  ? "bg-red-500 text-white"
-                  : "bg-gray-200 text-gray-500 cursor-not-allowed",
-              ]->Array.join(" ")}
-              disabled={!canDeleteCanvas}
-              onClick={e => {
-                e->JsxEvent.Mouse.stopPropagation
-                handleDeleteCanvas()
+              onMouseDown={_ => {
+                applyBrush(i, j)
+                setCursorOverlayOff(_ => true)
               }}>
-              {"x"->React.string}
-            </button>
-          </div>
+              <div
+                className={"w-full h-full absolute"}
+                style={{
+                  backgroundColor: backgroundColor,
+                }}
+              />
+              {switch hoveredCell {
+              | Some((hoverI, hoverJ)) =>
+                cursorOverlayOff || !showCursorOverlay || !canApply(i, j, hoverI, hoverJ)
+                  ? React.null
+                  : <div
+                      style={{
+                        backgroundColor: overlayBackgroundColor,
+                      }}
+                      className="absolute w-full h-full inset-0 opacity-20">
+                    </div>
+              | None => React.null
+              }}
+            </div>
+          })
+          ->React.array
         })
         ->React.array}
-        <button
-          onClick={_ => handleAddCanvas()}
-          className="flex-shrink-0 h-16 w-16 border-2 border-dashed border-gray-300 flex items-center justify-center text-3xl text-gray-400">
-          {"+"->React.string}
-        </button>
+      </div>
+
+      <div className="flex flex-col gap-2 w-full">
+        <div className="flex flex-row items-start gap-3 overflow-x-auto">
+          {canvases
+          ->Array.mapWithIndex((canvasBoard, canvasIndex) => {
+            let (thumbDimI, thumbDimJ) = canvasBoard->Array.dims2D
+            let isSelectedCanvas = canvasIndex == currentCanvasIndex
+            <div
+              className={[
+                "relative flex-shrink-0 border w-16 h-16",
+                isSelectedCanvas ? "border-blue-500" : "border-gray-200",
+              ]->Array.join(" ")}>
+              <button
+                key={canvasIndex->Int.toString}
+                onClick={_ => {
+                  setSelectedCanvasIndex(_ => canvasIndex)
+                  setHoveredCell(_ => None)
+                  setCursorOverlayOff(_ => true)
+                }}
+                className={["absolute w-fit h-fit"]->Array.join(" ")}>
+                <div
+                  className="h-16 w-16 grid"
+                  style={{
+                    gridTemplateColumns: `repeat(${thumbDimI->Int.toString}, minmax(0, 1fr))`,
+                    gridTemplateRows: `repeat(${thumbDimJ->Int.toString}, minmax(0, 1fr))`,
+                  }}>
+                  {canvasBoard
+                  ->Array.mapWithIndex((line, i) => {
+                    line
+                    ->Array.mapWithIndex(
+                      (cell, j) => {
+                        <div
+                          key={i->Int.toString ++ j->Int.toString}
+                          className="w-full h-full"
+                          style={{
+                            backgroundColor: cell->Nullable.getOr("transparent"),
+                          }}>
+                        </div>
+                      },
+                    )
+                    ->React.array
+                  })
+                  ->React.array}
+                </div>
+              </button>
+              {isSelectedCanvas
+                ? <button
+                    className={[
+                      " w-4 h-4 leading-none text-sm font-medium absolute right-0 bottom-0",
+                      canDeleteCanvas
+                        ? "bg-red-500 text-white"
+                        : "bg-gray-200 text-gray-500 cursor-not-allowed",
+                    ]->Array.join(" ")}
+                    disabled={!canDeleteCanvas}
+                    onClick={e => {
+                      e->JsxEvent.Mouse.stopPropagation
+                      handleDeleteCanvas()
+                    }}>
+                    {"x"->React.string}
+                  </button>
+                : React.null}
+            </div>
+          })
+          ->React.array}
+          <button
+            onClick={_ => handleAddCanvas()}
+            className="flex-shrink-0 h-16 w-16 border-2 border-dashed border-gray-300 flex items-center justify-center text-3xl text-gray-400">
+            {"+"->React.string}
+          </button>
+        </div>
       </div>
     </div>
+
     <div className="flex flex-col gap-2">
       <div className="flex flex-row gap-2">
         <button
@@ -633,6 +573,70 @@ let make = () => {
       <div>
         <div className="flex flex-row"> {"Show Brush Overlay"->React.string} </div>
         <Switch checked={showCursorOverlay} onChange={v => setShowCursorOverlay(_ => v)} />
+      </div>
+      <div className="border rounded p-2 flex flex-col gap-2 w-48">
+        <button
+          onClick={_ => setIsResizeOpen(v => !v)}
+          className={[
+            "flex flex-row items-center justify-between font-medium",
+            "w-full",
+          ]->Array.join(" ")}>
+          {"Canvas Size"->React.string}
+          <span> {isResizeOpen ? "-"->React.string : "+"->React.string} </span>
+        </button>
+
+        {isResizeOpen
+          ? <div className="flex flex-col gap-2">
+              <div className="flex flex-row w-full gap-2">
+                <input
+                  className="border rounded px-2 py-1 text-sm flex-1 min-w-0"
+                  value={resizeRowsInput}
+                  onChange={event => {
+                    let value = ReactEvent.Form.target(event)["value"]
+                    setResizeRowsInput(_ => value)
+                  }}
+                />
+                <span className={"flex-none px-1"}> {"x"->React.string} </span>
+                <input
+                  className="border rounded px-2 py-1 text-sm flex-1  min-w-0"
+                  value={resizeColsInput}
+                  onChange={event => {
+                    let value = ReactEvent.Form.target(event)["value"]
+                    setResizeColsInput(_ => value)
+                  }}
+                />
+              </div>
+
+              <button
+                className={[
+                  "rounded px-2 py-1 text-sm font-medium",
+                  canSubmitResize
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 text-gray-500 cursor-not-allowed",
+                ]->Array.join(" ")}
+                disabled={!canSubmitResize}
+                onClick={_ => {
+                  switch (parsePositiveInt(resizeRowsInput), parsePositiveInt(resizeColsInput)) {
+                  | (Some(nextRows), Some(nextCols)) =>
+                    setBoard(prev =>
+                      Array.make2D(nextRows, nextCols, () =>
+                        Nullable.null
+                      )->Array.mapWithIndex((row, rowI) =>
+                        row->Array.mapWithIndex(
+                          (_, colJ) => prev->Array.check2D(rowI, colJ)->Option.getOr(Nullable.null),
+                        )
+                      )
+                    )
+                    setHoveredCell(_ => None)
+                    setCursorOverlayOff(_ => true)
+                    setIsResizeOpen(_ => false)
+                  | _ => ()
+                  }
+                }}>
+                {"Save"->React.string}
+              </button>
+            </div>
+          : React.null}
       </div>
     </div>
   </div>
