@@ -188,6 +188,30 @@ function App(props) {
   let match$10 = React.useState(() => {});
   let setHoveredCell = match$10[1];
   let hoveredCell = match$10[0];
+  let match$11 = React.useState(() => 1);
+  let setZoom = match$11[1];
+  let zoom = match$11[0];
+  let zoomRef = React.useRef(zoom);
+  zoomRef.current = zoom;
+  let adjustZoomByFactor = factor => setZoom(prev => {
+    let value = prev * factor;
+    let cappedMax = value > 4 ? 4 : value;
+    if (cappedMax < 0.25) {
+      return 0.25;
+    } else {
+      return cappedMax;
+    }
+  });
+  let match$12 = React.useState(() => [
+    0,
+    0
+  ]);
+  let setPan = match$12[1];
+  let pan = match$12[0];
+  let adjustPan = (deltaX, deltaY) => setPan(param => [
+    param[0] + deltaX,
+    param[1] + deltaY
+  ]);
   let isMouseDown = useIsMouseDown();
   let canvasCount = canvases.length;
   React.useEffect(() => {
@@ -220,24 +244,24 @@ function App(props) {
       });
     }
   });
-  let match$11 = dims2D(board);
-  let boardDimJ = match$11[1];
-  let boardDimI = match$11[0];
-  let match$12 = dims2D(brush);
-  let brushCenterDimI = match$12[0] / 2 | 0;
-  let brushCenterDimJ = match$12[1] / 2 | 0;
-  let match$13 = dims2D(tileMask);
-  let tileMaskDimJ = match$13[1];
-  let tileMaskDimI = match$13[0];
-  let match$14 = React.useState(() => false);
-  let setIsResizeOpen = match$14[1];
-  let isResizeOpen = match$14[0];
-  let match$15 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$15[1];
-  let resizeRowsInput = match$15[0];
-  let match$16 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$16[1];
-  let resizeColsInput = match$16[0];
+  let match$13 = dims2D(board);
+  let boardDimJ = match$13[1];
+  let boardDimI = match$13[0];
+  let match$14 = dims2D(brush);
+  let brushCenterDimI = match$14[0] / 2 | 0;
+  let brushCenterDimJ = match$14[1] / 2 | 0;
+  let match$15 = dims2D(tileMask);
+  let tileMaskDimJ = match$15[1];
+  let tileMaskDimI = match$15[0];
+  let match$16 = React.useState(() => false);
+  let setIsResizeOpen = match$16[1];
+  let isResizeOpen = match$16[0];
+  let match$17 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$17[1];
+  let resizeRowsInput = match$17[0];
+  let match$18 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$18[1];
+  let resizeColsInput = match$18[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -252,9 +276,9 @@ function App(props) {
     }
     
   };
-  let match$17 = parsePositiveInt(resizeRowsInput);
-  let match$18 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$17 !== undefined && match$18 !== undefined ? match$17 !== boardDimI || match$18 !== boardDimJ : false;
+  let match$19 = parsePositiveInt(resizeRowsInput);
+  let match$20 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$19 !== undefined && match$20 !== undefined ? match$19 !== boardDimI || match$20 !== boardDimJ : false;
   let canDeleteCanvas = canvasCount > 1;
   let selectedSavedBrushIndex = Belt_Array.getIndexBy(savedBrushes, savedBrush => OtherJs.isEqual2D(savedBrush, brush));
   let selectedSavedTileMaskIndex = Belt_Array.getIndexBy(savedTileMasks, savedTileMask => OtherJs.isEqual2D(savedTileMask, tileMask));
@@ -323,6 +347,61 @@ function App(props) {
       window.removeEventListener("mousemove", onMouseMove);
     };
   }, []);
+  React.useEffect(() => {
+    let handleKeyDown = event => {
+      if (event.metaKey) {
+        let match = event.key;
+        switch (match) {
+          case "[" :
+            event.preventDefault();
+            return adjustZoomByFactor(0.9);
+          case "]" :
+            event.preventDefault();
+            return adjustZoomByFactor(1.1);
+          default:
+            return;
+        }
+      } else {
+        let step = 16 / zoomRef.current;
+        let match$1 = event.key;
+        switch (match$1) {
+          case "ArrowDown" :
+            event.preventDefault();
+            return adjustPan(0, - step);
+          case "ArrowLeft" :
+            event.preventDefault();
+            return adjustPan(step, 0);
+          case "ArrowRight" :
+            event.preventDefault();
+            return adjustPan(- step, 0);
+          case "ArrowUp" :
+            event.preventDefault();
+            return adjustPan(0, step);
+          default:
+            return;
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+  let handleCanvasWheel = event => {
+    event.preventDefault();
+    let deltaY = event.deltaY;
+    if (deltaY === 0) {
+      return;
+    } else if (deltaY < 0) {
+      return adjustZoomByFactor(1.1);
+    } else {
+      return adjustZoomByFactor(0.9);
+    }
+  };
+  let offsetXString = pan[0].toString();
+  let offsetYString = pan[1].toString();
+  let zoomString = zoom.toString();
+  let transformValue = "translate3d(" + offsetXString + "px, " + offsetYString + "px, 0) scale(" + zoomString + ")";
   return JsxRuntime.jsxs("div", {
     children: [
       JsxRuntime.jsxs("div", {
@@ -439,54 +518,64 @@ function App(props) {
       JsxRuntime.jsxs("div", {
         children: [
           JsxRuntime.jsx("div", {
-            children: board.map((line, i) => line.map((cell, j) => {
-              let backgroundColor = Stdlib_Nullable.getOr(cell, "transparent");
-              let overlayBackgroundColor = Stdlib_Nullable.mapOr(cell, "black", v => {
-                if (isLight(v)) {
-                  return "black";
-                } else {
-                  return "white";
-                }
-              });
-              return JsxRuntime.jsxs("div", {
-                children: [
-                  JsxRuntime.jsx("div", {
-                    className: "w-full h-full absolute",
-                    style: {
-                      backgroundColor: backgroundColor
-                    }
-                  }),
-                  hoveredCell !== undefined && !(cursorOverlayOff || !showCursorOverlay || !canApply(i, j, hoveredCell[0], hoveredCell[1])) ? JsxRuntime.jsx("div", {
-                      className: "absolute w-full h-full inset-0 opacity-20",
-                      style: {
-                        backgroundColor: overlayBackgroundColor
-                      }
-                    }) : null
-                ],
-                className: "w-full h-full group relative",
-                onMouseDown: param => {
-                  applyBrush(i, j);
-                  setCursorOverlayOff(param => true);
-                },
-                onMouseEnter: param => {
-                  setHoveredCell(param => [
-                    i,
-                    j
-                  ]);
-                  if (isMouseDown) {
-                    return applyBrush(i, j);
+            children: JsxRuntime.jsx("div", {
+              children: board.map((line, i) => line.map((cell, j) => {
+                let backgroundColor = Stdlib_Nullable.getOr(cell, "transparent");
+                let overlayBackgroundColor = Stdlib_Nullable.mapOr(cell, "black", v => {
+                  if (isLight(v)) {
+                    return "black";
+                  } else {
+                    return "white";
                   }
-                  
-                },
-                onMouseLeave: param => setHoveredCell(param => {})
-              }, i.toString() + j.toString());
-            })),
-            className: "border w-fit h-fit",
+                });
+                return JsxRuntime.jsxs("div", {
+                  children: [
+                    JsxRuntime.jsx("div", {
+                      className: "w-full h-full absolute",
+                      style: {
+                        backgroundColor: backgroundColor
+                      }
+                    }),
+                    hoveredCell !== undefined && !(cursorOverlayOff || !showCursorOverlay || !canApply(i, j, hoveredCell[0], hoveredCell[1])) ? JsxRuntime.jsx("div", {
+                        className: "absolute w-full h-full inset-0 opacity-20",
+                        style: {
+                          backgroundColor: overlayBackgroundColor
+                        }
+                      }) : null
+                  ],
+                  className: "w-full h-full group relative",
+                  onMouseDown: param => {
+                    applyBrush(i, j);
+                    setCursorOverlayOff(param => true);
+                  },
+                  onMouseEnter: param => {
+                    setHoveredCell(param => [
+                      i,
+                      j
+                    ]);
+                    if (isMouseDown) {
+                      return applyBrush(i, j);
+                    }
+                    
+                  },
+                  onMouseLeave: param => setHoveredCell(param => {})
+                }, i.toString() + j.toString());
+              })),
+              className: "absolute top-0 left-0",
+              style: {
+                display: "grid",
+                gridTemplateColumns: "repeat(" + boardDimI.toString() + ", 1rem)",
+                gridTemplateRows: "repeat(" + boardDimJ.toString() + ", 1rem)",
+                transform: transformValue,
+                transformOrigin: "top left"
+              }
+            }),
+            className: "relative border border-gray-300 overflow-hidden bg-white",
             style: {
-              display: "grid",
-              gridTemplateColumns: "repeat(" + boardDimI.toString() + ", 1rem)",
-              gridTemplateRows: "repeat(" + boardDimJ.toString() + ", 1rem)"
-            }
+              height: "384px",
+              width: "384px"
+            },
+            onWheel: handleCanvasWheel
           }),
           JsxRuntime.jsx("div", {
             children: JsxRuntime.jsxs("div", {

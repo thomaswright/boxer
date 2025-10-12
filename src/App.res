@@ -122,6 +122,22 @@ let make = () => {
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
   let (hoveredCell, setHoveredCell) = React.useState(() => None)
 
+  let (zoom, setZoom) = React.useState(() => 1.)
+  let zoomRef = React.useRef(zoom)
+  zoomRef.current = zoom
+
+  let clampZoom = value => {
+    let cappedMax = if value > 4. { 4. } else { value }
+    if cappedMax < 0.25 { 0.25 } else { cappedMax }
+  }
+
+  let adjustZoomByFactor = factor =>
+    setZoom(prev => clampZoom(prev *. factor))
+
+  let (pan, setPan) = React.useState(() => (0., 0.))
+  let adjustPan = (deltaX, deltaY) =>
+    setPan(((prevX, prevY)) => (prevX +. deltaX, prevY +. deltaY))
+
   let isMouseDown = useIsMouseDown()
 
   let canvasCount = canvases->Array.length
@@ -282,6 +298,64 @@ let make = () => {
 
     Some(() => window->Window.removeMouseMoveEventListener(onMouseMove))
   })
+
+  React.useEffect0(() => {
+    let handleKeyDown = event => {
+      if event->KeyboardEvent.metaKey {
+        switch event->KeyboardEvent.key {
+        | "]" =>
+          event->KeyboardEvent.preventDefault
+          adjustZoomByFactor(1.1)
+        | "[" =>
+          event->KeyboardEvent.preventDefault
+          adjustZoomByFactor(0.9)
+        | _ => ()
+        }
+      } else {
+        let step = 16. /. zoomRef.current
+        switch event->KeyboardEvent.key {
+        | "ArrowUp" =>
+          event->KeyboardEvent.preventDefault
+          adjustPan(0., step)
+        | "ArrowDown" =>
+          event->KeyboardEvent.preventDefault
+          adjustPan(0., -. step)
+        | "ArrowLeft" =>
+          event->KeyboardEvent.preventDefault
+          adjustPan(step, 0.)
+        | "ArrowRight" =>
+          event->KeyboardEvent.preventDefault
+          adjustPan(-. step, 0.)
+        | _ => ()
+        }
+      }
+    }
+
+    window->Window.addKeyDownEventListener(handleKeyDown)
+
+    Some(() => window->Window.removeKeyDownEventListener(handleKeyDown))
+  })
+
+  let handleCanvasWheel = event => {
+    ReactEvent.Wheel.preventDefault(event)
+    let deltaY = ReactEvent.Wheel.deltaY(event)
+    if deltaY == 0. {
+      ()
+    } else if deltaY < 0. {
+      adjustZoomByFactor(1.1)
+    } else {
+      adjustZoomByFactor(0.9)
+    }
+  }
+
+  let transformValue = {
+    let (offsetX, offsetY) = pan
+    let offsetXString = offsetX->Js.Float.toString
+    let offsetYString = offsetY->Js.Float.toString
+    let zoomString = zoom->Js.Float.toString
+    "translate3d(" ++ offsetXString ++ "px, " ++ offsetYString ++ "px, 0) scale("
+    ++ zoomString ++ ")"
+  }
   <div className=" flex flex-row gap-5 p-5">
     <div className="flex flex-row h-lg">
       <div className={"flex flex-col "}>
@@ -418,59 +492,69 @@ let make = () => {
 
     <div className="flex flex-col gap-2">
       <div
-        className={"border w-fit h-fit"}
+        className="relative border border-gray-300 overflow-hidden bg-white"
         style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${boardDimI->Int.toString}, 1rem)`,
-          gridTemplateRows: `repeat(${boardDimJ->Int.toString}, 1rem)`,
-        }}>
-        {board
-        ->Array.mapWithIndex((line, i) => {
-          line
-          ->Array.mapWithIndex((cell, j) => {
-            let backgroundColor = cell->Nullable.getOr("transparent")
-            let overlayBackgroundColor =
-              cell->Nullable.mapOr("black", v => v->isLight ? "black" : "white")
+          width: "384px",
+          height: "384px",
+        }}
+        onWheel={handleCanvasWheel}>
+        <div
+          className={"absolute top-0 left-0"}
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${boardDimI->Int.toString}, 1rem)`,
+            gridTemplateRows: `repeat(${boardDimJ->Int.toString}, 1rem)`,
+            transform: transformValue,
+            transformOrigin: "top left",
+          }}>
+          {board
+          ->Array.mapWithIndex((line, i) => {
+            line
+            ->Array.mapWithIndex((cell, j) => {
+              let backgroundColor = cell->Nullable.getOr("transparent")
+              let overlayBackgroundColor =
+                cell->Nullable.mapOr("black", v => v->isLight ? "black" : "white")
 
-            <div
-              className={"w-full h-full group relative"}
-              key={i->Int.toString ++ j->Int.toString}
-              onMouseEnter={_ => {
-                setHoveredCell(_ => Some((i, j)))
-                if isMouseDown {
-                  applyBrush(i, j)
-                }
-              }}
-              onMouseLeave={_ => {
-                setHoveredCell(_ => None)
-              }}
-              onMouseDown={_ => {
-                applyBrush(i, j)
-                setCursorOverlayOff(_ => true)
-              }}>
               <div
-                className={"w-full h-full absolute"}
-                style={{
-                  backgroundColor: backgroundColor,
+                className={"w-full h-full group relative"}
+                key={i->Int.toString ++ j->Int.toString}
+                onMouseEnter={_ => {
+                  setHoveredCell(_ => Some((i, j)))
+                  if isMouseDown {
+                    applyBrush(i, j)
+                  }
                 }}
-              />
-              {switch hoveredCell {
-              | Some((hoverI, hoverJ)) =>
-                cursorOverlayOff || !showCursorOverlay || !canApply(i, j, hoverI, hoverJ)
-                  ? React.null
-                  : <div
-                      style={{
-                        backgroundColor: overlayBackgroundColor,
-                      }}
-                      className="absolute w-full h-full inset-0 opacity-20">
-                    </div>
-              | None => React.null
-              }}
-            </div>
+                onMouseLeave={_ => {
+                  setHoveredCell(_ => None)
+                }}
+                onMouseDown={_ => {
+                  applyBrush(i, j)
+                  setCursorOverlayOff(_ => true)
+                }}>
+                <div
+                  className={"w-full h-full absolute"}
+                  style={{
+                    backgroundColor: backgroundColor,
+                  }}
+                />
+                {switch hoveredCell {
+                | Some((hoverI, hoverJ)) =>
+                  cursorOverlayOff || !showCursorOverlay || !canApply(i, j, hoverI, hoverJ)
+                    ? React.null
+                    : <div
+                        style={{
+                          backgroundColor: overlayBackgroundColor,
+                        }}
+                        className="absolute w-full h-full inset-0 opacity-20">
+                      </div>
+                | None => React.null
+                }}
+              </div>
+            })
+            ->React.array
           })
-          ->React.array
-        })
-        ->React.array}
+          ->React.array}
+        </div>
       </div>
 
       <div className="flex flex-col gap-2 w-full">
