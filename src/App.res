@@ -29,8 +29,12 @@ module Array = {
   let check2D = (a, i, j) => {
     a->Array.get(i)->Option.flatMap(row => row->Array.get(j))
   }
+
+  @module("./other.js")
+  external isEqual2D: (array<array<bool>>, array<array<bool>>) => bool = "isEqual2D"
 }
 type brush = array<array<bool>>
+
 type brushMode = | @as("Color") Color | @as("Erase") Erase
 
 // type toolTray = | @as("Hidden") Hidden | @as("Brush") Brush | @as("TileMask") TileMask
@@ -74,16 +78,14 @@ type tileMask = {
 }
 
 let defaultTileMasks = [
+  [[true, true], [true, true]],
   [[true, false], [false, true]],
   [[false, true], [true, false]],
   [[false, true], [false, true]],
   [[true, false], [true, false]],
   [[false, false], [true, true]],
   [[true, true], [false, false]],
-  [[true, false], [false, false]],
-  [[false, true], [false, false]],
-  [[false, false], [true, false]],
-  [[false, false], [false, true]],
+  [[true, false, false], [false, true, false], [false, false, true]],
 ]
 
 let defaultBrushes = [
@@ -188,64 +190,22 @@ let make = () => {
   })
   <div className=" flex flex-col gap-5 p-5">
     <div className="flex flex-row gap-2">
-      <div
-        className={"border w-20 h-20"}
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${brushDimI->Int.toString}, auto)`,
-          gridTemplateRows: `repeat(${brushDimJ->Int.toString}, auto)`,
-        }}>
-        {brush
-        ->Array.mapWithIndex((line, i) => {
-          line
-          ->Array.mapWithIndex((cell, j) => {
-            let isCursorCenter = brushDimI / 2 == i && brushDimJ / 2 == j
-            <div
-              className={"w-full h-full group relative "}
-              key={i->Int.toString ++ j->Int.toString}
-              onMouseEnter={_ => {
-                if isMouseDown {
-                  setBrush(b => b->Array.update2D(i, j, v => !v))
-                }
-              }}
-              onMouseDown={_ => {
-                setBrush(b => b->Array.update2D(i, j, v => !v))
-                setCursorOverlayOff(_ => true)
-              }}>
-              <div
-                className={"w-full h-full absolute"}
-                style={{
-                  backgroundColor: cell ? "#00c3ff" : "transparent",
-                }}
-              />
-              {cursorOverlayOff || !showCursorOverlay
-                ? React.null
-                : <div
-                    className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
-                  </div>}
-              {!isCursorCenter
-                ? React.null
-                : <div
-                    className="absolute w-full h-full flex flex-row items-center justify-center ">
-                    <div className=" w-1/2 h-1/2 bg-red-500 rounded-full"></div>
-                  </div>}
-            </div>
-          })
-          ->React.array
-        })
-        ->React.array}
-      </div>
-      <div className={"flex flex-row flex-wrap gap-1 w-32"}>
+      <div className={"flex flex-row flex-wrap gap-1 w-32 h-fit"}>
         {savedBrushes
         ->Array.map(savedBrush => {
           let (dimI, dimJ) = savedBrush->Array.dims2D
-          <div>
-            <div className={" text-3xs font-bold border border-b-0 w-8 text-center"}>
+          let selected = Array.isEqual2D(brush, savedBrush)
+          <button
+            onClick={_ => setBrush(_ => savedBrush)}
+            className={[selected ? "bg-red-100 text-red-600" : ""]->Array.join(" ")}>
+            <div
+              className={[" text-3xs font-bold border border-b-0 w-8 text-center"]->Array.join(
+                " ",
+              )}>
               {`${dimI->Int.toString}:${dimJ->Int.toString}`->React.string}
             </div>
 
-            <button
-              onClick={_ => setBrush(_ => savedBrush)}
+            <div
               style={{
                 display: "grid",
                 gridTemplateColumns: `repeat(${dimI->Int.toString}, auto)`,
@@ -261,7 +221,7 @@ let make = () => {
                       className={"w-full h-full "}
                       key={i->Int.toString ++ j->Int.toString}
                       style={{
-                        backgroundColor: cell ? "#00c3ff" : "transparent",
+                        backgroundColor: cell ? "#000" : "transparent",
                       }}>
                     </div>
                   },
@@ -269,53 +229,13 @@ let make = () => {
                 ->React.array
               })
               ->React.array}
-            </button>
-          </div>
-        })
-        ->React.array}
-      </div>
-      <div
-        className={"border w-20 h-20"}
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${tileMaskDimI->Int.toString}, auto)`,
-          gridTemplateRows: `repeat(${tileMaskDimJ->Int.toString}, auto)`,
-        }}>
-        {tileMask
-        ->Array.mapWithIndex((line, i) => {
-          line
-          ->Array.mapWithIndex((cell, j) => {
-            <div
-              className={"w-full h-full group relative "}
-              key={i->Int.toString ++ j->Int.toString}
-              onMouseEnter={_ => {
-                if isMouseDown {
-                  setTileMask(b => b->Array.update2D(i, j, v => !v))
-                }
-              }}
-              onMouseDown={_ => {
-                setTileMask(b => b->Array.update2D(i, j, v => !v))
-                setCursorOverlayOff(_ => true)
-              }}>
-              <div
-                className={"w-full h-full absolute"}
-                style={{
-                  backgroundColor: cell ? "#ffa700" : "transparent",
-                }}
-              />
-              {cursorOverlayOff || !showCursorOverlay
-                ? React.null
-                : <div
-                    className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
-                  </div>}
             </div>
-          })
-          ->React.array
+          </button>
         })
         ->React.array}
       </div>
 
-      <div className={"flex flex-row flex-wrap gap-1 w-20"}>
+      <div className={"flex flex-row flex-wrap gap-1 w-20 h-fit"}>
         {savedTileMasks
         ->Array.map(savedTileMask => {
           let (dimI, dimJ) = savedTileMask->Array.dims2D
@@ -349,6 +269,35 @@ let make = () => {
         ->React.array}
       </div>
     </div>
+
+    <button
+      className={"bg-gray-200 rounded px-2 h-fit w-fit"}
+      onClick={_ => {
+        let newBrush = board->Array.map(row => row->Array.map(cell => !(cell->Nullable.isNullable)))
+        setSavedBrushes(v => v->Array.concat([newBrush]))
+        setBrush(_ => newBrush)
+      }}>
+      {"brush from canvas"->React.string}
+    </button>
+
+    <button
+      className={"bg-gray-200 rounded px-2 h-fit w-fit"}
+      onClick={_ => {
+        let newTileMask =
+          board->Array.map(row => row->Array.map(cell => !(cell->Nullable.isNullable)))
+        setSavedTileMasks(v => v->Array.concat([newTileMask]))
+        setTileMask(_ => newTileMask)
+      }}>
+      {"dither mask from canvas"->React.string}
+    </button>
+
+    //    <button
+    //   className={"bg-gray-200 rounded px-2 h-fit w-fit"}
+    //   onClick={_ => {
+    //     resize
+    //   }}>
+    //   {"resize"->React.string}
+    // </button>
 
     // <div>
     //   {switch toolTrayMode {
@@ -456,3 +405,92 @@ let make = () => {
     </div>
   </div>
 }
+
+// <div
+//   className={"border w-20 h-20"}
+//   style={{
+//     display: "grid",
+//     gridTemplateColumns: `repeat(${brushDimI->Int.toString}, auto)`,
+//     gridTemplateRows: `repeat(${brushDimJ->Int.toString}, auto)`,
+//   }}>
+//   {brush
+//   ->Array.mapWithIndex((line, i) => {
+//     line
+//     ->Array.mapWithIndex((cell, j) => {
+//       let isCursorCenter = brushDimI / 2 == i && brushDimJ / 2 == j
+//       <div
+//         className={"w-full h-full group relative "}
+//         key={i->Int.toString ++ j->Int.toString}
+//         onMouseEnter={_ => {
+//           if isMouseDown {
+//             setBrush(b => b->Array.update2D(i, j, v => !v))
+//           }
+//         }}
+//         onMouseDown={_ => {
+//           setBrush(b => b->Array.update2D(i, j, v => !v))
+//           setCursorOverlayOff(_ => true)
+//         }}>
+//         <div
+//           className={"w-full h-full absolute"}
+//           style={{
+//             backgroundColor: cell ? "#00c3ff" : "transparent",
+//           }}
+//         />
+//         {cursorOverlayOff || !showCursorOverlay
+//           ? React.null
+//           : <div
+//               className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
+//             </div>}
+//         {!isCursorCenter
+//           ? React.null
+//           : <div
+//               className="absolute w-full h-full flex flex-row items-center justify-center ">
+//               <div className=" w-1/2 h-1/2 bg-red-500 rounded-full"></div>
+//             </div>}
+//       </div>
+//     })
+//     ->React.array
+//   })
+//   ->React.array}
+// </div>
+
+// <div
+//   className={"border w-20 h-20"}
+//   style={{
+//     display: "grid",
+//     gridTemplateColumns: `repeat(${tileMaskDimI->Int.toString}, auto)`,
+//     gridTemplateRows: `repeat(${tileMaskDimJ->Int.toString}, auto)`,
+//   }}>
+//   {tileMask
+//   ->Array.mapWithIndex((line, i) => {
+//     line
+//     ->Array.mapWithIndex((cell, j) => {
+//       <div
+//         className={"w-full h-full group relative "}
+//         key={i->Int.toString ++ j->Int.toString}
+//         onMouseEnter={_ => {
+//           if isMouseDown {
+//             setTileMask(b => b->Array.update2D(i, j, v => !v))
+//           }
+//         }}
+//         onMouseDown={_ => {
+//           setTileMask(b => b->Array.update2D(i, j, v => !v))
+//           setCursorOverlayOff(_ => true)
+//         }}>
+//         <div
+//           className={"w-full h-full absolute"}
+//           style={{
+//             backgroundColor: cell ? "#ffa700" : "transparent",
+//           }}
+//         />
+//         {cursorOverlayOff || !showCursorOverlay
+//           ? React.null
+//           : <div
+//               className="absolute w-full h-full inset-0 bg-black opacity-0 group-hover:opacity-20">
+//             </div>}
+//       </div>
+//     })
+//     ->React.array
+//   })
+//   ->React.array}
+// </div>
