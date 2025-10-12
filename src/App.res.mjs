@@ -327,107 +327,117 @@ function App(props) {
     children: [
       JsxRuntime.jsxs("div", {
         children: [
-          JsxRuntime.jsx("div", {
-            children: savedBrushes.map(savedBrush => {
-              let match = dims2D(savedBrush);
-              let dimJ = match[1];
-              let dimI = match[0];
-              let selected = OtherJs.isEqual2D(brush, savedBrush);
-              return JsxRuntime.jsxs("button", {
+          JsxRuntime.jsxs("div", {
+            children: [
+              JsxRuntime.jsxs("div", {
                 children: [
-                  JsxRuntime.jsx("div", {
-                    children: dimI.toString() + ":" + dimJ.toString(),
-                    className: [" text-3xs font-bold border border-b-0 w-8 text-center"].join(" ")
+                  JsxRuntime.jsx("button", {
+                    children: "x",
+                    className: [
+                      "w-4 h-4 leading-none",
+                      canDeleteSelectedBrush ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    ].join(" "),
+                    disabled: !canDeleteSelectedBrush,
+                    onClick: param => handleDeleteSelectedBrush()
                   }),
-                  JsxRuntime.jsx("div", {
-                    children: savedBrush.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
-                      className: "w-full h-full ",
-                      style: {
-                        backgroundColor: cell ? "#000" : "transparent"
-                      }
-                    }, i.toString() + j.toString()))),
-                    className: "h-8 w-8 border",
-                    style: {
-                      display: "grid",
-                      gridTemplateColumns: "repeat(" + dimI.toString() + ", auto)",
-                      gridTemplateRows: "repeat(" + dimJ.toString() + ", auto)"
+                  JsxRuntime.jsx("button", {
+                    children: "+",
+                    className: "bg-gray-200 w-4 h-4 leading-none",
+                    onClick: param => {
+                      let newBrush = board.map(row => row.map(cell => !(cell == null)));
+                      setSavedBrushes(v => v.concat([newBrush]));
+                      setBrush(param => newBrush);
                     }
                   })
-                ],
-                className: [selected ? "bg-red-100 text-red-600" : ""].join(" "),
-                onClick: param => setBrush(param => savedBrush)
-              });
-            }),
-            className: "flex flex-row flex-wrap gap-1 w-32 h-fit"
+                ]
+              }),
+              savedBrushes.map(savedBrush => {
+                let match = dims2D(savedBrush);
+                let dimJ = match[1];
+                let dimI = match[0];
+                let selected = OtherJs.isEqual2D(brush, savedBrush);
+                return JsxRuntime.jsxs("button", {
+                  children: [
+                    JsxRuntime.jsx("div", {
+                      children: dimI.toString() + ":" + dimJ.toString(),
+                      className: [" text-3xs font-bold border border-b-0 w-8 text-center"].join(" ")
+                    }),
+                    JsxRuntime.jsx("div", {
+                      children: savedBrush.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
+                        className: "w-full h-full ",
+                        style: {
+                          backgroundColor: cell ? "#000" : "transparent"
+                        }
+                      }, i.toString() + j.toString()))),
+                      className: "h-8 w-8 border",
+                      style: {
+                        display: "grid",
+                        gridTemplateColumns: "repeat(" + dimI.toString() + ", auto)",
+                        gridTemplateRows: "repeat(" + dimJ.toString() + ", auto)"
+                      }
+                    })
+                  ],
+                  className: [selected ? "bg-red-100 text-red-600" : ""].join(" "),
+                  onClick: param => setBrush(param => savedBrush)
+                });
+              })
+            ],
+            className: "flex flex-col "
           }),
-          JsxRuntime.jsx("div", {
-            children: savedTileMasks.map(savedTileMask => {
-              let match = dims2D(savedTileMask);
-              let selected = OtherJs.isEqual2D(tileMask, savedTileMask);
-              return JsxRuntime.jsx("button", {
-                children: savedTileMask.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
-                  className: "w-full h-full ",
+          JsxRuntime.jsxs("div", {
+            children: [
+              JsxRuntime.jsxs("div", {
+                children: [
+                  JsxRuntime.jsx("button", {
+                    children: "x",
+                    className: [
+                      "w-4 h-4 leading-none",
+                      canDeleteSelectedTileMask ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    ].join(" "),
+                    disabled: !canDeleteSelectedTileMask,
+                    onClick: param => handleDeleteSelectedTileMask()
+                  }),
+                  JsxRuntime.jsx("button", {
+                    children: "+",
+                    className: "bg-gray-200 w-4 h-4 leading-none",
+                    onClick: param => {
+                      let newTileMask = board.map(row => row.map(cell => !(cell == null)));
+                      setSavedTileMasks(v => v.concat([newTileMask]));
+                      setTileMask(param => newTileMask);
+                    }
+                  })
+                ]
+              }),
+              savedTileMasks.map(savedTileMask => {
+                let match = dims2D(savedTileMask);
+                let selected = OtherJs.isEqual2D(tileMask, savedTileMask);
+                return JsxRuntime.jsx("button", {
+                  children: savedTileMask.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
+                    className: "w-full h-full ",
+                    style: {
+                      backgroundColor: cell ? "#ffa700" : "transparent"
+                    }
+                  }, i.toString() + j.toString()))),
+                  className: [
+                    "h-8 w-8 border",
+                    selected ? "bg-orange-100 border-orange-500" : "border-gray-200"
+                  ].join(" "),
                   style: {
-                    backgroundColor: cell ? "#ffa700" : "transparent"
-                  }
-                }, i.toString() + j.toString()))),
-                className: [
-                  "h-5 w-5 border",
-                  selected ? "bg-orange-100 border-orange-500" : "border-gray-200"
-                ].join(" "),
-                style: {
-                  display: "grid",
-                  gridTemplateColumns: "repeat(" + match[0].toString() + ", auto)",
-                  gridTemplateRows: "repeat(" + match[1].toString() + ", auto)"
-                },
-                onClick: param => setTileMask(param => savedTileMask)
-              });
-            }),
-            className: "flex flex-row flex-wrap gap-1 w-20 h-fit"
+                    display: "grid",
+                    gridTemplateColumns: "repeat(" + match[0].toString() + ", auto)",
+                    gridTemplateRows: "repeat(" + match[1].toString() + ", auto)"
+                  },
+                  onClick: param => setTileMask(param => savedTileMask)
+                });
+              })
+            ],
+            className: "flex flex-col"
           })
         ],
+        className: "flex flex-row h-lg"
+      }),
+      JsxRuntime.jsx("div", {
         className: "flex flex-row gap-2"
-      }),
-      JsxRuntime.jsxs("div", {
-        children: [
-          JsxRuntime.jsx("button", {
-            children: "delete selected brush",
-            className: [
-              "rounded px-2 h-fit w-fit",
-              canDeleteSelectedBrush ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
-            ].join(" "),
-            disabled: !canDeleteSelectedBrush,
-            onClick: param => handleDeleteSelectedBrush()
-          }),
-          JsxRuntime.jsx("button", {
-            children: "delete selected tile mask",
-            className: [
-              "rounded px-2 h-fit w-fit",
-              canDeleteSelectedTileMask ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
-            ].join(" "),
-            disabled: !canDeleteSelectedTileMask,
-            onClick: param => handleDeleteSelectedTileMask()
-          })
-        ],
-        className: "flex flex-row gap-2"
-      }),
-      JsxRuntime.jsx("button", {
-        children: "brush from canvas",
-        className: "bg-gray-200 rounded px-2 h-fit w-fit",
-        onClick: param => {
-          let newBrush = board.map(row => row.map(cell => !(cell == null)));
-          setSavedBrushes(v => v.concat([newBrush]));
-          setBrush(param => newBrush);
-        }
-      }),
-      JsxRuntime.jsx("button", {
-        children: "dither mask from canvas",
-        className: "bg-gray-200 rounded px-2 h-fit w-fit",
-        onClick: param => {
-          let newTileMask = board.map(row => row.map(cell => !(cell == null)));
-          setSavedTileMasks(v => v.concat([newTileMask]));
-          setTileMask(param => newTileMask);
-        }
       }),
       JsxRuntime.jsxs("div", {
         children: [
@@ -546,56 +556,62 @@ function App(props) {
           gridTemplateRows: "repeat(" + boardDimJ.toString() + ", 1rem)"
         }
       }),
-      JsxRuntime.jsxs("div", {
-        children: [
-          JsxRuntime.jsxs("div", {
-            children: [
-              canvases.map((canvasBoard, canvasIndex) => {
-                let match = dims2D(canvasBoard);
-                let isSelectedCanvas = canvasIndex === currentCanvasIndex;
-                return JsxRuntime.jsx("button", {
-                  children: JsxRuntime.jsx("div", {
-                    children: canvasBoard.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
-                      className: "w-full h-full",
+      JsxRuntime.jsx("div", {
+        children: JsxRuntime.jsxs("div", {
+          children: [
+            canvases.map((canvasBoard, canvasIndex) => {
+              let match = dims2D(canvasBoard);
+              let isSelectedCanvas = canvasIndex === currentCanvasIndex;
+              return JsxRuntime.jsxs("div", {
+                children: [
+                  JsxRuntime.jsx("button", {
+                    children: JsxRuntime.jsx("div", {
+                      children: canvasBoard.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
+                        className: "w-full h-full",
+                        style: {
+                          backgroundColor: Stdlib_Nullable.getOr(cell, "transparent")
+                        }
+                      }, i.toString() + j.toString()))),
+                      className: "h-16 w-16 grid",
                       style: {
-                        backgroundColor: Stdlib_Nullable.getOr(cell, "transparent")
+                        gridTemplateColumns: "repeat(" + match[0].toString() + ", minmax(0, 1fr))",
+                        gridTemplateRows: "repeat(" + match[1].toString() + ", minmax(0, 1fr))"
                       }
-                    }, i.toString() + j.toString()))),
-                    className: "h-16 w-16 grid",
-                    style: {
-                      gridTemplateColumns: "repeat(" + match[0].toString() + ", minmax(0, 1fr))",
-                      gridTemplateRows: "repeat(" + match[1].toString() + ", minmax(0, 1fr))"
+                    }),
+                    className: [
+                      " border",
+                      isSelectedCanvas ? "border-blue-500" : "border-gray-200"
+                    ].join(" "),
+                    onClick: param => {
+                      setSelectedCanvasIndex(param => canvasIndex);
+                      setHoveredCell(param => {});
+                      setCursorOverlayOff(param => true);
                     }
-                  }),
-                  className: [
-                    "flex-shrink-0 rounded border p-1",
-                    isSelectedCanvas ? "border-blue-500" : "border-gray-200"
-                  ].join(" "),
-                  onClick: param => {
-                    setSelectedCanvasIndex(param => canvasIndex);
-                    setHoveredCell(param => {});
-                    setCursorOverlayOff(param => true);
-                  }
-                }, canvasIndex.toString());
-              }),
-              JsxRuntime.jsx("button", {
-                children: "+",
-                className: "flex-shrink-0 h-16 w-16 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-3xl text-gray-400",
-                onClick: param => handleAddCanvas()
-              })
-            ],
-            className: "flex flex-row items-start gap-3 overflow-x-auto py-2"
-          }),
-          JsxRuntime.jsx("button", {
-            children: "Delete Canvas",
-            className: [
-              "self-start rounded px-3 py-1 text-sm font-medium",
-              canDeleteCanvas ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
-            ].join(" "),
-            disabled: !canDeleteCanvas,
-            onClick: param => handleDeleteCanvas()
-          })
-        ],
+                  }, canvasIndex.toString()),
+                  JsxRuntime.jsx("button", {
+                    children: "x",
+                    className: [
+                      " w-4 h-4 leading-none text-sm font-medium absolute right-0 bottom-0",
+                      canDeleteCanvas ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    ].join(" "),
+                    disabled: !canDeleteCanvas,
+                    onClick: e => {
+                      e.stopPropagation();
+                      handleDeleteCanvas();
+                    }
+                  })
+                ],
+                className: "relative flex-shrink-0"
+              });
+            }),
+            JsxRuntime.jsx("button", {
+              children: "+",
+              className: "flex-shrink-0 h-16 w-16 border-2 border-dashed border-gray-300 flex items-center justify-center text-3xl text-gray-400",
+              onClick: param => handleAddCanvas()
+            })
+          ],
+          className: "flex flex-row items-start gap-3 overflow-x-auto"
+        }),
         className: "flex flex-col gap-3 w-full"
       }),
       JsxRuntime.jsxs("div", {
