@@ -269,13 +269,13 @@ module CanvasViewport = {
   ) => {
     <div
       ref={ReactDOM.Ref.domRef(canvasContainerRef)}
-      className="relative border border-gray-300 overflow-hidden bg-white"
+      className="relative border border-gray-300 overflow-hidden bg-gray-200"
       style={{
         width: "384px",
         height: "384px",
       }}>
       <div
-        className={"absolute top-0 left-0 border"}
+        className={"absolute top-0 left-0 bg-white"}
         style={{
           display: "grid",
           gridTemplateColumns: `repeat(${boardDimI->Int.toString}, 1rem)`,
@@ -692,8 +692,8 @@ let make = () => {
     let boardWidth = Float.fromInt(boardDimI) *. cellSize
     let boardHeight = Float.fromInt(boardDimJ) *. cellSize
     let currentZoom = zoomRef.current
-    let nextPanX = centerX -. (boardWidth *. currentZoom) /. 2.
-    let nextPanY = centerY -. (boardHeight *. currentZoom) /. 2.
+    let nextPanX = centerX -. boardWidth *. currentZoom /. 2.
+    let nextPanY = centerY -. boardHeight *. currentZoom /. 2.
     setPan(_ => (nextPanX, nextPanY))
   }
 

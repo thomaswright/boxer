@@ -332,7 +332,7 @@ function App$CanvasViewport(props) {
           onMouseLeave: param => setHoveredCell(param => {})
         }, i.toString() + j.toString());
       })),
-      className: "absolute top-0 left-0 border",
+      className: "absolute top-0 left-0 bg-white",
       style: {
         display: "grid",
         gridTemplateColumns: "repeat(" + props.boardDimI.toString() + ", 1rem)",
@@ -342,7 +342,7 @@ function App$CanvasViewport(props) {
       }
     }),
     ref: Primitive_option.some(props.canvasContainerRef),
-    className: "relative border border-gray-300 overflow-hidden bg-white",
+    className: "relative border border-gray-300 overflow-hidden bg-gray-200",
     style: {
       height: "384px",
       width: "384px"
