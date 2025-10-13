@@ -429,7 +429,13 @@ module ControlsPanel = {
     ~setResizeColsInput,
     ~canSubmitResize,
     ~onSubmitResize,
+    ~zoom,
+    ~onZoomIn,
+    ~onZoomOut,
+    ~onZoomReset,
   ) => {
+    let zoomPercentString = (zoom *. 100.)->Float.toFixed(~digits=0)
+
     <div className="flex flex-col gap-2">
       <div className="flex flex-row gap-2">
         <button
@@ -505,6 +511,29 @@ module ControlsPanel = {
               </button>
             </div>
           : React.null}
+      </div>
+      <div className="border rounded p-2 flex flex-col gap-2 w-48">
+        <div className="flex flex-row items-center justify-between">
+          <span className="font-medium"> {"Zoom"->React.string} </span>
+          <span className="text-sm font-mono"> {`${zoomPercentString}%`->React.string} </span>
+        </div>
+        <div className="flex flex-row gap-2">
+          <button
+            className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
+            onClick={_ => onZoomOut()}>
+            {"-"->React.string}
+          </button>
+          <button
+            className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
+            onClick={_ => onZoomReset()}>
+            {"100%"->React.string}
+          </button>
+          <button
+            className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
+            onClick={_ => onZoomIn()}>
+            {"+"->React.string}
+          </button>
+        </div>
       </div>
     </div>
   }
@@ -584,9 +613,9 @@ let make = () => {
 
   let adjustPan = (deltaX, deltaY) => setPan(((prevX, prevY)) => (prevX +. deltaX, prevY +. deltaY))
 
-  let adjustZoomByFactor = factor =>
+  let updateZoom = updater =>
     setZoom(prev => {
-      let next = clampZoom(prev *. factor)
+      let next = clampZoom(updater(prev))
       if next != prev {
         let (centerX, centerY) = viewportCenter
         let (prevPanX, prevPanY) = panRef.current
@@ -598,6 +627,11 @@ let make = () => {
       }
       next
     })
+
+  let adjustZoomByFactor = factor => updateZoom(prev => prev *. factor)
+  let resetZoom = () => updateZoom(_ => 1.)
+  let zoomIn = () => adjustZoomByFactor(zoom_factor)
+  let zoomOut = () => adjustZoomByFactor(1. /. zoom_factor)
 
   let isMouseDown = useIsMouseDown()
 
@@ -795,10 +829,10 @@ let make = () => {
         switch event->KeyboardEvent.key {
         | "]" =>
           event->KeyboardEvent.preventDefault
-          adjustZoomByFactor(zoom_factor)
+          zoomIn()
         | "[" =>
           event->KeyboardEvent.preventDefault
-          adjustZoomByFactor(1. /. zoom_factor)
+          zoomOut()
         | _ => ()
         }
       } else {
@@ -903,6 +937,10 @@ let make = () => {
       setResizeColsInput={setResizeColsInput}
       canSubmitResize={canSubmitResize}
       onSubmitResize={handleResizeSubmit}
+      zoom
+      onZoomIn={zoomIn}
+      onZoomOut={zoomOut}
+      onZoomReset={resetZoom}
     />
   </div>
 }

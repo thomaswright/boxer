@@ -410,6 +410,9 @@ function App$CanvasThumbnails(props) {
 }
 
 function App$ControlsPanel(props) {
+  let onZoomReset = props.onZoomReset;
+  let onZoomOut = props.onZoomOut;
+  let onZoomIn = props.onZoomIn;
   let onSubmitResize = props.onSubmitResize;
   let canSubmitResize = props.canSubmitResize;
   let setResizeColsInput = props.setResizeColsInput;
@@ -420,6 +423,7 @@ function App$ControlsPanel(props) {
   let setMyColor = props.setMyColor;
   let setBrushMode = props.setBrushMode;
   let brushMode = props.brushMode;
+  let zoomPercentString = (props.zoom * 100).toFixed(0);
   return JsxRuntime.jsxs("div", {
     children: [
       JsxRuntime.jsxs("div", {
@@ -515,6 +519,44 @@ function App$ControlsPanel(props) {
             }) : null
         ],
         className: "border rounded p-2 flex flex-col gap-2 w-48"
+      }),
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsxs("div", {
+            children: [
+              JsxRuntime.jsx("span", {
+                children: "Zoom",
+                className: "font-medium"
+              }),
+              JsxRuntime.jsx("span", {
+                children: zoomPercentString + "%",
+                className: "text-sm font-mono"
+              })
+            ],
+            className: "flex flex-row items-center justify-between"
+          }),
+          JsxRuntime.jsxs("div", {
+            children: [
+              JsxRuntime.jsx("button", {
+                children: "-",
+                className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
+                onClick: param => onZoomOut()
+              }),
+              JsxRuntime.jsx("button", {
+                children: "100%",
+                className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
+                onClick: param => onZoomReset()
+              }),
+              JsxRuntime.jsx("button", {
+                children: "+",
+                className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
+                onClick: param => onZoomIn()
+              })
+            ],
+            className: "flex flex-row gap-2"
+          })
+        ],
+        className: "border rounded p-2 flex flex-col gap-2 w-48"
       })
     ],
     className: "flex flex-col gap-2"
@@ -599,8 +641,8 @@ function App(props) {
     param[0] + deltaX,
     param[1] + deltaY
   ]);
-  let adjustZoomByFactor = factor => setZoom(prev => {
-    let next = clampZoom(prev * factor);
+  let updateZoom = updater => setZoom(prev => {
+    let next = clampZoom(updater(prev));
     if (next !== prev) {
       let centerY = viewportCenter[1];
       let centerX = viewportCenter[0];
@@ -616,6 +658,12 @@ function App(props) {
     }
     return next;
   });
+  let resetZoom = () => updateZoom(param => 1);
+  let zoomIn = () => updateZoom(prev => prev * 1.1);
+  let zoomOut = () => {
+    let factor = 1 / 1.1;
+    updateZoom(prev => prev * factor);
+  };
   let isMouseDown = useIsMouseDown();
   let canvasCount = canvases.length;
   React.useEffect(() => {
@@ -773,10 +821,11 @@ function App(props) {
         switch (match) {
           case "[" :
             event.preventDefault();
-            return adjustZoomByFactor(1 / 1.1);
+            let factor = 1 / 1.1;
+            return updateZoom(prev => prev * factor);
           case "]" :
             event.preventDefault();
-            return adjustZoomByFactor(1.1);
+            return updateZoom(prev => prev * 1.1);
           default:
             return;
         }
@@ -880,7 +929,11 @@ function App(props) {
         resizeColsInput: resizeColsInput,
         setResizeColsInput: setResizeColsInput,
         canSubmitResize: canSubmitResize,
-        onSubmitResize: handleResizeSubmit
+        onSubmitResize: handleResizeSubmit,
+        zoom: zoom,
+        onZoomIn: zoomIn,
+        onZoomOut: zoomOut,
+        onZoomReset: resetZoom
       })
     ],
     className: " flex flex-row gap-5 p-5"
