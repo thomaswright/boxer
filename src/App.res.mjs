@@ -3,6 +3,7 @@
 import * as React from "react";
 import * as OtherJs from "./other.js";
 import * as Belt_Array from "rescript/lib/es6/Belt_Array.js";
+import * as Belt_Float from "rescript/lib/es6/Belt_Float.js";
 import * as Stdlib_Int from "rescript/lib/es6/Stdlib_Int.js";
 import SwitchJsx from "./Switch.jsx";
 import * as Color from "@texel/color";
@@ -11,6 +12,7 @@ import * as Primitive_int from "rescript/lib/es6/Primitive_int.js";
 import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
 import * as ReactColorful from "react-colorful";
 import * as Stdlib_Nullable from "rescript/lib/es6/Stdlib_Nullable.js";
+import * as ExportBoardJs from "./exportBoard.js";
 import * as Primitive_option from "rescript/lib/es6/Primitive_option.js";
 import * as JsxRuntime from "react/jsx-runtime";
 import UseLocalStorageJs from "./useLocalStorage.js";
@@ -410,6 +412,9 @@ function App$CanvasThumbnails(props) {
 }
 
 function App$ControlsPanel(props) {
+  let onExport = props.onExport;
+  let canExport = props.canExport;
+  let setExportScaleInput = props.setExportScaleInput;
   let onCenterCanvas = props.onCenterCanvas;
   let onZoomReset = props.onZoomReset;
   let onZoomOut = props.onZoomOut;
@@ -563,6 +568,49 @@ function App$ControlsPanel(props) {
           })
         ],
         className: "border rounded p-2 flex flex-col gap-2 w-48"
+      }),
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsx("span", {
+            children: "Export PNG",
+            className: "font-medium"
+          }),
+          JsxRuntime.jsxs("div", {
+            children: [
+              JsxRuntime.jsxs("label", {
+                children: [
+                  JsxRuntime.jsx("span", {
+                    children: "Scale",
+                    className: "text-xs uppercase tracking-wide text-gray-500"
+                  }),
+                  JsxRuntime.jsx("input", {
+                    className: "border rounded px-2 py-1 text-sm w-16",
+                    min: "1",
+                    step: 1.0,
+                    type: "number",
+                    value: props.exportScaleInput,
+                    onChange: event => {
+                      let value = event.target.value;
+                      setExportScaleInput(param => value);
+                    }
+                  })
+                ],
+                className: "flex flex-col gap-1 text-sm"
+              }),
+              JsxRuntime.jsx("button", {
+                children: "Export",
+                className: [
+                  "rounded px-2 py-1 text-sm font-medium flex-1 h-fit",
+                  canExport ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                ].join(" "),
+                disabled: !canExport,
+                onClick: param => onExport()
+              })
+            ],
+            className: "flex flex-row  gap-2 items-end"
+          })
+        ],
+        className: "border rounded p-2 flex flex-col gap-2 w-48"
       })
     ],
     className: "flex flex-col gap-2"
@@ -596,18 +644,20 @@ function App(props) {
   let setCursorOverlayOff = match$9[1];
   let match$10 = React.useState(() => {});
   let setHoveredCell = match$10[1];
-  let match$11 = UseLocalStorageJs("canvas-zoom", 1);
-  let setZoom = match$11[1];
-  let zoom = match$11[0];
+  let match$11 = React.useState(() => "1");
+  let exportScaleInput = match$11[0];
+  let match$12 = UseLocalStorageJs("canvas-zoom", 1);
+  let setZoom = match$12[1];
+  let zoom = match$12[0];
   let zoomRef = React.useRef(zoom);
   zoomRef.current = zoom;
   let canvasContainerRef = React.useRef(null);
-  let match$12 = React.useState(() => [
+  let match$13 = React.useState(() => [
     192,
     192
   ]);
-  let setViewportCenter = match$12[1];
-  let viewportCenter = match$12[0];
+  let setViewportCenter = match$13[1];
+  let viewportCenter = match$13[0];
   let updateViewportCenter = () => {
     let element = canvasContainerRef.current;
     if (element == null) {
@@ -635,12 +685,12 @@ function App(props) {
       return cappedMax;
     }
   };
-  let match$13 = UseLocalStorageJs("canvas-pan", [
+  let match$14 = UseLocalStorageJs("canvas-pan", [
     0,
     0
   ]);
-  let setPan = match$13[1];
-  let pan = match$13[0];
+  let setPan = match$14[1];
+  let pan = match$14[0];
   let panRef = React.useRef(pan);
   panRef.current = pan;
   let adjustPan = (deltaX, deltaY) => setPan(param => [
@@ -702,15 +752,15 @@ function App(props) {
       });
     }
   });
-  let match$14 = dims2D(board);
-  let boardDimJ = match$14[1];
-  let boardDimI = match$14[0];
-  let match$15 = dims2D(brush);
-  let brushCenterDimI = match$15[0] / 2 | 0;
-  let brushCenterDimJ = match$15[1] / 2 | 0;
-  let match$16 = dims2D(tileMask);
-  let tileMaskDimJ = match$16[1];
-  let tileMaskDimI = match$16[0];
+  let match$15 = dims2D(board);
+  let boardDimJ = match$15[1];
+  let boardDimI = match$15[0];
+  let match$16 = dims2D(brush);
+  let brushCenterDimI = match$16[0] / 2 | 0;
+  let brushCenterDimJ = match$16[1] / 2 | 0;
+  let match$17 = dims2D(tileMask);
+  let tileMaskDimJ = match$17[1];
+  let tileMaskDimI = match$17[0];
   let centerCanvas = () => {
     let boardWidth = boardDimI * 16;
     let boardHeight = boardDimJ * 16;
@@ -722,14 +772,14 @@ function App(props) {
       nextPanY
     ]);
   };
-  let match$17 = React.useState(() => false);
-  let setIsResizeOpen = match$17[1];
-  let match$18 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$18[1];
-  let resizeRowsInput = match$18[0];
-  let match$19 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$19[1];
-  let resizeColsInput = match$19[0];
+  let match$18 = React.useState(() => false);
+  let setIsResizeOpen = match$18[1];
+  let match$19 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$19[1];
+  let resizeRowsInput = match$19[0];
+  let match$20 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$20[1];
+  let resizeColsInput = match$20[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -744,9 +794,18 @@ function App(props) {
     }
     
   };
-  let match$20 = parsePositiveInt(resizeRowsInput);
-  let match$21 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$20 !== undefined && match$21 !== undefined ? match$20 !== boardDimI || match$21 !== boardDimJ : false;
+  let parsePositiveFloat = value => {
+    let parsed = Belt_Float.fromString(value);
+    if (parsed !== undefined && parsed > 0) {
+      return parsed;
+    }
+    
+  };
+  let match$21 = parsePositiveInt(resizeRowsInput);
+  let match$22 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$21 !== undefined && match$22 !== undefined ? match$21 !== boardDimI || match$22 !== boardDimJ : false;
+  let exportScaleValue = parsePositiveFloat(exportScaleInput);
+  let canExport = Stdlib_Option.isSome(exportScaleValue);
   let handleResizeSubmit = () => {
     let match = parsePositiveInt(resizeRowsInput);
     let match$1 = parsePositiveInt(resizeColsInput);
@@ -755,6 +814,13 @@ function App(props) {
       setHoveredCell(param => {});
       setCursorOverlayOff(param => true);
       return setIsResizeOpen(param => false);
+    }
+    
+  };
+  let handleExportPng = () => {
+    if (exportScaleValue !== undefined) {
+      ExportBoardJs.exportBoardAsPng(board, exportScaleValue);
+      return;
     }
     
   };
@@ -939,7 +1005,7 @@ function App(props) {
         setMyColor: match$8[1],
         showCursorOverlay: showCursorOverlay,
         setShowCursorOverlay: match$7[1],
-        isResizeOpen: match$17[0],
+        isResizeOpen: match$18[0],
         setIsResizeOpen: setIsResizeOpen,
         resizeRowsInput: resizeRowsInput,
         setResizeRowsInput: setResizeRowsInput,
@@ -951,7 +1017,11 @@ function App(props) {
         onZoomIn: zoomIn,
         onZoomOut: zoomOut,
         onZoomReset: resetZoom,
-        onCenterCanvas: centerCanvas
+        onCenterCanvas: centerCanvas,
+        exportScaleInput: exportScaleInput,
+        setExportScaleInput: match$11[1],
+        canExport: canExport,
+        onExport: handleExportPng
       })
     ],
     className: " flex flex-row gap-5 p-5"

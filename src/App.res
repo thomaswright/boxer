@@ -35,6 +35,7 @@ module Array = {
   external isEqual2D: (array<array<bool>>, array<array<bool>>) => bool = "isEqual2D"
 }
 type brush = array<array<bool>>
+type board = array<array<Nullable.t<string>>>
 
 type brushMode = | @as("Color") Color | @as("Erase") Erase
 
@@ -45,6 +46,9 @@ let zoom_factor = 1.1
 let makeBoard = (i, j) => Array.make2D(i, j, () => Nullable.null)
 let makeBrush = (i, j) => Array.make2D(i, j, () => true)
 let makeTileMask = (i, j) => Array.make2D(i, j, () => true)
+
+@module("./exportBoard.js")
+external exportBoardAsPng: (board, float) => unit = "exportBoardAsPng"
 
 let useIsMouseDown = () => {
   let (isMouseDown, setIsMouseDown) = React.useState(() => false)
@@ -434,6 +438,10 @@ module ControlsPanel = {
     ~onZoomOut,
     ~onZoomReset,
     ~onCenterCanvas,
+    ~exportScaleInput,
+    ~setExportScaleInput,
+    ~canExport,
+    ~onExport,
   ) => {
     let zoomPercentString = (zoom *. 100.)->Float.toFixed(~digits=0)
 
@@ -541,6 +549,36 @@ module ControlsPanel = {
           {"Center"->React.string}
         </button>
       </div>
+      <div className="border rounded p-2 flex flex-col gap-2 w-48">
+        <span className="font-medium"> {"Export PNG"->React.string} </span>
+        <div className="flex flex-row  gap-2 items-end">
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs uppercase tracking-wide text-gray-500">
+              {"Scale"->React.string}
+            </span>
+            <input
+              className="border rounded px-2 py-1 text-sm w-16"
+              type_="number"
+              min={"1"}
+              step={1.0}
+              value={exportScaleInput}
+              onChange={event => {
+                let value = ReactEvent.Form.target(event)["value"]
+                setExportScaleInput(_ => value)
+              }}
+            />
+          </label>
+          <button
+            className={[
+              "rounded px-2 py-1 text-sm font-medium flex-1 h-fit",
+              canExport ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed",
+            ]->Array.join(" ")}
+            disabled={!canExport}
+            onClick={_ => onExport()}>
+            {"Export"->React.string}
+          </button>
+        </div>
+      </div>
     </div>
   }
 }
@@ -575,6 +613,7 @@ let make = () => {
   // Transient UI state
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
   let (hoveredCell, setHoveredCell) = React.useState(() => None)
+  let (exportScaleInput, setExportScaleInput) = React.useState(() => "1")
 
   // Camera positioning
   let (zoom, setZoom, _) = useLocalStorage("canvas-zoom", 1.)
@@ -713,6 +752,11 @@ let make = () => {
     | Some(parsed) if parsed > 0 => Some(parsed)
     | _ => None
     }
+  let parsePositiveFloat = value =>
+    switch value->Belt.Float.fromString {
+    | Some(parsed) if parsed > 0. => Some(parsed)
+    | _ => None
+    }
 
   let canSubmitResize = switch (
     parsePositiveInt(resizeRowsInput),
@@ -721,6 +765,8 @@ let make = () => {
   | (Some(nextRows), Some(nextCols)) => nextRows != boardDimI || nextCols != boardDimJ
   | _ => false
   }
+  let exportScaleValue = parsePositiveFloat(exportScaleInput)
+  let canExport = exportScaleValue->Option.isSome
 
   let handleResizeSubmit = () =>
     switch (parsePositiveInt(resizeRowsInput), parsePositiveInt(resizeColsInput)) {
@@ -736,6 +782,12 @@ let make = () => {
       setCursorOverlayOff(_ => true)
       setIsResizeOpen(_ => false)
     | _ => ()
+    }
+
+  let handleExportPng = () =>
+    switch exportScaleValue {
+    | Some(scale) => exportBoardAsPng(board, scale)
+    | None => ()
     }
 
   // Saved asset helpers
@@ -957,6 +1009,10 @@ let make = () => {
       onZoomOut={zoomOut}
       onZoomReset={resetZoom}
       onCenterCanvas={centerCanvas}
+      exportScaleInput={exportScaleInput}
+      setExportScaleInput={setExportScaleInput}
+      canExport={canExport}
+      onExport={handleExportPng}
     />
   </div>
 }
