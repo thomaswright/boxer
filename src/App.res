@@ -113,7 +113,7 @@ module SavedBrushesPanel = {
     ~canDeleteSelectedBrush,
     ~handleDeleteSelectedBrush,
   ) => {
-    <div className={"flex flex-col"}>
+    <div className={"flex flex-col divide-y divide-gray-600 h-full overflow-y-scroll"}>
       <div>
         <button
           className={[
@@ -145,9 +145,10 @@ module SavedBrushesPanel = {
         <button
           key={savedBrushIndex->Int.toString}
           onClick={_ => setBrush(_ => savedBrush)}
-          className={[selected ? "bg-red-100 text-red-600" : ""]->Array.join(" ")}>
+          className={["flex flex-row"]->Array.join(" ")}>
           <div
-            className={[" text-3xs font-bold border border-b-0 w-8 text-center"]->Array.join(" ")}>
+            className={[" text-3xs font-bold w-4 h- text-center bg-white"]->Array.join(" ")}
+            style={{writingMode: "sideways-lr"}}>
             {`${dimI->Int.toString}:${dimJ->Int.toString}`->React.string}
           </div>
 
@@ -157,7 +158,10 @@ module SavedBrushesPanel = {
               gridTemplateColumns: `repeat(${dimI->Int.toString}, auto)`,
               gridTemplateRows: `repeat(${dimJ->Int.toString}, auto)`,
             }}
-            className={"h-8 w-8 border"}>
+            className={[
+              selected ? "bg-orange-500" : "bg-gray-400",
+              "flex flex-row h-8 w-8",
+            ]->Array.join(" ")}>
             {savedBrush
             ->Array.mapWithIndex((line, i) => {
               line
@@ -167,7 +171,7 @@ module SavedBrushesPanel = {
                     className={"w-full h-full "}
                     key={i->Int.toString ++ j->Int.toString}
                     style={{
-                      backgroundColor: cell ? "#000" : "transparent",
+                      backgroundColor: cell ? "inherit" : "white",
                     }}>
                   </div>
                 },
@@ -194,7 +198,7 @@ module SavedTileMasksPanel = {
     ~canDeleteSelectedTileMask,
     ~handleDeleteSelectedTileMask,
   ) => {
-    <div className={"flex flex-col"}>
+    <div className={"flex flex-col divide-y divide-gray-600 h-full overflow-y-scroll"}>
       <div>
         <button
           className={[
@@ -224,34 +228,32 @@ module SavedTileMasksPanel = {
         let (dimI, dimJ) = savedTileMask->Array.dims2D
         let selected = Array.isEqual2D(tileMask, savedTileMask)
         <button
-          key={savedTileMaskIndex->Int.toString}
-          onClick={_ => setTileMask(_ => savedTileMask)}
-          style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${dimI->Int.toString}, auto)`,
-            gridTemplateRows: `repeat(${dimJ->Int.toString}, auto)`,
-          }}
-          className={[
-            "h-8 w-8 border",
-            selected ? "bg-orange-100 border-orange-500" : "border-gray-200",
-          ]->Array.join(" ")}>
-          {savedTileMask
-          ->Array.mapWithIndex((line, i) => {
-            line
-            ->Array.mapWithIndex(
-              (cell, j) => {
-                <div
-                  className={"w-full h-full "}
-                  key={i->Int.toString ++ j->Int.toString}
-                  style={{
-                    backgroundColor: cell ? "#ffa700" : "transparent",
-                  }}>
-                </div>
-              },
-            )
-            ->React.array
-          })
-          ->React.array}
+          key={savedTileMaskIndex->Int.toString} onClick={_ => setTileMask(_ => savedTileMask)}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${dimI->Int.toString}, auto)`,
+              gridTemplateRows: `repeat(${dimJ->Int.toString}, auto)`,
+            }}
+            className={["h-8 w-8", selected ? "bg-orange-500 " : "bg-gray-300"]->Array.join(" ")}>
+            {savedTileMask
+            ->Array.mapWithIndex((line, i) => {
+              line
+              ->Array.mapWithIndex(
+                (cell, j) => {
+                  <div
+                    className={"w-full h-full "}
+                    key={i->Int.toString ++ j->Int.toString}
+                    style={{
+                      backgroundColor: cell ? "inherit" : "white",
+                    }}>
+                  </div>
+                },
+              )
+              ->React.array
+            })
+            ->React.array}
+          </div>
         </button>
       })
       ->React.array}
@@ -442,7 +444,7 @@ module CanvasColorsControl = {
     ~viewportBackgroundColor,
     ~setViewportBackgroundColor,
   ) => {
-    <div className="border rounded p-2 flex flex-col gap-2 w-48">
+    <div className="border rounded p-2 flex flex-col gap-2 w-full">
       <div className="flex flex-row">
         <span className="font-medium flex-1"> {"Canvas Colors"->React.string} </span>
         <button
@@ -520,7 +522,7 @@ module ColorControl = {
 module BrushOverlayControl = {
   @react.component
   let make = (~showCursorOverlay, ~setShowCursorOverlay) => {
-    <div className="flex flex-row justify-between border rounded p-2 w-48">
+    <div className="flex flex-row justify-between border rounded p-2 w-full">
       <div className="flex flex-row font-medium"> {"Brush Overlay"->React.string} </div>
       <Switch checked={showCursorOverlay} onChange={v => setShowCursorOverlay(_ => v)} />
     </div>
@@ -539,7 +541,7 @@ module CanvasSizeControl = {
     ~canSubmitResize,
     ~onSubmitResize,
   ) => {
-    <div className="border rounded p-2 flex flex-col gap-2 w-48">
+    <div className="border rounded p-2 flex flex-col gap-2 w-full">
       <button
         onClick={_ => setIsResizeOpen(v => !v)}
         className={["flex flex-row items-center justify-between font-medium", "w-full"]->Array.join(
@@ -593,7 +595,7 @@ module ZoomControl = {
   let make = (~onZoomOut, ~onZoomReset, ~onZoomIn, ~onCenterCanvas, ~zoom) => {
     let zoomPercentString = (zoom *. 100.)->Float.toFixed(~digits=0)
 
-    <div className="border rounded p-2 flex flex-col gap-2 w-48">
+    <div className="border rounded p-2 flex flex-col gap-2 w-full">
       <div className="flex flex-row items-center justify-between">
         <span className="font-medium"> {"Zoom"->React.string} </span>
         <span className="text-sm font-mono"> {`${zoomPercentString}%`->React.string} </span>
@@ -627,7 +629,7 @@ module ZoomControl = {
 module SilhouetteControl = {
   @react.component
   let make = (~isSilhouette, ~setIsSilhouette) => {
-    <div className="flex flex-row items-center justify-between border rounded p-2 w-48">
+    <div className="flex flex-row items-center justify-between border rounded p-2 w-full">
       <div className="font-medium"> {"Silhouette"->React.string} </div>
       <Switch checked={isSilhouette} onChange={value => setIsSilhouette(_ => value)} />
     </div>
@@ -644,7 +646,7 @@ module ExportControl = {
     ~canExport,
     ~onExport,
   ) => {
-    <div className="border rounded p-2 flex flex-col gap-2 w-48">
+    <div className="border rounded p-2 flex flex-col gap-2 w-full">
       <span className="font-medium"> {"Export PNG"->React.string} </span>
       <div className="flex flex-row  gap-2 items-end">
         <label className="flex flex-col gap-1 text-sm">
@@ -723,7 +725,7 @@ module ControlsPanel = {
     ~canExport,
     ~onExport,
   ) => {
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 flex-none width-48 h-full overflow-y-scroll">
       <ColorControl brushMode setBrushMode myColor setMyColor />
       <CanvasColorsControl
         myColor
@@ -958,7 +960,11 @@ let make = () => {
   let handleExportPng = () =>
     switch exportScaleValue {
     | Some(scale) =>
-      exportBoardAsPng(board, scale, {includeBackground: includeExportBackground, backgroundColor: canvasBackgroundColor})
+      exportBoardAsPng(
+        board,
+        scale,
+        {includeBackground: includeExportBackground, backgroundColor: canvasBackgroundColor},
+      )
     | None => ()
     }
 
@@ -1113,8 +1119,8 @@ let make = () => {
     zoomString ++ ")"
   }
 
-  <div className=" flex flex-row gap-5 p-5">
-    <div className="flex flex-row h-lg">
+  <div className=" flex flex-row gap-5 p-3 h-dvh">
+    <div className="flex flex-row gap-2 h-full p-2 border rounded flex-none">
       <SavedBrushesPanel
         board={board}
         brush={brush}
@@ -1134,7 +1140,7 @@ let make = () => {
         handleDeleteSelectedTileMask={handleDeleteSelectedTileMask}
       />
     </div>
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 flex-1">
       <CanvasViewport
         canvasContainerRef
         board

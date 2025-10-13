@@ -201,16 +201,22 @@ function App$SavedBrushesPanel(props) {
           children: [
             JsxRuntime.jsx("div", {
               children: dimI.toString() + ":" + dimJ.toString(),
-              className: [" text-3xs font-bold border border-b-0 w-8 text-center"].join(" ")
+              className: [" text-3xs font-bold w-4 h- text-center bg-white"].join(" "),
+              style: {
+                writingMode: "sideways-lr"
+              }
             }),
             JsxRuntime.jsx("div", {
               children: savedBrush.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
                 className: "w-full h-full ",
                 style: {
-                  backgroundColor: cell ? "#000" : "transparent"
+                  backgroundColor: cell ? "inherit" : "white"
                 }
               }, i.toString() + j.toString()))),
-              className: "h-8 w-8 border",
+              className: [
+                selected ? "bg-orange-500" : "bg-gray-400",
+                "flex flex-row h-8 w-8"
+              ].join(" "),
               style: {
                 display: "grid",
                 gridTemplateColumns: "repeat(" + dimI.toString() + ", auto)",
@@ -218,12 +224,12 @@ function App$SavedBrushesPanel(props) {
               }
             })
           ],
-          className: [selected ? "bg-red-100 text-red-600" : ""].join(" "),
+          className: ["flex flex-row"].join(" "),
           onClick: param => setBrush(param => savedBrush)
         }, savedBrushIndex.toString());
       })
     ],
-    className: "flex flex-col"
+    className: "flex flex-col divide-y divide-gray-600 h-full overflow-y-scroll"
   });
 }
 
@@ -262,26 +268,28 @@ function App$SavedTileMasksPanel(props) {
         let match = dims2D(savedTileMask);
         let selected = OtherJs.isEqual2D(tileMask, savedTileMask);
         return JsxRuntime.jsx("button", {
-          children: savedTileMask.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
-            className: "w-full h-full ",
+          children: JsxRuntime.jsx("div", {
+            children: savedTileMask.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
+              className: "w-full h-full ",
+              style: {
+                backgroundColor: cell ? "inherit" : "white"
+              }
+            }, i.toString() + j.toString()))),
+            className: [
+              "h-8 w-8",
+              selected ? "bg-orange-500 " : "bg-gray-300"
+            ].join(" "),
             style: {
-              backgroundColor: cell ? "#ffa700" : "transparent"
+              display: "grid",
+              gridTemplateColumns: "repeat(" + match[0].toString() + ", auto)",
+              gridTemplateRows: "repeat(" + match[1].toString() + ", auto)"
             }
-          }, i.toString() + j.toString()))),
-          className: [
-            "h-8 w-8 border",
-            selected ? "bg-orange-100 border-orange-500" : "border-gray-200"
-          ].join(" "),
-          style: {
-            display: "grid",
-            gridTemplateColumns: "repeat(" + match[0].toString() + ", auto)",
-            gridTemplateRows: "repeat(" + match[1].toString() + ", auto)"
-          },
+          }),
           onClick: param => setTileMask(param => savedTileMask)
         }, savedTileMaskIndex.toString());
       })
     ],
-    className: "flex flex-col"
+    className: "flex flex-col divide-y divide-gray-600 h-full overflow-y-scroll"
   });
 }
 
@@ -482,7 +490,7 @@ function App$CanvasColorsControl(props) {
         className: "flex flex-col gap-1"
       })
     ],
-    className: "border rounded p-2 flex flex-col gap-2 w-48"
+    className: "border rounded p-2 flex flex-col gap-2 w-full"
   });
 }
 
@@ -535,7 +543,7 @@ function App$BrushOverlayControl(props) {
         onChange: v => setShowCursorOverlay(param => v)
       })
     ],
-    className: "flex flex-row justify-between border rounded p-2 w-48"
+    className: "flex flex-row justify-between border rounded p-2 w-full"
   });
 }
 
@@ -601,7 +609,7 @@ function App$CanvasSizeControl(props) {
           className: "flex flex-col gap-2"
         }) : null
     ],
-    className: "border rounded p-2 flex flex-col gap-2 w-48"
+    className: "border rounded p-2 flex flex-col gap-2 w-full"
   });
 }
 
@@ -652,7 +660,7 @@ function App$ZoomControl(props) {
         onClick: param => onCenterCanvas()
       })
     ],
-    className: "border rounded p-2 flex flex-col gap-2 w-48"
+    className: "border rounded p-2 flex flex-col gap-2 w-full"
   });
 }
 
@@ -669,7 +677,7 @@ function App$SilhouetteControl(props) {
         onChange: value => setIsSilhouette(param => value)
       })
     ],
-    className: "flex flex-row items-center justify-between border rounded p-2 w-48"
+    className: "flex flex-row items-center justify-between border rounded p-2 w-full"
   });
 }
 
@@ -735,7 +743,7 @@ function App$ExportControl(props) {
         className: "flex flex-row items-center gap-2 text-sm"
       })
     ],
-    className: "border rounded p-2 flex flex-col gap-2 w-48"
+    className: "border rounded p-2 flex flex-col gap-2 w-full"
   });
 }
 
@@ -790,7 +798,7 @@ function App$ControlsPanel(props) {
         setShowCursorOverlay: props.setShowCursorOverlay
       })
     ],
-    className: "flex flex-col gap-2"
+    className: "flex flex-col gap-2 flex-none width-48 h-full overflow-y-scroll"
   });
 }
 
@@ -1154,7 +1162,7 @@ function App(props) {
             handleDeleteSelectedTileMask: handleDeleteSelectedTileMask
           })
         ],
-        className: "flex flex-row h-lg"
+        className: "flex flex-row gap-2 h-full p-2 border rounded flex-none"
       }),
       JsxRuntime.jsxs("div", {
         children: [
@@ -1188,7 +1196,7 @@ function App(props) {
             className: "flex flex-col gap-2 w-full"
           })
         ],
-        className: "flex flex-col gap-2"
+        className: "flex flex-col gap-2 flex-1"
       }),
       JsxRuntime.jsx(App$ControlsPanel, {
         brushMode: brushMode,
@@ -1224,7 +1232,7 @@ function App(props) {
         onExport: handleExportPng
       })
     ],
-    className: " flex flex-row gap-5 p-5"
+    className: " flex flex-row gap-5 p-3 h-dvh"
   });
 }
 
