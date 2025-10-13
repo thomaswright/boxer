@@ -7,21 +7,22 @@ function ensurePositiveScale(scale) {
   return scale;
 }
 
-function drawBoardToCanvas(ctx, board, cellSize) {
+function drawBoardToCanvas(ctx, board, cellSize, backgroundColor) {
   for (let x = 0; x < board.length; x += 1) {
     const column = board[x];
     if (!Array.isArray(column)) continue;
     for (let y = 0; y < column.length; y += 1) {
       const color = column[y];
-      if (color) {
-        ctx.fillStyle = color;
+      const fill = color ?? backgroundColor;
+      if (fill) {
+        ctx.fillStyle = fill;
         ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
       }
     }
   }
 }
 
-export function exportBoardAsPng(board, scale) {
+export function exportBoardAsPng(board, scale, options = {}) {
   if (!Array.isArray(board) || board.length === 0) {
     return;
   }
@@ -44,7 +45,18 @@ export function exportBoardAsPng(board, scale) {
   }
 
   ctx.clearRect(0, 0, width, height);
-  drawBoardToCanvas(ctx, board, cellSize);
+
+  if (options.includeBackground && options.backgroundColor) {
+    ctx.fillStyle = options.backgroundColor;
+    ctx.fillRect(0, 0, width, height);
+  }
+
+  drawBoardToCanvas(
+    ctx,
+    board,
+    cellSize,
+    options.includeBackground ? options.backgroundColor ?? null : null
+  );
 
   const link = document.createElement("a");
   link.href = canvas.toDataURL("image/png");
@@ -54,4 +66,3 @@ export function exportBoardAsPng(board, scale) {
   link.click();
   link.remove();
 }
-

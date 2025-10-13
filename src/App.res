@@ -41,6 +41,10 @@ module Initials = {
 }
 
 type board = array<array<Nullable.t<string>>>
+type exportOptions = {
+  includeBackground: bool,
+  backgroundColor: string,
+}
 
 type brushMode = | @as("Color") Color | @as("Erase") Erase
 
@@ -49,7 +53,7 @@ let makeBrush = (i, j) => Array.make2D(i, j, () => true)
 let makeTileMask = (i, j) => Array.make2D(i, j, () => true)
 
 @module("./exportBoard.js")
-external exportBoardAsPng: (board, float) => unit = "exportBoardAsPng"
+external exportBoardAsPng: (board, float, exportOptions) => unit = "exportBoardAsPng"
 
 let useIsMouseDown = () => {
   let (isMouseDown, setIsMouseDown) = React.useState(() => false)
@@ -632,7 +636,14 @@ module SilhouetteControl = {
 
 module ExportControl = {
   @react.component
-  let make = (~exportScaleInput, ~setExportScaleInput, ~canExport, ~onExport) => {
+  let make = (
+    ~exportScaleInput,
+    ~setExportScaleInput,
+    ~includeBackground,
+    ~setIncludeBackground,
+    ~canExport,
+    ~onExport,
+  ) => {
     <div className="border rounded p-2 flex flex-col gap-2 w-48">
       <span className="font-medium"> {"Export PNG"->React.string} </span>
       <div className="flex flex-row  gap-2 items-end">
@@ -662,6 +673,17 @@ module ExportControl = {
           {"Export"->React.string}
         </button>
       </div>
+      <label className="flex flex-row items-center gap-2 text-sm">
+        <input
+          type_="checkbox"
+          checked={includeBackground}
+          onChange={event => {
+            let checked = ReactEvent.Form.target(event)["checked"]
+            setIncludeBackground(_ => checked)
+          }}
+        />
+        <span> {"Include Background"->React.string} </span>
+      </label>
     </div>
   }
 }
@@ -696,6 +718,8 @@ module ControlsPanel = {
     ~onCenterCanvas,
     ~exportScaleInput,
     ~setExportScaleInput,
+    ~includeExportBackground,
+    ~setIncludeExportBackground,
     ~canExport,
     ~onExport,
   ) => {
@@ -710,7 +734,14 @@ module ControlsPanel = {
       />
       <ZoomControl onZoomOut onZoomReset onZoomIn onCenterCanvas zoom />
       <SilhouetteControl isSilhouette setIsSilhouette />
-      <ExportControl exportScaleInput setExportScaleInput canExport onExport />
+      <ExportControl
+        exportScaleInput
+        setExportScaleInput
+        includeBackground={includeExportBackground}
+        setIncludeBackground={setIncludeExportBackground}
+        canExport
+        onExport
+      />
       <CanvasSizeControl
         isResizeOpen
         setIsResizeOpen
@@ -753,6 +784,7 @@ let make = () => {
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
   let (hoveredCell, setHoveredCell) = React.useState(() => None)
   let (exportScaleInput, setExportScaleInput) = React.useState(() => "1")
+  let (includeExportBackground, setIncludeExportBackground) = React.useState(() => true)
 
   // Camera positioning
   let (zoom, setZoom, _) = useLocalStorage("canvas-zoom", 1.)
@@ -925,7 +957,8 @@ let make = () => {
 
   let handleExportPng = () =>
     switch exportScaleValue {
-    | Some(scale) => exportBoardAsPng(board, scale)
+    | Some(scale) =>
+      exportBoardAsPng(board, scale, {includeBackground: includeExportBackground, backgroundColor: canvasBackgroundColor})
     | None => ()
     }
 
@@ -1159,6 +1192,8 @@ let make = () => {
       onCenterCanvas={centerCanvas}
       exportScaleInput={exportScaleInput}
       setExportScaleInput={setExportScaleInput}
+      includeExportBackground={includeExportBackground}
+      setIncludeExportBackground={setIncludeExportBackground}
       canExport={canExport}
       onExport={handleExportPng}
     />
