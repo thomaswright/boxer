@@ -37,6 +37,7 @@ module Initials = {
   let viewportBackgroundColor = "#e5e7eb"
   let myColor = "blue"
   let zoom_factor = 1.1
+  let silhouette = false
 }
 
 type board = array<array<Nullable.t<string>>>
@@ -272,6 +273,7 @@ module CanvasViewport = {
     ~showCursorOverlay,
     ~canvasBackgroundColor,
     ~viewportBackgroundColor,
+    ~isSilhouette,
   ) => {
     <div
       ref={ReactDOM.Ref.domRef(canvasContainerRef)}
@@ -295,9 +297,16 @@ module CanvasViewport = {
         ->Array.mapWithIndex((line, i) => {
           line
           ->Array.mapWithIndex((cell, j) => {
-            let backgroundColor = cell->Nullable.getOr("transparent")
-            let overlayBackgroundColor =
-              cell->Nullable.mapOr("black", v => v->isLight ? "black" : "white")
+            let cellColor = if isSilhouette {
+              cell->Nullable.mapOr("transparent", _ => "#000000")
+            } else {
+              cell->Nullable.getOr("transparent")
+            }
+            let overlayBackgroundColor = if isSilhouette {
+              "white"
+            } else {
+              cell->Nullable.mapOr("black", value => value->isLight ? "black" : "white")
+            }
 
             <div
               className={"w-full h-full group relative"}
@@ -318,7 +327,7 @@ module CanvasViewport = {
               <div
                 className={"w-full h-full absolute"}
                 style={{
-                  backgroundColor: backgroundColor,
+                  backgroundColor: cellColor,
                 }}
               />
               {switch hoveredCell {
@@ -611,6 +620,16 @@ module ZoomControl = {
   }
 }
 
+module SilhouetteControl = {
+  @react.component
+  let make = (~isSilhouette, ~setIsSilhouette) => {
+    <div className="flex flex-row items-center justify-between border rounded p-2 w-48">
+      <div className="font-medium"> {"Silhouette"->React.string} </div>
+      <Switch checked={isSilhouette} onChange={value => setIsSilhouette(_ => value)} />
+    </div>
+  }
+}
+
 module ExportControl = {
   @react.component
   let make = (~exportScaleInput, ~setExportScaleInput, ~canExport, ~onExport) => {
@@ -658,6 +677,8 @@ module ControlsPanel = {
     ~setCanvasBackgroundColor,
     ~viewportBackgroundColor,
     ~setViewportBackgroundColor,
+    ~isSilhouette,
+    ~setIsSilhouette,
     ~showCursorOverlay,
     ~setShowCursorOverlay,
     ~isResizeOpen,
@@ -688,6 +709,7 @@ module ControlsPanel = {
         setViewportBackgroundColor
       />
       <ZoomControl onZoomOut onZoomReset onZoomIn onCenterCanvas zoom />
+      <SilhouetteControl isSilhouette setIsSilhouette />
       <ExportControl exportScaleInput setExportScaleInput canExport onExport />
       <CanvasSizeControl
         isResizeOpen
@@ -725,6 +747,7 @@ let make = () => {
     "viewport-background-color",
     Initials.viewportBackgroundColor,
   )
+  let (isSilhouette, setIsSilhouette, _) = useLocalStorage("canvas-silhouette", Initials.silhouette)
 
   // Transient UI state
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
@@ -1095,6 +1118,7 @@ let make = () => {
         showCursorOverlay
         canvasBackgroundColor
         viewportBackgroundColor
+        isSilhouette
       />
       <div className="flex flex-col gap-2 w-full">
         <CanvasThumbnails
@@ -1116,6 +1140,8 @@ let make = () => {
       setCanvasBackgroundColor={setCanvasBackgroundColor}
       viewportBackgroundColor={viewportBackgroundColor}
       setViewportBackgroundColor={setViewportBackgroundColor}
+      isSilhouette={isSilhouette}
+      setIsSilhouette={setIsSilhouette}
       showCursorOverlay={showCursorOverlay}
       setShowCursorOverlay={setShowCursorOverlay}
       isResizeOpen={isResizeOpen}

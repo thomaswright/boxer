@@ -286,6 +286,7 @@ function App$SavedTileMasksPanel(props) {
 }
 
 function App$CanvasViewport(props) {
+  let isSilhouette = props.isSilhouette;
   let showCursorOverlay = props.showCursorOverlay;
   let canApply = props.canApply;
   let applyBrush = props.applyBrush;
@@ -297,20 +298,20 @@ function App$CanvasViewport(props) {
   return JsxRuntime.jsx("div", {
     children: JsxRuntime.jsx("div", {
       children: props.board.map((line, i) => line.map((cell, j) => {
-        let backgroundColor = Stdlib_Nullable.getOr(cell, "transparent");
-        let overlayBackgroundColor = Stdlib_Nullable.mapOr(cell, "black", v => {
-          if (isLight(v)) {
-            return "black";
-          } else {
-            return "white";
-          }
-        });
+        let cellColor = isSilhouette ? Stdlib_Nullable.mapOr(cell, "transparent", param => "#000000") : Stdlib_Nullable.getOr(cell, "transparent");
+        let overlayBackgroundColor = isSilhouette ? "white" : Stdlib_Nullable.mapOr(cell, "black", value => {
+            if (isLight(value)) {
+              return "black";
+            } else {
+              return "white";
+            }
+          });
         return JsxRuntime.jsxs("div", {
           children: [
             JsxRuntime.jsx("div", {
               className: "w-full h-full absolute",
               style: {
-                backgroundColor: backgroundColor
+                backgroundColor: cellColor
               }
             }),
             hoveredCell !== undefined && !(cursorOverlayOff || !showCursorOverlay || !canApply(i, j, hoveredCell[0], hoveredCell[1])) ? JsxRuntime.jsx("div", {
@@ -655,6 +656,23 @@ function App$ZoomControl(props) {
   });
 }
 
+function App$SilhouetteControl(props) {
+  let setIsSilhouette = props.setIsSilhouette;
+  return JsxRuntime.jsxs("div", {
+    children: [
+      JsxRuntime.jsx("div", {
+        children: "Silhouette",
+        className: "font-medium"
+      }),
+      JsxRuntime.jsx(make, {
+        checked: props.isSilhouette,
+        onChange: value => setIsSilhouette(param => value)
+      })
+    ],
+    className: "flex flex-row items-center justify-between border rounded p-2 w-48"
+  });
+}
+
 function App$ExportControl(props) {
   let onExport = props.onExport;
   let canExport = props.canExport;
@@ -728,6 +746,10 @@ function App$ControlsPanel(props) {
         onCenterCanvas: props.onCenterCanvas,
         zoom: props.zoom
       }),
+      JsxRuntime.jsx(App$SilhouetteControl, {
+        isSilhouette: props.isSilhouette,
+        setIsSilhouette: props.setIsSilhouette
+      }),
       JsxRuntime.jsx(App$ExportControl, {
         exportScaleInput: props.exportScaleInput,
         setExportScaleInput: props.setExportScaleInput,
@@ -780,24 +802,26 @@ function App(props) {
   let canvasBackgroundColor$1 = match$9[0];
   let match$10 = UseLocalStorageJs("viewport-background-color", viewportBackgroundColor);
   let viewportBackgroundColor$1 = match$10[0];
-  let match$11 = React.useState(() => false);
-  let setCursorOverlayOff = match$11[1];
-  let match$12 = React.useState(() => {});
-  let setHoveredCell = match$12[1];
-  let match$13 = React.useState(() => "1");
-  let exportScaleInput = match$13[0];
-  let match$14 = UseLocalStorageJs("canvas-zoom", 1);
-  let setZoom = match$14[1];
-  let zoom = match$14[0];
+  let match$11 = UseLocalStorageJs("canvas-silhouette", false);
+  let isSilhouette = match$11[0];
+  let match$12 = React.useState(() => false);
+  let setCursorOverlayOff = match$12[1];
+  let match$13 = React.useState(() => {});
+  let setHoveredCell = match$13[1];
+  let match$14 = React.useState(() => "1");
+  let exportScaleInput = match$14[0];
+  let match$15 = UseLocalStorageJs("canvas-zoom", 1);
+  let setZoom = match$15[1];
+  let zoom = match$15[0];
   let zoomRef = React.useRef(zoom);
   zoomRef.current = zoom;
   let canvasContainerRef = React.useRef(null);
-  let match$15 = React.useState(() => [
+  let match$16 = React.useState(() => [
     192,
     192
   ]);
-  let setViewportCenter = match$15[1];
-  let viewportCenter = match$15[0];
+  let setViewportCenter = match$16[1];
+  let viewportCenter = match$16[0];
   let updateViewportCenter = () => {
     let element = canvasContainerRef.current;
     if (element == null) {
@@ -825,12 +849,12 @@ function App(props) {
       return cappedMax;
     }
   };
-  let match$16 = UseLocalStorageJs("canvas-pan", [
+  let match$17 = UseLocalStorageJs("canvas-pan", [
     0,
     0
   ]);
-  let setPan = match$16[1];
-  let pan = match$16[0];
+  let setPan = match$17[1];
+  let pan = match$17[0];
   let panRef = React.useRef(pan);
   panRef.current = pan;
   let adjustPan = (deltaX, deltaY) => setPan(param => [
@@ -892,15 +916,15 @@ function App(props) {
       });
     }
   });
-  let match$17 = dims2D(board);
-  let boardDimJ = match$17[1];
-  let boardDimI = match$17[0];
-  let match$18 = dims2D(brush);
-  let brushCenterDimI = match$18[0] / 2 | 0;
-  let brushCenterDimJ = match$18[1] / 2 | 0;
-  let match$19 = dims2D(tileMask);
-  let tileMaskDimJ = match$19[1];
-  let tileMaskDimI = match$19[0];
+  let match$18 = dims2D(board);
+  let boardDimJ = match$18[1];
+  let boardDimI = match$18[0];
+  let match$19 = dims2D(brush);
+  let brushCenterDimI = match$19[0] / 2 | 0;
+  let brushCenterDimJ = match$19[1] / 2 | 0;
+  let match$20 = dims2D(tileMask);
+  let tileMaskDimJ = match$20[1];
+  let tileMaskDimI = match$20[0];
   let centerCanvas = () => {
     let boardWidth = boardDimI * 16;
     let boardHeight = boardDimJ * 16;
@@ -912,14 +936,14 @@ function App(props) {
       nextPanY
     ]);
   };
-  let match$20 = React.useState(() => false);
-  let setIsResizeOpen = match$20[1];
-  let match$21 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$21[1];
-  let resizeRowsInput = match$21[0];
-  let match$22 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$22[1];
-  let resizeColsInput = match$22[0];
+  let match$21 = React.useState(() => false);
+  let setIsResizeOpen = match$21[1];
+  let match$22 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$22[1];
+  let resizeRowsInput = match$22[0];
+  let match$23 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$23[1];
+  let resizeColsInput = match$23[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -941,9 +965,9 @@ function App(props) {
     }
     
   };
-  let match$23 = parsePositiveInt(resizeRowsInput);
-  let match$24 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$23 !== undefined && match$24 !== undefined ? match$23 !== boardDimI || match$24 !== boardDimJ : false;
+  let match$24 = parsePositiveInt(resizeRowsInput);
+  let match$25 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$24 !== undefined && match$25 !== undefined ? match$24 !== boardDimI || match$25 !== boardDimJ : false;
   let exportScaleValue = parsePositiveFloat(exportScaleInput);
   let canExport = Stdlib_Option.isSome(exportScaleValue);
   let handleResizeSubmit = () => {
@@ -1115,16 +1139,17 @@ function App(props) {
             boardDimI: boardDimI,
             boardDimJ: boardDimJ,
             transformValue: transformValue,
-            hoveredCell: match$12[0],
+            hoveredCell: match$13[0],
             setHoveredCell: setHoveredCell,
-            cursorOverlayOff: match$11[0],
+            cursorOverlayOff: match$12[0],
             setCursorOverlayOff: setCursorOverlayOff,
             isMouseDown: isMouseDown,
             applyBrush: applyBrush,
             canApply: canApply,
             showCursorOverlay: showCursorOverlay,
             canvasBackgroundColor: canvasBackgroundColor$1,
-            viewportBackgroundColor: viewportBackgroundColor$1
+            viewportBackgroundColor: viewportBackgroundColor$1,
+            isSilhouette: isSilhouette
           }),
           JsxRuntime.jsx("div", {
             children: JsxRuntime.jsx(App$CanvasThumbnails, {
@@ -1149,9 +1174,11 @@ function App(props) {
         setCanvasBackgroundColor: match$9[1],
         viewportBackgroundColor: viewportBackgroundColor$1,
         setViewportBackgroundColor: match$10[1],
+        isSilhouette: isSilhouette,
+        setIsSilhouette: match$11[1],
         showCursorOverlay: showCursorOverlay,
         setShowCursorOverlay: match$7[1],
-        isResizeOpen: match$20[0],
+        isResizeOpen: match$21[0],
         setIsResizeOpen: setIsResizeOpen,
         resizeRowsInput: resizeRowsInput,
         setResizeRowsInput: setResizeRowsInput,
@@ -1165,7 +1192,7 @@ function App(props) {
         onZoomReset: resetZoom,
         onCenterCanvas: centerCanvas,
         exportScaleInput: exportScaleInput,
-        setExportScaleInput: match$13[1],
+        setExportScaleInput: match$14[1],
         canExport: canExport,
         onExport: handleExportPng
       })
