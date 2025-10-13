@@ -687,7 +687,6 @@ module ControlsPanel = {
         viewportBackgroundColor
         setViewportBackgroundColor
       />
-      <BrushOverlayControl showCursorOverlay setShowCursorOverlay />
       <ZoomControl onZoomOut onZoomReset onZoomIn onCenterCanvas zoom />
       <ExportControl exportScaleInput setExportScaleInput canExport onExport />
       <CanvasSizeControl
@@ -700,6 +699,7 @@ module ControlsPanel = {
         canSubmitResize
         onSubmitResize
       />
+      <BrushOverlayControl showCursorOverlay setShowCursorOverlay />
     </div>
   }
 }
@@ -1021,16 +1021,16 @@ let make = () => {
       } else {
         let step = 16. /. zoomRef.current
         switch event->KeyboardEvent.key {
-        | "ArrowUp" =>
-          event->KeyboardEvent.preventDefault
-          adjustPan(0., step)
         | "ArrowDown" =>
           event->KeyboardEvent.preventDefault
+          adjustPan(0., step)
+        | "ArrowUp" =>
+          event->KeyboardEvent.preventDefault
           adjustPan(0., -.step)
-        | "ArrowLeft" =>
+        | "ArrowRight" =>
           event->KeyboardEvent.preventDefault
           adjustPan(step, 0.)
-        | "ArrowRight" =>
+        | "ArrowLeft" =>
           event->KeyboardEvent.preventDefault
           adjustPan(-.step, 0.)
         | _ => ()

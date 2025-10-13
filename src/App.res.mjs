@@ -721,10 +721,6 @@ function App$ControlsPanel(props) {
         viewportBackgroundColor: props.viewportBackgroundColor,
         setViewportBackgroundColor: props.setViewportBackgroundColor
       }),
-      JsxRuntime.jsx(App$BrushOverlayControl, {
-        showCursorOverlay: props.showCursorOverlay,
-        setShowCursorOverlay: props.setShowCursorOverlay
-      }),
       JsxRuntime.jsx(App$ZoomControl, {
         onZoomOut: props.onZoomOut,
         onZoomReset: props.onZoomReset,
@@ -747,6 +743,10 @@ function App$ControlsPanel(props) {
         setResizeColsInput: props.setResizeColsInput,
         canSubmitResize: props.canSubmitResize,
         onSubmitResize: props.onSubmitResize
+      }),
+      JsxRuntime.jsx(App$BrushOverlayControl, {
+        showCursorOverlay: props.showCursorOverlay,
+        setShowCursorOverlay: props.setShowCursorOverlay
       })
     ],
     className: "flex flex-col gap-2"
@@ -1058,16 +1058,16 @@ function App(props) {
         switch (match$1) {
           case "ArrowDown" :
             event.preventDefault();
-            return adjustPan(0, - step);
+            return adjustPan(0, step);
           case "ArrowLeft" :
             event.preventDefault();
-            return adjustPan(step, 0);
+            return adjustPan(- step, 0);
           case "ArrowRight" :
             event.preventDefault();
-            return adjustPan(- step, 0);
+            return adjustPan(step, 0);
           case "ArrowUp" :
             event.preventDefault();
-            return adjustPan(0, step);
+            return adjustPan(0, - step);
           default:
             return;
         }
