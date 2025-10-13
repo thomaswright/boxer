@@ -411,6 +411,181 @@ module CanvasThumbnails = {
   }
 }
 
+module ColorControl = {
+  @react.component
+  let make = (~brushMode, ~setBrushMode, ~myColor, ~setMyColor) => {
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-row gap-2">
+        <button
+          className={[
+            brushMode == Color ? " bg-blue-500 text-white" : "bg-gray-200",
+            "px-2 font-medium rounded",
+          ]->Array.join(" ")}
+          onClick={_ => setBrushMode(_ => Color)}>
+          {"Color"->React.string}
+        </button>
+        <button
+          className={[
+            brushMode == Erase ? " bg-blue-500 text-white" : "bg-gray-200",
+            "px-2 font-medium rounded",
+          ]->Array.join(" ")}
+          onClick={_ => setBrushMode(_ => Erase)}>
+          {"Erase"->React.string}
+        </button>
+      </div>
+      <HexColorPicker
+        color={myColor}
+        onChange={newColor => {
+          setMyColor(_ => newColor)
+        }}
+      />
+    </div>
+  }
+}
+
+module BrushOverlayControl = {
+  @react.component
+  let make = (~showCursorOverlay, ~setShowCursorOverlay) => {
+    <div className="flex flex-row justify-between border rounded p-2 w-48">
+      <div className="flex flex-row font-medium"> {"Brush Overlay"->React.string} </div>
+      <Switch checked={showCursorOverlay} onChange={v => setShowCursorOverlay(_ => v)} />
+    </div>
+  }
+}
+
+module CanvasSizeControl = {
+  @react.component
+  let make = (
+    ~isResizeOpen,
+    ~setIsResizeOpen,
+    ~resizeRowsInput,
+    ~setResizeRowsInput,
+    ~resizeColsInput,
+    ~setResizeColsInput,
+    ~canSubmitResize,
+    ~onSubmitResize,
+  ) => {
+    <div className="border rounded p-2 flex flex-col gap-2 w-48">
+      <button
+        onClick={_ => setIsResizeOpen(v => !v)}
+        className={["flex flex-row items-center justify-between font-medium", "w-full"]->Array.join(
+          " ",
+        )}>
+        {"Canvas Size"->React.string}
+        <span> {isResizeOpen ? "-"->React.string : "+"->React.string} </span>
+      </button>
+
+      {isResizeOpen
+        ? <div className="flex flex-col gap-2">
+            <div className="flex flex-row w-full gap-2">
+              <input
+                className="border rounded px-2 py-1 text-sm flex-1 min-w-0"
+                value={resizeRowsInput}
+                onChange={event => {
+                  let value = ReactEvent.Form.target(event)["value"]
+                  setResizeRowsInput(_ => value)
+                }}
+              />
+              <span className={"flex-none px-1"}> {"x"->React.string} </span>
+              <input
+                className="border rounded px-2 py-1 text-sm flex-1  min-w-0"
+                value={resizeColsInput}
+                onChange={event => {
+                  let value = ReactEvent.Form.target(event)["value"]
+                  setResizeColsInput(_ => value)
+                }}
+              />
+            </div>
+
+            <button
+              className={[
+                "rounded px-2 py-1 text-sm font-medium",
+                canSubmitResize
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-gray-500 cursor-not-allowed",
+              ]->Array.join(" ")}
+              disabled={!canSubmitResize}
+              onClick={_ => onSubmitResize()}>
+              {"Save"->React.string}
+            </button>
+          </div>
+        : React.null}
+    </div>
+  }
+}
+
+module ZoomControl = {
+  @react.component
+  let make = (~onZoomOut, ~onZoomReset, ~onZoomIn, ~onCenterCanvas, ~zoom) => {
+    let zoomPercentString = (zoom *. 100.)->Float.toFixed(~digits=0)
+
+    <div className="border rounded p-2 flex flex-col gap-2 w-48">
+      <div className="flex flex-row items-center justify-between">
+        <span className="font-medium"> {"Zoom"->React.string} </span>
+        <span className="text-sm font-mono"> {`${zoomPercentString}%`->React.string} </span>
+      </div>
+      <div className="flex flex-row gap-2">
+        <button
+          className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
+          onClick={_ => onZoomOut()}>
+          {"-"->React.string}
+        </button>
+        <button
+          className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
+          onClick={_ => onZoomReset()}>
+          {"100%"->React.string}
+        </button>
+        <button
+          className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
+          onClick={_ => onZoomIn()}>
+          {"+"->React.string}
+        </button>
+      </div>
+      <button
+        className="rounded px-2 py-1 text-sm font-medium bg-gray-200"
+        onClick={_ => onCenterCanvas()}>
+        {"Center"->React.string}
+      </button>
+    </div>
+  }
+}
+
+module ExportControl = {
+  @react.component
+  let make = (~exportScaleInput, ~setExportScaleInput, ~canExport, ~onExport) => {
+    <div className="border rounded p-2 flex flex-col gap-2 w-48">
+      <span className="font-medium"> {"Export PNG"->React.string} </span>
+      <div className="flex flex-row  gap-2 items-end">
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-xs uppercase tracking-wide text-gray-500">
+            {"Scale"->React.string}
+          </span>
+          <input
+            className="border rounded px-2 py-1 text-sm w-16"
+            type_="number"
+            min={"1"}
+            step={1.0}
+            value={exportScaleInput}
+            onChange={event => {
+              let value = ReactEvent.Form.target(event)["value"]
+              setExportScaleInput(_ => value)
+            }}
+          />
+        </label>
+        <button
+          className={[
+            "rounded px-2 py-1 text-sm font-medium flex-1 h-fit",
+            canExport ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed",
+          ]->Array.join(" ")}
+          disabled={!canExport}
+          onClick={_ => onExport()}>
+          {"Export"->React.string}
+        </button>
+      </div>
+    </div>
+  }
+}
+
 module ControlsPanel = {
   @react.component
   let make = (
@@ -438,142 +613,21 @@ module ControlsPanel = {
     ~canExport,
     ~onExport,
   ) => {
-    let zoomPercentString = (zoom *. 100.)->Float.toFixed(~digits=0)
-
     <div className="flex flex-col gap-2">
-      <div className="flex flex-row gap-2">
-        <button
-          className={[
-            brushMode == Color ? " bg-blue-500 text-white" : "bg-gray-200",
-            "px-2 font-medium rounded",
-          ]->Array.join(" ")}
-          onClick={_ => setBrushMode(_ => Color)}>
-          {"Color"->React.string}
-        </button>
-        <button
-          className={[
-            brushMode == Erase ? " bg-blue-500 text-white" : "bg-gray-200",
-            "px-2 font-medium rounded",
-          ]->Array.join(" ")}
-          onClick={_ => setBrushMode(_ => Erase)}>
-          {"Erase"->React.string}
-        </button>
-      </div>
-      <HexColorPicker
-        color={myColor}
-        onChange={newColor => {
-          setMyColor(_ => newColor)
-        }}
+      <ColorControl brushMode setBrushMode myColor setMyColor />
+      <BrushOverlayControl showCursorOverlay setShowCursorOverlay />
+      <ZoomControl onZoomOut onZoomReset onZoomIn onCenterCanvas zoom />
+      <ExportControl exportScaleInput setExportScaleInput canExport onExport />
+      <CanvasSizeControl
+        isResizeOpen
+        setIsResizeOpen
+        resizeRowsInput
+        setResizeRowsInput
+        resizeColsInput
+        setResizeColsInput
+        canSubmitResize
+        onSubmitResize
       />
-      <div className="flex flex-row justify-between border rounded p-2 w-48">
-        <div className="flex flex-row font-medium"> {"Brush Overlay"->React.string} </div>
-        <Switch checked={showCursorOverlay} onChange={v => setShowCursorOverlay(_ => v)} />
-      </div>
-      <div className="border rounded p-2 flex flex-col gap-2 w-48">
-        <button
-          onClick={_ => setIsResizeOpen(v => !v)}
-          className={[
-            "flex flex-row items-center justify-between font-medium",
-            "w-full",
-          ]->Array.join(" ")}>
-          {"Canvas Size"->React.string}
-          <span> {isResizeOpen ? "-"->React.string : "+"->React.string} </span>
-        </button>
-
-        {isResizeOpen
-          ? <div className="flex flex-col gap-2">
-              <div className="flex flex-row w-full gap-2">
-                <input
-                  className="border rounded px-2 py-1 text-sm flex-1 min-w-0"
-                  value={resizeRowsInput}
-                  onChange={event => {
-                    let value = ReactEvent.Form.target(event)["value"]
-                    setResizeRowsInput(_ => value)
-                  }}
-                />
-                <span className={"flex-none px-1"}> {"x"->React.string} </span>
-                <input
-                  className="border rounded px-2 py-1 text-sm flex-1  min-w-0"
-                  value={resizeColsInput}
-                  onChange={event => {
-                    let value = ReactEvent.Form.target(event)["value"]
-                    setResizeColsInput(_ => value)
-                  }}
-                />
-              </div>
-
-              <button
-                className={[
-                  "rounded px-2 py-1 text-sm font-medium",
-                  canSubmitResize
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-500 cursor-not-allowed",
-                ]->Array.join(" ")}
-                disabled={!canSubmitResize}
-                onClick={_ => onSubmitResize()}>
-                {"Save"->React.string}
-              </button>
-            </div>
-          : React.null}
-      </div>
-      <div className="border rounded p-2 flex flex-col gap-2 w-48">
-        <div className="flex flex-row items-center justify-between">
-          <span className="font-medium"> {"Zoom"->React.string} </span>
-          <span className="text-sm font-mono"> {`${zoomPercentString}%`->React.string} </span>
-        </div>
-        <div className="flex flex-row gap-2">
-          <button
-            className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
-            onClick={_ => onZoomOut()}>
-            {"-"->React.string}
-          </button>
-          <button
-            className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
-            onClick={_ => onZoomReset()}>
-            {"100%"->React.string}
-          </button>
-          <button
-            className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
-            onClick={_ => onZoomIn()}>
-            {"+"->React.string}
-          </button>
-        </div>
-        <button
-          className="rounded px-2 py-1 text-sm font-medium bg-gray-200"
-          onClick={_ => onCenterCanvas()}>
-          {"Center"->React.string}
-        </button>
-      </div>
-      <div className="border rounded p-2 flex flex-col gap-2 w-48">
-        <span className="font-medium"> {"Export PNG"->React.string} </span>
-        <div className="flex flex-row  gap-2 items-end">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs uppercase tracking-wide text-gray-500">
-              {"Scale"->React.string}
-            </span>
-            <input
-              className="border rounded px-2 py-1 text-sm w-16"
-              type_="number"
-              min={"1"}
-              step={1.0}
-              value={exportScaleInput}
-              onChange={event => {
-                let value = ReactEvent.Form.target(event)["value"]
-                setExportScaleInput(_ => value)
-              }}
-            />
-          </label>
-          <button
-            className={[
-              "rounded px-2 py-1 text-sm font-medium flex-1 h-fit",
-              canExport ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed",
-            ]->Array.join(" ")}
-            disabled={!canExport}
-            onClick={_ => onExport()}>
-            {"Export"->React.string}
-          </button>
-        </div>
-      </div>
     </div>
   }
 }

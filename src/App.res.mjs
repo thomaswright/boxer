@@ -411,25 +411,10 @@ function App$CanvasThumbnails(props) {
   });
 }
 
-function App$ControlsPanel(props) {
-  let onExport = props.onExport;
-  let canExport = props.canExport;
-  let setExportScaleInput = props.setExportScaleInput;
-  let onCenterCanvas = props.onCenterCanvas;
-  let onZoomReset = props.onZoomReset;
-  let onZoomOut = props.onZoomOut;
-  let onZoomIn = props.onZoomIn;
-  let onSubmitResize = props.onSubmitResize;
-  let canSubmitResize = props.canSubmitResize;
-  let setResizeColsInput = props.setResizeColsInput;
-  let setResizeRowsInput = props.setResizeRowsInput;
-  let setIsResizeOpen = props.setIsResizeOpen;
-  let isResizeOpen = props.isResizeOpen;
-  let setShowCursorOverlay = props.setShowCursorOverlay;
+function App$ColorControl(props) {
   let setMyColor = props.setMyColor;
   let setBrushMode = props.setBrushMode;
   let brushMode = props.brushMode;
-  let zoomPercentString = (props.zoom * 100).toFixed(0);
   return JsxRuntime.jsxs("div", {
     children: [
       JsxRuntime.jsxs("div", {
@@ -456,162 +441,230 @@ function App$ControlsPanel(props) {
       JsxRuntime.jsx(ReactColorful.HexColorPicker, {
         color: props.myColor,
         onChange: newColor => setMyColor(param => newColor)
+      })
+    ],
+    className: "flex flex-col gap-2"
+  });
+}
+
+function App$BrushOverlayControl(props) {
+  let setShowCursorOverlay = props.setShowCursorOverlay;
+  return JsxRuntime.jsxs("div", {
+    children: [
+      JsxRuntime.jsx("div", {
+        children: "Brush Overlay",
+        className: "flex flex-row font-medium"
       }),
-      JsxRuntime.jsxs("div", {
+      JsxRuntime.jsx(make, {
+        checked: props.showCursorOverlay,
+        onChange: v => setShowCursorOverlay(param => v)
+      })
+    ],
+    className: "flex flex-row justify-between border rounded p-2 w-48"
+  });
+}
+
+function App$CanvasSizeControl(props) {
+  let onSubmitResize = props.onSubmitResize;
+  let canSubmitResize = props.canSubmitResize;
+  let setResizeColsInput = props.setResizeColsInput;
+  let setResizeRowsInput = props.setResizeRowsInput;
+  let setIsResizeOpen = props.setIsResizeOpen;
+  let isResizeOpen = props.isResizeOpen;
+  return JsxRuntime.jsxs("div", {
+    children: [
+      JsxRuntime.jsxs("button", {
         children: [
-          JsxRuntime.jsx("div", {
-            children: "Brush Overlay",
-            className: "flex flex-row font-medium"
-          }),
-          JsxRuntime.jsx(make, {
-            checked: props.showCursorOverlay,
-            onChange: v => setShowCursorOverlay(param => v)
+          "Canvas Size",
+          JsxRuntime.jsx("span", {
+            children: isResizeOpen ? "-" : "+"
           })
         ],
-        className: "flex flex-row justify-between border rounded p-2 w-48"
+        className: [
+          "flex flex-row items-center justify-between font-medium",
+          "w-full"
+        ].join(" "),
+        onClick: param => setIsResizeOpen(v => !v)
       }),
-      JsxRuntime.jsxs("div", {
-        children: [
-          JsxRuntime.jsxs("button", {
-            children: [
-              "Canvas Size",
-              JsxRuntime.jsx("span", {
-                children: isResizeOpen ? "-" : "+"
-              })
-            ],
-            className: [
-              "flex flex-row items-center justify-between font-medium",
-              "w-full"
-            ].join(" "),
-            onClick: param => setIsResizeOpen(v => !v)
-          }),
-          isResizeOpen ? JsxRuntime.jsxs("div", {
+      isResizeOpen ? JsxRuntime.jsxs("div", {
+          children: [
+            JsxRuntime.jsxs("div", {
               children: [
-                JsxRuntime.jsxs("div", {
-                  children: [
-                    JsxRuntime.jsx("input", {
-                      className: "border rounded px-2 py-1 text-sm flex-1 min-w-0",
-                      value: props.resizeRowsInput,
-                      onChange: event => {
-                        let value = event.target.value;
-                        setResizeRowsInput(param => value);
-                      }
-                    }),
-                    JsxRuntime.jsx("span", {
-                      children: "x",
-                      className: "flex-none px-1"
-                    }),
-                    JsxRuntime.jsx("input", {
-                      className: "border rounded px-2 py-1 text-sm flex-1  min-w-0",
-                      value: props.resizeColsInput,
-                      onChange: event => {
-                        let value = event.target.value;
-                        setResizeColsInput(param => value);
-                      }
-                    })
-                  ],
-                  className: "flex flex-row w-full gap-2"
+                JsxRuntime.jsx("input", {
+                  className: "border rounded px-2 py-1 text-sm flex-1 min-w-0",
+                  value: props.resizeRowsInput,
+                  onChange: event => {
+                    let value = event.target.value;
+                    setResizeRowsInput(param => value);
+                  }
                 }),
-                JsxRuntime.jsx("button", {
-                  children: "Save",
-                  className: [
-                    "rounded px-2 py-1 text-sm font-medium",
-                    canSubmitResize ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                  ].join(" "),
-                  disabled: !canSubmitResize,
-                  onClick: param => onSubmitResize()
+                JsxRuntime.jsx("span", {
+                  children: "x",
+                  className: "flex-none px-1"
+                }),
+                JsxRuntime.jsx("input", {
+                  className: "border rounded px-2 py-1 text-sm flex-1  min-w-0",
+                  value: props.resizeColsInput,
+                  onChange: event => {
+                    let value = event.target.value;
+                    setResizeColsInput(param => value);
+                  }
                 })
               ],
-              className: "flex flex-col gap-2"
-            }) : null
-        ],
-        className: "border rounded p-2 flex flex-col gap-2 w-48"
-      }),
-      JsxRuntime.jsxs("div", {
-        children: [
-          JsxRuntime.jsxs("div", {
-            children: [
-              JsxRuntime.jsx("span", {
-                children: "Zoom",
-                className: "font-medium"
-              }),
-              JsxRuntime.jsx("span", {
-                children: zoomPercentString + "%",
-                className: "text-sm font-mono"
-              })
-            ],
-            className: "flex flex-row items-center justify-between"
-          }),
-          JsxRuntime.jsxs("div", {
-            children: [
-              JsxRuntime.jsx("button", {
-                children: "-",
-                className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
-                onClick: param => onZoomOut()
-              }),
-              JsxRuntime.jsx("button", {
-                children: "100%",
-                className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
-                onClick: param => onZoomReset()
-              }),
-              JsxRuntime.jsx("button", {
-                children: "+",
-                className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
-                onClick: param => onZoomIn()
-              })
-            ],
-            className: "flex flex-row gap-2"
-          }),
-          JsxRuntime.jsx("button", {
-            children: "Center",
-            className: "rounded px-2 py-1 text-sm font-medium bg-gray-200",
-            onClick: param => onCenterCanvas()
-          })
-        ],
-        className: "border rounded p-2 flex flex-col gap-2 w-48"
-      }),
+              className: "flex flex-row w-full gap-2"
+            }),
+            JsxRuntime.jsx("button", {
+              children: "Save",
+              className: [
+                "rounded px-2 py-1 text-sm font-medium",
+                canSubmitResize ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+              ].join(" "),
+              disabled: !canSubmitResize,
+              onClick: param => onSubmitResize()
+            })
+          ],
+          className: "flex flex-col gap-2"
+        }) : null
+    ],
+    className: "border rounded p-2 flex flex-col gap-2 w-48"
+  });
+}
+
+function App$ZoomControl(props) {
+  let onCenterCanvas = props.onCenterCanvas;
+  let onZoomIn = props.onZoomIn;
+  let onZoomReset = props.onZoomReset;
+  let onZoomOut = props.onZoomOut;
+  let zoomPercentString = (props.zoom * 100).toFixed(0);
+  return JsxRuntime.jsxs("div", {
+    children: [
       JsxRuntime.jsxs("div", {
         children: [
           JsxRuntime.jsx("span", {
-            children: "Export PNG",
+            children: "Zoom",
             className: "font-medium"
           }),
-          JsxRuntime.jsxs("div", {
-            children: [
-              JsxRuntime.jsxs("label", {
-                children: [
-                  JsxRuntime.jsx("span", {
-                    children: "Scale",
-                    className: "text-xs uppercase tracking-wide text-gray-500"
-                  }),
-                  JsxRuntime.jsx("input", {
-                    className: "border rounded px-2 py-1 text-sm w-16",
-                    min: "1",
-                    step: 1.0,
-                    type: "number",
-                    value: props.exportScaleInput,
-                    onChange: event => {
-                      let value = event.target.value;
-                      setExportScaleInput(param => value);
-                    }
-                  })
-                ],
-                className: "flex flex-col gap-1 text-sm"
-              }),
-              JsxRuntime.jsx("button", {
-                children: "Export",
-                className: [
-                  "rounded px-2 py-1 text-sm font-medium flex-1 h-fit",
-                  canExport ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                ].join(" "),
-                disabled: !canExport,
-                onClick: param => onExport()
-              })
-            ],
-            className: "flex flex-row  gap-2 items-end"
+          JsxRuntime.jsx("span", {
+            children: zoomPercentString + "%",
+            className: "text-sm font-mono"
           })
         ],
-        className: "border rounded p-2 flex flex-col gap-2 w-48"
+        className: "flex flex-row items-center justify-between"
+      }),
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsx("button", {
+            children: "-",
+            className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
+            onClick: param => onZoomOut()
+          }),
+          JsxRuntime.jsx("button", {
+            children: "100%",
+            className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
+            onClick: param => onZoomReset()
+          }),
+          JsxRuntime.jsx("button", {
+            children: "+",
+            className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
+            onClick: param => onZoomIn()
+          })
+        ],
+        className: "flex flex-row gap-2"
+      }),
+      JsxRuntime.jsx("button", {
+        children: "Center",
+        className: "rounded px-2 py-1 text-sm font-medium bg-gray-200",
+        onClick: param => onCenterCanvas()
+      })
+    ],
+    className: "border rounded p-2 flex flex-col gap-2 w-48"
+  });
+}
+
+function App$ExportControl(props) {
+  let onExport = props.onExport;
+  let canExport = props.canExport;
+  let setExportScaleInput = props.setExportScaleInput;
+  return JsxRuntime.jsxs("div", {
+    children: [
+      JsxRuntime.jsx("span", {
+        children: "Export PNG",
+        className: "font-medium"
+      }),
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsxs("label", {
+            children: [
+              JsxRuntime.jsx("span", {
+                children: "Scale",
+                className: "text-xs uppercase tracking-wide text-gray-500"
+              }),
+              JsxRuntime.jsx("input", {
+                className: "border rounded px-2 py-1 text-sm w-16",
+                min: "1",
+                step: 1.0,
+                type: "number",
+                value: props.exportScaleInput,
+                onChange: event => {
+                  let value = event.target.value;
+                  setExportScaleInput(param => value);
+                }
+              })
+            ],
+            className: "flex flex-col gap-1 text-sm"
+          }),
+          JsxRuntime.jsx("button", {
+            children: "Export",
+            className: [
+              "rounded px-2 py-1 text-sm font-medium flex-1 h-fit",
+              canExport ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            ].join(" "),
+            disabled: !canExport,
+            onClick: param => onExport()
+          })
+        ],
+        className: "flex flex-row  gap-2 items-end"
+      })
+    ],
+    className: "border rounded p-2 flex flex-col gap-2 w-48"
+  });
+}
+
+function App$ControlsPanel(props) {
+  return JsxRuntime.jsxs("div", {
+    children: [
+      JsxRuntime.jsx(App$ColorControl, {
+        brushMode: props.brushMode,
+        setBrushMode: props.setBrushMode,
+        myColor: props.myColor,
+        setMyColor: props.setMyColor
+      }),
+      JsxRuntime.jsx(App$BrushOverlayControl, {
+        showCursorOverlay: props.showCursorOverlay,
+        setShowCursorOverlay: props.setShowCursorOverlay
+      }),
+      JsxRuntime.jsx(App$ZoomControl, {
+        onZoomOut: props.onZoomOut,
+        onZoomReset: props.onZoomReset,
+        onZoomIn: props.onZoomIn,
+        onCenterCanvas: props.onCenterCanvas,
+        zoom: props.zoom
+      }),
+      JsxRuntime.jsx(App$ExportControl, {
+        exportScaleInput: props.exportScaleInput,
+        setExportScaleInput: props.setExportScaleInput,
+        canExport: props.canExport,
+        onExport: props.onExport
+      }),
+      JsxRuntime.jsx(App$CanvasSizeControl, {
+        isResizeOpen: props.isResizeOpen,
+        setIsResizeOpen: props.setIsResizeOpen,
+        resizeRowsInput: props.resizeRowsInput,
+        setResizeRowsInput: props.setResizeRowsInput,
+        resizeColsInput: props.resizeColsInput,
+        setResizeColsInput: props.setResizeColsInput,
+        canSubmitResize: props.canSubmitResize,
+        onSubmitResize: props.onSubmitResize
       })
     ],
     className: "flex flex-col gap-2"
