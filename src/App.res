@@ -16,10 +16,7 @@ module Switch = {
 
 module Array = {
   include Array
-  let update2D = (a, i, j, f) =>
-    a->Array.mapWithIndex((row, rowI) =>
-      rowI == i ? row->Array.mapWithIndex((cell, cellJ) => cellJ == j ? f(cell) : cell) : row
-    )
+
   let make2D = (rows, cols, f) =>
     Array.make(~length=rows, ())->Array.map(_ => Array.make(~length=cols, f()))
   let dims2D = a => {
@@ -34,14 +31,12 @@ module Array = {
   @module("./other.js")
   external isEqual2D: (array<array<bool>>, array<array<bool>>) => bool = "isEqual2D"
 }
-type brush = array<array<bool>>
+
 type board = array<array<Nullable.t<string>>>
 
 type brushMode = | @as("Color") Color | @as("Erase") Erase
 
 let zoom_factor = 1.1
-
-// type toolTray = | @as("Hidden") Hidden | @as("Brush") Brush | @as("TileMask") TileMask
 
 let makeBoard = (i, j) => Array.make2D(i, j, () => Nullable.null)
 let makeBrush = (i, j) => Array.make2D(i, j, () => true)
@@ -582,19 +577,6 @@ module ControlsPanel = {
     </div>
   }
 }
-
-//  <div>
-//           {[1, 2, 3, 4, 5, 8, 12, 16, 24]
-//           ->Array.map(dim => {
-//             let dimString = dim->Int.toString
-//             <button
-//               onClick={_ => setBrush(_ => makeBrush(dim, dim))}
-//               className={"px-1 bg-gray-300 rounded text-xs"}>
-//               {`${dimString}`->React.string}
-//             </button>
-//           })
-//           ->React.array}
-//         </div>
 
 @react.component
 let make = () => {
