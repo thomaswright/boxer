@@ -32,11 +32,16 @@ module Array = {
   external isEqual2D: (array<array<bool>>, array<array<bool>>) => bool = "isEqual2D"
 }
 
+module Initials = {
+  let canvasBackgroundColor = "#ffffff"
+  let viewportBackgroundColor = "#e5e7eb"
+  let myColor = "blue"
+  let zoom_factor = 1.1
+}
+
 type board = array<array<Nullable.t<string>>>
 
 type brushMode = | @as("Color") Color | @as("Erase") Erase
-
-let zoom_factor = 1.1
 
 let makeBoard = (i, j) => Array.make2D(i, j, () => Nullable.null)
 let makeBrush = (i, j) => Array.make2D(i, j, () => true)
@@ -265,22 +270,26 @@ module CanvasViewport = {
     ~applyBrush,
     ~canApply,
     ~showCursorOverlay,
+    ~canvasBackgroundColor,
+    ~viewportBackgroundColor,
   ) => {
     <div
       ref={ReactDOM.Ref.domRef(canvasContainerRef)}
-      className="relative border border-gray-300 overflow-hidden bg-gray-200"
+      className="relative border border-gray-300 overflow-hidden"
       style={{
         width: "384px",
         height: "384px",
+        backgroundColor: viewportBackgroundColor,
       }}>
       <div
-        className={"absolute top-0 left-0 bg-white"}
+        className={"absolute top-0 left-0"}
         style={{
           display: "grid",
           gridTemplateColumns: `repeat(${boardDimI->Int.toString}, 1rem)`,
           gridTemplateRows: `repeat(${boardDimJ->Int.toString}, 1rem)`,
           transform: transformValue,
           transformOrigin: "top left",
+          backgroundColor: canvasBackgroundColor,
         }}>
         {board
         ->Array.mapWithIndex((line, i) => {
@@ -407,6 +416,58 @@ module CanvasThumbnails = {
         className="flex-shrink-0 h-16 w-16 border-2 border-dashed border-gray-300 flex items-center justify-center text-3xl text-gray-400">
         {"+"->React.string}
       </button>
+    </div>
+  }
+}
+
+module CanvasColorsControl = {
+  @react.component
+  let make = (
+    ~myColor,
+    ~canvasBackgroundColor,
+    ~setCanvasBackgroundColor,
+    ~viewportBackgroundColor,
+    ~setViewportBackgroundColor,
+  ) => {
+    <div className="border rounded p-2 flex flex-col gap-2 w-48">
+      <div className="flex flex-row">
+        <span className="font-medium flex-1"> {"Canvas Colors"->React.string} </span>
+        <button
+          type_="button"
+          className="flex flex-row items-center gap-1 text-xs font-medium ml-2"
+          onClick={_ => {
+            setCanvasBackgroundColor(_ => Initials.canvasBackgroundColor)
+            setViewportBackgroundColor(_ => Initials.viewportBackgroundColor)
+          }}>
+          {"Default"->React.string}
+        </button>
+      </div>
+      <div className="flex flex-col gap-1">
+        <button
+          type_="button"
+          className="flex flex-row items-center gap-1 text-xs font-medium "
+          onClick={_ => setCanvasBackgroundColor(_ => myColor)}>
+          <div className="flex-1 text-left"> {"Background"->React.string} </div>
+          <div
+            className="w-6 h-6 border rounded"
+            style={{
+              backgroundColor: canvasBackgroundColor,
+            }}
+          />
+        </button>
+        <button
+          type_="button"
+          className="flex flex-row items-center gap-1 text-xs font-medium"
+          onClick={_ => setViewportBackgroundColor(_ => myColor)}>
+          <div className="flex-1 text-left"> {"Viewport"->React.string} </div>
+          <div
+            className="w-6 h-6 border rounded"
+            style={{
+              backgroundColor: viewportBackgroundColor,
+            }}
+          />
+        </button>
+      </div>
     </div>
   }
 }
@@ -593,6 +654,10 @@ module ControlsPanel = {
     ~setBrushMode,
     ~myColor,
     ~setMyColor,
+    ~canvasBackgroundColor,
+    ~setCanvasBackgroundColor,
+    ~viewportBackgroundColor,
+    ~setViewportBackgroundColor,
     ~showCursorOverlay,
     ~setShowCursorOverlay,
     ~isResizeOpen,
@@ -615,6 +680,13 @@ module ControlsPanel = {
   ) => {
     <div className="flex flex-col gap-2">
       <ColorControl brushMode setBrushMode myColor setMyColor />
+      <CanvasColorsControl
+        myColor
+        canvasBackgroundColor
+        setCanvasBackgroundColor
+        viewportBackgroundColor
+        setViewportBackgroundColor
+      />
       <BrushOverlayControl showCursorOverlay setShowCursorOverlay />
       <ZoomControl onZoomOut onZoomReset onZoomIn onCenterCanvas zoom />
       <ExportControl exportScaleInput setExportScaleInput canExport onExport />
@@ -644,7 +716,15 @@ let make = () => {
   let (savedTileMasks, setSavedTileMasks, _) = useLocalStorage("saved-tile-masks", defaultTileMasks)
   let (tileMask, setTileMask, _) = useLocalStorage("tile-mask", makeTileMask(4, 4))
   let (showCursorOverlay, setShowCursorOverlay, _) = useLocalStorage("show-cursor-overlay", true)
-  let (myColor, setMyColor, _) = useLocalStorage("my-color", "blue")
+  let (myColor, setMyColor, _) = useLocalStorage("my-color", Initials.myColor)
+  let (canvasBackgroundColor, setCanvasBackgroundColor, _) = useLocalStorage(
+    "canvas-background-color",
+    Initials.canvasBackgroundColor,
+  )
+  let (viewportBackgroundColor, setViewportBackgroundColor, _) = useLocalStorage(
+    "viewport-background-color",
+    Initials.viewportBackgroundColor,
+  )
 
   // Transient UI state
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
@@ -711,8 +791,8 @@ let make = () => {
 
   let adjustZoomByFactor = factor => updateZoom(prev => prev *. factor)
   let resetZoom = () => updateZoom(_ => 1.)
-  let zoomIn = () => adjustZoomByFactor(zoom_factor)
-  let zoomOut = () => adjustZoomByFactor(1. /. zoom_factor)
+  let zoomIn = () => adjustZoomByFactor(Initials.zoom_factor)
+  let zoomOut = () => adjustZoomByFactor(1. /. Initials.zoom_factor)
   let isMouseDown = useIsMouseDown()
 
   // Canvas selection & derived state
@@ -1013,6 +1093,8 @@ let make = () => {
         applyBrush
         canApply
         showCursorOverlay
+        canvasBackgroundColor
+        viewportBackgroundColor
       />
       <div className="flex flex-col gap-2 w-full">
         <CanvasThumbnails
@@ -1030,6 +1112,10 @@ let make = () => {
       setBrushMode={setBrushMode}
       myColor={myColor}
       setMyColor={setMyColor}
+      canvasBackgroundColor={canvasBackgroundColor}
+      setCanvasBackgroundColor={setCanvasBackgroundColor}
+      viewportBackgroundColor={viewportBackgroundColor}
+      setViewportBackgroundColor={setViewportBackgroundColor}
       showCursorOverlay={showCursorOverlay}
       setShowCursorOverlay={setShowCursorOverlay}
       isResizeOpen={isResizeOpen}
