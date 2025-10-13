@@ -201,21 +201,28 @@ function App$SavedBrushesPanel(props) {
           children: [
             JsxRuntime.jsx("div", {
               children: dimI.toString() + ":" + dimJ.toString(),
-              className: [" text-3xs font-bold w-4 h- text-center bg-white"].join(" "),
+              className: [
+                " text-3xs font-bold w-4 text-center bg-white",
+                selected ? "text-orange-700" : "text-black"
+              ].join(" "),
               style: {
                 writingMode: "sideways-lr"
               }
             }),
             JsxRuntime.jsx("div", {
               children: savedBrush.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
-                className: "w-full h-full ",
-                style: {
-                  backgroundColor: cell ? "inherit" : "white"
-                }
+                className: [
+                  "w-full h-full ",
+                  selected ? (
+                      cell ? "bg-orange-500" : "bg-orange-200"
+                    ) : (
+                      cell ? "bg-gray-400" : "bg-gray-200"
+                    )
+                ].join(" ")
               }, i.toString() + j.toString()))),
               className: [
                 selected ? "bg-orange-500" : "bg-gray-400",
-                "flex flex-row h-8 w-8"
+                "flex flex-row h-8 w-8 rounded-xs overflow-hidden"
               ].join(" "),
               style: {
                 display: "grid",
@@ -229,7 +236,7 @@ function App$SavedBrushesPanel(props) {
         }, savedBrushIndex.toString());
       })
     ],
-    className: "flex flex-col divide-y divide-gray-600 h-full overflow-y-scroll"
+    className: "flex flex-col gap-1 h-full overflow-y-scroll"
   });
 }
 
@@ -270,14 +277,18 @@ function App$SavedTileMasksPanel(props) {
         return JsxRuntime.jsx("button", {
           children: JsxRuntime.jsx("div", {
             children: savedTileMask.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
-              className: "w-full h-full ",
-              style: {
-                backgroundColor: cell ? "inherit" : "white"
-              }
+              className: [
+                "w-full h-full ",
+                selected ? (
+                    cell ? "bg-orange-500" : "bg-orange-200"
+                  ) : (
+                    cell ? "bg-gray-400" : "bg-gray-200"
+                  )
+              ].join(" ")
             }, i.toString() + j.toString()))),
             className: [
-              "h-8 w-8",
-              selected ? "bg-orange-500 " : "bg-gray-300"
+              "h-8 w-8 rounded-xs overflow-hidden",
+              selected ? "bg-orange-500 " : "bg-gray-400"
             ].join(" "),
             style: {
               display: "grid",
@@ -289,7 +300,7 @@ function App$SavedTileMasksPanel(props) {
         }, savedTileMaskIndex.toString());
       })
     ],
-    className: "flex flex-col divide-y divide-gray-600 h-full overflow-y-scroll"
+    className: "flex flex-col gap-1 h-full overflow-y-scroll"
   });
 }
 

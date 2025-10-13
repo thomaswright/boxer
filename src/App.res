@@ -113,7 +113,7 @@ module SavedBrushesPanel = {
     ~canDeleteSelectedBrush,
     ~handleDeleteSelectedBrush,
   ) => {
-    <div className={"flex flex-col divide-y divide-gray-600 h-full overflow-y-scroll"}>
+    <div className={"flex flex-col gap-1 h-full overflow-y-scroll"}>
       <div>
         <button
           className={[
@@ -147,7 +147,10 @@ module SavedBrushesPanel = {
           onClick={_ => setBrush(_ => savedBrush)}
           className={["flex flex-row"]->Array.join(" ")}>
           <div
-            className={[" text-3xs font-bold w-4 h- text-center bg-white"]->Array.join(" ")}
+            className={[
+              " text-3xs font-bold w-4 text-center bg-white",
+              selected ? "text-orange-700" : "text-black",
+            ]->Array.join(" ")}
             style={{writingMode: "sideways-lr"}}>
             {`${dimI->Int.toString}:${dimJ->Int.toString}`->React.string}
           </div>
@@ -160,7 +163,7 @@ module SavedBrushesPanel = {
             }}
             className={[
               selected ? "bg-orange-500" : "bg-gray-400",
-              "flex flex-row h-8 w-8",
+              "flex flex-row h-8 w-8 rounded-xs overflow-hidden",
             ]->Array.join(" ")}>
             {savedBrush
             ->Array.mapWithIndex((line, i) => {
@@ -168,11 +171,15 @@ module SavedBrushesPanel = {
               ->Array.mapWithIndex(
                 (cell, j) => {
                   <div
-                    className={"w-full h-full "}
-                    key={i->Int.toString ++ j->Int.toString}
-                    style={{
-                      backgroundColor: cell ? "inherit" : "white",
-                    }}>
+                    className={[
+                      "w-full h-full ",
+                      selected
+                        ? cell ? "bg-orange-500" : "bg-orange-200"
+                        : cell
+                        ? "bg-gray-400"
+                        : "bg-gray-200",
+                    ]->Array.join(" ")}
+                    key={i->Int.toString ++ j->Int.toString}>
                   </div>
                 },
               )
@@ -198,7 +205,7 @@ module SavedTileMasksPanel = {
     ~canDeleteSelectedTileMask,
     ~handleDeleteSelectedTileMask,
   ) => {
-    <div className={"flex flex-col divide-y divide-gray-600 h-full overflow-y-scroll"}>
+    <div className={"flex flex-col gap-1 h-full overflow-y-scroll"}>
       <div>
         <button
           className={[
@@ -235,18 +242,29 @@ module SavedTileMasksPanel = {
               gridTemplateColumns: `repeat(${dimI->Int.toString}, auto)`,
               gridTemplateRows: `repeat(${dimJ->Int.toString}, auto)`,
             }}
-            className={["h-8 w-8", selected ? "bg-orange-500 " : "bg-gray-300"]->Array.join(" ")}>
+            className={[
+              "h-8 w-8 rounded-xs overflow-hidden",
+              selected ? "bg-orange-500 " : "bg-gray-400",
+            ]->Array.join(" ")}>
             {savedTileMask
             ->Array.mapWithIndex((line, i) => {
               line
               ->Array.mapWithIndex(
                 (cell, j) => {
                   <div
-                    className={"w-full h-full "}
+                    className={[
+                      "w-full h-full ",
+                      selected
+                        ? cell ? "bg-orange-500" : "bg-orange-200"
+                        : cell
+                        ? "bg-gray-400"
+                        : "bg-gray-200",
+                    ]->Array.join(" ")}
                     key={i->Int.toString ++ j->Int.toString}
-                    style={{
-                      backgroundColor: cell ? "inherit" : "white",
-                    }}>
+                    // style={{
+                    //   backgroundColor: cell ? "inherit" : "#ddd",
+                    // }}
+                  >
                   </div>
                 },
               )
