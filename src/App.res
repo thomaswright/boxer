@@ -198,10 +198,11 @@ module SavedTileMasksPanel = {
   @react.component
   let make = (
     ~board,
-    ~tileMask,
     ~setTileMask,
     ~savedTileMasks,
     ~setSavedTileMasks,
+    ~selectedTileMaskIndex,
+    ~setSelectedTileMaskIndex,
     ~canDeleteSelectedTileMask,
     ~handleDeleteSelectedTileMask,
   ) => {
@@ -223,7 +224,11 @@ module SavedTileMasksPanel = {
           onClick={_ => {
             let newTileMask =
               board->Array.map(row => row->Array.map(cell => !(cell->Nullable.isNullable)))
-            setSavedTileMasks(v => v->Array.concat([newTileMask]))
+            setSavedTileMasks(prev => {
+              let next = prev->Array.concat([newTileMask])
+              setSelectedTileMaskIndex(_ => next->Array.length - 1)
+              next
+            })
             setTileMask(_ => newTileMask)
           }}>
           {"+"->React.string}
@@ -233,9 +238,13 @@ module SavedTileMasksPanel = {
       {savedTileMasks
       ->Array.mapWithIndex((savedTileMask, savedTileMaskIndex) => {
         let (dimI, dimJ) = savedTileMask->Array.dims2D
-        let selected = Array.isEqual2D(tileMask, savedTileMask)
+        let selected = savedTileMaskIndex == selectedTileMaskIndex
         <button
-          key={savedTileMaskIndex->Int.toString} onClick={_ => setTileMask(_ => savedTileMask)}>
+          key={savedTileMaskIndex->Int.toString}
+          onClick={_ => {
+            setSelectedTileMaskIndex(_ => savedTileMaskIndex)
+            setTileMask(_ => savedTileMask)
+          }}>
           <div
             style={{
               display: "grid",
@@ -787,6 +796,10 @@ let make = () => {
   let (brush, setBrush, _) = useLocalStorage("brush", makeBrush(3, 3))
   let (savedBrushes, setSavedBrushes, _) = useLocalStorage("saved-brushes", defaultBrushes)
   let (savedTileMasks, setSavedTileMasks, _) = useLocalStorage("saved-tile-masks", defaultTileMasks)
+  let (selectedTileMaskIndex, setSelectedTileMaskIndex, _) = useLocalStorage(
+    "selected-tile-mask-index",
+    0,
+  )
   let (tileMask, setTileMask, _) = useLocalStorage("tile-mask", makeTileMask(4, 4))
   let (showCursorOverlay, setShowCursorOverlay, _) = useLocalStorage("show-cursor-overlay", true)
   let (myColor, setMyColor, _) = useLocalStorage("my-color", Initials.myColor)
@@ -938,6 +951,26 @@ let make = () => {
     None
   }, (boardDimI, boardDimJ))
 
+  React.useEffect2(() => {
+    switch savedTileMasks->Array.get(selectedTileMaskIndex) {
+    | Some(mask) =>
+      if !Array.isEqual2D(mask, tileMask) {
+        setTileMask(_ => mask)
+      }
+      None
+    | None =>
+      if savedTileMasks->Array.length > 0 {
+        let fallbackIndex = if selectedTileMaskIndex >= savedTileMasks->Array.length {
+          savedTileMasks->Array.length - 1
+        } else {
+          0
+        }
+        setSelectedTileMaskIndex(_ => fallbackIndex)
+      }
+      None
+    }
+  }, (savedTileMasks, selectedTileMaskIndex))
+
   let parsePositiveInt = value =>
     switch value->Int.fromString {
     | Some(parsed) if parsed > 0 => Some(parsed)
@@ -990,11 +1023,8 @@ let make = () => {
   let selectedSavedBrushIndex =
     savedBrushes->Belt.Array.getIndexBy(savedBrush => Array.isEqual2D(savedBrush, brush))
 
-  let selectedSavedTileMaskIndex =
-    savedTileMasks->Belt.Array.getIndexBy(savedTileMask => Array.isEqual2D(savedTileMask, tileMask))
-
   let canDeleteSelectedBrush = selectedSavedBrushIndex->Option.isSome
-  let canDeleteSelectedTileMask = selectedSavedTileMaskIndex->Option.isSome
+  let canDeleteSelectedTileMask = savedTileMasks->Array.length > 1
 
   let handleDeleteSelectedBrush = () =>
     switch selectedSavedBrushIndex {
@@ -1003,12 +1033,27 @@ let make = () => {
     | None => ()
     }
 
-  let handleDeleteSelectedTileMask = () =>
-    switch selectedSavedTileMaskIndex {
-    | Some(selectedIndex) =>
-      setSavedTileMasks(prev => prev->Belt.Array.keepWithIndex((_, idx) => idx != selectedIndex))
-    | None => ()
+  let handleDeleteSelectedTileMask = () => {
+    if canDeleteSelectedTileMask {
+      setSavedTileMasks(prev => {
+        let next = prev->Belt.Array.keepWithIndex((_, idx) => idx != selectedTileMaskIndex)
+        let nextLength = next->Array.length
+        let nextIndex = if nextLength == 0 {
+          0
+        } else if selectedTileMaskIndex >= nextLength {
+          nextLength - 1
+        } else {
+          selectedTileMaskIndex
+        }
+        setSelectedTileMaskIndex(_ => nextIndex)
+        switch next->Array.get(nextIndex) {
+        | Some(mask) => setTileMask(_ => mask)
+        | None => ()
+        }
+        next
+      })
     }
+  }
 
   // Canvas collection actions
   let canDeleteCanvas = canvasCount > 1
@@ -1150,10 +1195,11 @@ let make = () => {
       />
       <SavedTileMasksPanel
         board={board}
-        tileMask={tileMask}
         setTileMask={setTileMask}
         savedTileMasks={savedTileMasks}
         setSavedTileMasks={setSavedTileMasks}
+        selectedTileMaskIndex={selectedTileMaskIndex}
+        setSelectedTileMaskIndex={setSelectedTileMaskIndex}
         canDeleteSelectedTileMask={canDeleteSelectedTileMask}
         handleDeleteSelectedTileMask={handleDeleteSelectedTileMask}
       />
