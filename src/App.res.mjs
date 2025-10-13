@@ -155,9 +155,374 @@ let defaultBrushes = [
   make2D(16, 16, () => true)
 ];
 
+function App$SavedBrushesPanel(props) {
+  let handleDeleteSelectedBrush = props.handleDeleteSelectedBrush;
+  let canDeleteSelectedBrush = props.canDeleteSelectedBrush;
+  let setSavedBrushes = props.setSavedBrushes;
+  let setBrush = props.setBrush;
+  let brush = props.brush;
+  let board = props.board;
+  return JsxRuntime.jsxs("div", {
+    children: [
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsx("button", {
+            children: "x",
+            className: [
+              "w-4 h-4 leading-none",
+              canDeleteSelectedBrush ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            ].join(" "),
+            disabled: !canDeleteSelectedBrush,
+            onClick: param => handleDeleteSelectedBrush()
+          }),
+          JsxRuntime.jsx("button", {
+            children: "+",
+            className: "bg-gray-200 w-4 h-4 leading-none",
+            onClick: param => {
+              let newBrush = board.map(row => row.map(cell => !(cell == null)));
+              setSavedBrushes(v => v.concat([newBrush]));
+              setBrush(param => newBrush);
+            }
+          })
+        ]
+      }),
+      props.savedBrushes.map((savedBrush, savedBrushIndex) => {
+        let match = dims2D(savedBrush);
+        let dimJ = match[1];
+        let dimI = match[0];
+        let selected = OtherJs.isEqual2D(brush, savedBrush);
+        return JsxRuntime.jsxs("button", {
+          children: [
+            JsxRuntime.jsx("div", {
+              children: dimI.toString() + ":" + dimJ.toString(),
+              className: [" text-3xs font-bold border border-b-0 w-8 text-center"].join(" ")
+            }),
+            JsxRuntime.jsx("div", {
+              children: savedBrush.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
+                className: "w-full h-full ",
+                style: {
+                  backgroundColor: cell ? "#000" : "transparent"
+                }
+              }, i.toString() + j.toString()))),
+              className: "h-8 w-8 border",
+              style: {
+                display: "grid",
+                gridTemplateColumns: "repeat(" + dimI.toString() + ", auto)",
+                gridTemplateRows: "repeat(" + dimJ.toString() + ", auto)"
+              }
+            })
+          ],
+          className: [selected ? "bg-red-100 text-red-600" : ""].join(" "),
+          onClick: param => setBrush(param => savedBrush)
+        }, savedBrushIndex.toString());
+      })
+    ],
+    className: "flex flex-col"
+  });
+}
+
+function App$SavedTileMasksPanel(props) {
+  let handleDeleteSelectedTileMask = props.handleDeleteSelectedTileMask;
+  let canDeleteSelectedTileMask = props.canDeleteSelectedTileMask;
+  let setSavedTileMasks = props.setSavedTileMasks;
+  let setTileMask = props.setTileMask;
+  let tileMask = props.tileMask;
+  let board = props.board;
+  return JsxRuntime.jsxs("div", {
+    children: [
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsx("button", {
+            children: "x",
+            className: [
+              "w-4 h-4 leading-none",
+              canDeleteSelectedTileMask ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            ].join(" "),
+            disabled: !canDeleteSelectedTileMask,
+            onClick: param => handleDeleteSelectedTileMask()
+          }),
+          JsxRuntime.jsx("button", {
+            children: "+",
+            className: "bg-gray-200 w-4 h-4 leading-none",
+            onClick: param => {
+              let newTileMask = board.map(row => row.map(cell => !(cell == null)));
+              setSavedTileMasks(v => v.concat([newTileMask]));
+              setTileMask(param => newTileMask);
+            }
+          })
+        ]
+      }),
+      props.savedTileMasks.map((savedTileMask, savedTileMaskIndex) => {
+        let match = dims2D(savedTileMask);
+        let selected = OtherJs.isEqual2D(tileMask, savedTileMask);
+        return JsxRuntime.jsx("button", {
+          children: savedTileMask.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
+            className: "w-full h-full ",
+            style: {
+              backgroundColor: cell ? "#ffa700" : "transparent"
+            }
+          }, i.toString() + j.toString()))),
+          className: [
+            "h-8 w-8 border",
+            selected ? "bg-orange-100 border-orange-500" : "border-gray-200"
+          ].join(" "),
+          style: {
+            display: "grid",
+            gridTemplateColumns: "repeat(" + match[0].toString() + ", auto)",
+            gridTemplateRows: "repeat(" + match[1].toString() + ", auto)"
+          },
+          onClick: param => setTileMask(param => savedTileMask)
+        }, savedTileMaskIndex.toString());
+      })
+    ],
+    className: "flex flex-col"
+  });
+}
+
+function App$CanvasViewport(props) {
+  let showCursorOverlay = props.showCursorOverlay;
+  let canApply = props.canApply;
+  let applyBrush = props.applyBrush;
+  let isMouseDown = props.isMouseDown;
+  let setCursorOverlayOff = props.setCursorOverlayOff;
+  let cursorOverlayOff = props.cursorOverlayOff;
+  let setHoveredCell = props.setHoveredCell;
+  let hoveredCell = props.hoveredCell;
+  return JsxRuntime.jsx("div", {
+    children: JsxRuntime.jsx("div", {
+      children: props.board.map((line, i) => line.map((cell, j) => {
+        let backgroundColor = Stdlib_Nullable.getOr(cell, "transparent");
+        let overlayBackgroundColor = Stdlib_Nullable.mapOr(cell, "black", v => {
+          if (isLight(v)) {
+            return "black";
+          } else {
+            return "white";
+          }
+        });
+        return JsxRuntime.jsxs("div", {
+          children: [
+            JsxRuntime.jsx("div", {
+              className: "w-full h-full absolute",
+              style: {
+                backgroundColor: backgroundColor
+              }
+            }),
+            hoveredCell !== undefined && !(cursorOverlayOff || !showCursorOverlay || !canApply(i, j, hoveredCell[0], hoveredCell[1])) ? JsxRuntime.jsx("div", {
+                className: "absolute w-full h-full inset-0 opacity-20",
+                style: {
+                  backgroundColor: overlayBackgroundColor
+                }
+              }) : null
+          ],
+          className: "w-full h-full group relative",
+          onMouseDown: param => {
+            applyBrush(i, j);
+            setCursorOverlayOff(param => true);
+          },
+          onMouseEnter: param => {
+            setHoveredCell(param => [
+              i,
+              j
+            ]);
+            if (isMouseDown) {
+              return applyBrush(i, j);
+            }
+            
+          },
+          onMouseLeave: param => setHoveredCell(param => {})
+        }, i.toString() + j.toString());
+      })),
+      className: "absolute top-0 left-0 border",
+      style: {
+        display: "grid",
+        gridTemplateColumns: "repeat(" + props.boardDimI.toString() + ", 1rem)",
+        gridTemplateRows: "repeat(" + props.boardDimJ.toString() + ", 1rem)",
+        transform: props.transformValue,
+        transformOrigin: "top left"
+      }
+    }),
+    ref: Primitive_option.some(props.canvasContainerRef),
+    className: "relative border border-gray-300 overflow-hidden bg-white",
+    style: {
+      height: "384px",
+      width: "384px"
+    }
+  });
+}
+
+function App$CanvasThumbnails(props) {
+  let onSelectCanvas = props.onSelectCanvas;
+  let handleAddCanvas = props.handleAddCanvas;
+  let handleDeleteCanvas = props.handleDeleteCanvas;
+  let canDeleteCanvas = props.canDeleteCanvas;
+  let currentCanvasIndex = props.currentCanvasIndex;
+  return JsxRuntime.jsxs("div", {
+    children: [
+      props.canvases.map((canvasBoard, canvasIndex) => {
+        let match = dims2D(canvasBoard);
+        let isSelectedCanvas = canvasIndex === currentCanvasIndex;
+        return JsxRuntime.jsxs("div", {
+          children: [
+            JsxRuntime.jsx("button", {
+              children: JsxRuntime.jsx("div", {
+                children: canvasBoard.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
+                  className: "w-full h-full",
+                  style: {
+                    backgroundColor: Stdlib_Nullable.getOr(cell, "transparent")
+                  }
+                }, i.toString() + j.toString()))),
+                className: "h-16 w-16 grid",
+                style: {
+                  gridTemplateColumns: "repeat(" + match[0].toString() + ", minmax(0, 1fr))",
+                  gridTemplateRows: "repeat(" + match[1].toString() + ", minmax(0, 1fr))"
+                }
+              }),
+              className: ["absolute w-fit h-fit"].join(" "),
+              onClick: param => onSelectCanvas(canvasIndex)
+            }),
+            isSelectedCanvas ? JsxRuntime.jsx("button", {
+                children: "x",
+                className: [
+                  " w-4 h-4 leading-none text-sm font-medium absolute right-0 bottom-0",
+                  canDeleteCanvas ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                ].join(" "),
+                disabled: !canDeleteCanvas,
+                onClick: e => {
+                  e.stopPropagation();
+                  handleDeleteCanvas();
+                }
+              }) : null
+          ],
+          className: [
+            "relative flex-shrink-0 border w-16 h-16",
+            isSelectedCanvas ? "border-blue-500" : "border-gray-200"
+          ].join(" ")
+        }, canvasIndex.toString());
+      }),
+      JsxRuntime.jsx("button", {
+        children: "+",
+        className: "flex-shrink-0 h-16 w-16 border-2 border-dashed border-gray-300 flex items-center justify-center text-3xl text-gray-400",
+        onClick: param => handleAddCanvas()
+      })
+    ],
+    className: "flex flex-row items-start gap-3 overflow-x-auto"
+  });
+}
+
+function App$ControlsPanel(props) {
+  let onSubmitResize = props.onSubmitResize;
+  let canSubmitResize = props.canSubmitResize;
+  let setResizeColsInput = props.setResizeColsInput;
+  let setResizeRowsInput = props.setResizeRowsInput;
+  let setIsResizeOpen = props.setIsResizeOpen;
+  let isResizeOpen = props.isResizeOpen;
+  let setShowCursorOverlay = props.setShowCursorOverlay;
+  let setMyColor = props.setMyColor;
+  let setBrushMode = props.setBrushMode;
+  let brushMode = props.brushMode;
+  return JsxRuntime.jsxs("div", {
+    children: [
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsx("button", {
+            children: "Color",
+            className: [
+              brushMode === "Color" ? " bg-blue-500 text-white" : "bg-gray-200",
+              "px-2 font-medium rounded"
+            ].join(" "),
+            onClick: param => setBrushMode(param => "Color")
+          }),
+          JsxRuntime.jsx("button", {
+            children: "Erase",
+            className: [
+              brushMode === "Erase" ? " bg-blue-500 text-white" : "bg-gray-200",
+              "px-2 font-medium rounded"
+            ].join(" "),
+            onClick: param => setBrushMode(param => "Erase")
+          })
+        ],
+        className: "flex flex-row gap-2"
+      }),
+      JsxRuntime.jsx(ReactColorful.HexColorPicker, {
+        color: props.myColor,
+        onChange: newColor => setMyColor(param => newColor)
+      }),
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsx("div", {
+            children: "Show Brush Overlay",
+            className: "flex flex-row"
+          }),
+          JsxRuntime.jsx(make, {
+            checked: props.showCursorOverlay,
+            onChange: v => setShowCursorOverlay(param => v)
+          })
+        ]
+      }),
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsxs("button", {
+            children: [
+              "Canvas Size",
+              JsxRuntime.jsx("span", {
+                children: isResizeOpen ? "-" : "+"
+              })
+            ],
+            className: [
+              "flex flex-row items-center justify-between font-medium",
+              "w-full"
+            ].join(" "),
+            onClick: param => setIsResizeOpen(v => !v)
+          }),
+          isResizeOpen ? JsxRuntime.jsxs("div", {
+              children: [
+                JsxRuntime.jsxs("div", {
+                  children: [
+                    JsxRuntime.jsx("input", {
+                      className: "border rounded px-2 py-1 text-sm flex-1 min-w-0",
+                      value: props.resizeRowsInput,
+                      onChange: event => {
+                        let value = event.target.value;
+                        setResizeRowsInput(param => value);
+                      }
+                    }),
+                    JsxRuntime.jsx("span", {
+                      children: "x",
+                      className: "flex-none px-1"
+                    }),
+                    JsxRuntime.jsx("input", {
+                      className: "border rounded px-2 py-1 text-sm flex-1  min-w-0",
+                      value: props.resizeColsInput,
+                      onChange: event => {
+                        let value = event.target.value;
+                        setResizeColsInput(param => value);
+                      }
+                    })
+                  ],
+                  className: "flex flex-row w-full gap-2"
+                }),
+                JsxRuntime.jsx("button", {
+                  children: "Save",
+                  className: [
+                    "rounded px-2 py-1 text-sm font-medium",
+                    canSubmitResize ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  ].join(" "),
+                  disabled: !canSubmitResize,
+                  onClick: param => onSubmitResize()
+                })
+              ],
+              className: "flex flex-col gap-2"
+            }) : null
+        ],
+        className: "border rounded p-2 flex flex-col gap-2 w-48"
+      })
+    ],
+    className: "flex flex-col gap-2"
+  });
+}
+
 function App(props) {
   let match = UseLocalStorageJs("brush-mode", "Color");
-  let setBrushMode = match[1];
   let brushMode = match[0];
   let match$1 = UseLocalStorageJs("canvases", [make2D(12, 12, () => null)]);
   let setCanvases = match$1[1];
@@ -166,7 +531,6 @@ function App(props) {
   let setSelectedCanvasIndex = match$2[1];
   let selectedCanvasIndex = match$2[0];
   let match$3 = UseLocalStorageJs("brush", make2D(3, 3, () => true));
-  let setBrush = match$3[1];
   let brush = match$3[0];
   let match$4 = UseLocalStorageJs("saved-brushes", defaultBrushes);
   let setSavedBrushes = match$4[1];
@@ -175,20 +539,15 @@ function App(props) {
   let setSavedTileMasks = match$5[1];
   let savedTileMasks = match$5[0];
   let match$6 = UseLocalStorageJs("tile-mask", make2D(4, 4, () => true));
-  let setTileMask = match$6[1];
   let tileMask = match$6[0];
   let match$7 = UseLocalStorageJs("show-cursor-overlay", true);
-  let setShowCursorOverlay = match$7[1];
   let showCursorOverlay = match$7[0];
   let match$8 = UseLocalStorageJs("my-color", "blue");
-  let setMyColor = match$8[1];
   let myColor = match$8[0];
   let match$9 = React.useState(() => false);
   let setCursorOverlayOff = match$9[1];
-  let cursorOverlayOff = match$9[0];
   let match$10 = React.useState(() => {});
   let setHoveredCell = match$10[1];
-  let hoveredCell = match$10[0];
   let match$11 = UseLocalStorageJs("canvas-zoom", 1);
   let setZoom = match$11[1];
   let zoom = match$11[0];
@@ -301,7 +660,6 @@ function App(props) {
   let tileMaskDimI = match$16[0];
   let match$17 = React.useState(() => false);
   let setIsResizeOpen = match$17[1];
-  let isResizeOpen = match$17[0];
   let match$18 = React.useState(() => boardDimI.toString());
   let setResizeRowsInput = match$18[1];
   let resizeRowsInput = match$18[0];
@@ -326,6 +684,17 @@ function App(props) {
   let match$21 = parsePositiveInt(resizeColsInput);
   let canSubmitResize = match$20 !== undefined && match$21 !== undefined ? match$20 !== boardDimI || match$21 !== boardDimJ : false;
   let canDeleteCanvas = canvasCount > 1;
+  let handleResizeSubmit = () => {
+    let match = parsePositiveInt(resizeRowsInput);
+    let match$1 = parsePositiveInt(resizeColsInput);
+    if (match !== undefined && match$1 !== undefined) {
+      updateCanvasAtIndex(currentCanvasIndex, prev => make2D(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => Stdlib_Option.getOr(check2D(prev, rowI, colJ), null))));
+      setHoveredCell(param => {});
+      setCursorOverlayOff(param => true);
+      return setIsResizeOpen(param => false);
+    }
+    
+  };
   let selectedSavedBrushIndex = Belt_Array.getIndexBy(savedBrushes, savedBrush => OtherJs.isEqual2D(savedBrush, brush));
   let selectedSavedTileMaskIndex = Belt_Array.getIndexBy(savedTileMasks, savedTileMask => OtherJs.isEqual2D(savedTileMask, tileMask));
   let canDeleteSelectedBrush = Stdlib_Option.isSome(selectedSavedBrushIndex);
@@ -358,6 +727,11 @@ function App(props) {
       ) : selectedCanvasIndex;
     setCanvases(prev => Belt_Array.keepWithIndex(prev, (_canvas, idx) => idx !== selectedCanvasIndex));
     setSelectedCanvasIndex(param => nextSelected);
+    setHoveredCell(param => {});
+    setCursorOverlayOff(param => true);
+  };
+  let handleSelectCanvas = canvasIndex => {
+    setSelectedCanvasIndex(param => canvasIndex);
     setHoveredCell(param => {});
     setCursorOverlayOff(param => true);
   };
@@ -441,346 +815,73 @@ function App(props) {
     children: [
       JsxRuntime.jsxs("div", {
         children: [
-          JsxRuntime.jsxs("div", {
-            children: [
-              JsxRuntime.jsxs("div", {
-                children: [
-                  JsxRuntime.jsx("button", {
-                    children: "x",
-                    className: [
-                      "w-4 h-4 leading-none",
-                      canDeleteSelectedBrush ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    ].join(" "),
-                    disabled: !canDeleteSelectedBrush,
-                    onClick: param => handleDeleteSelectedBrush()
-                  }),
-                  JsxRuntime.jsx("button", {
-                    children: "+",
-                    className: "bg-gray-200 w-4 h-4 leading-none",
-                    onClick: param => {
-                      let newBrush = board.map(row => row.map(cell => !(cell == null)));
-                      setSavedBrushes(v => v.concat([newBrush]));
-                      setBrush(param => newBrush);
-                    }
-                  })
-                ]
-              }),
-              savedBrushes.map((savedBrush, savedBrushIndex) => {
-                let match = dims2D(savedBrush);
-                let dimJ = match[1];
-                let dimI = match[0];
-                let selected = OtherJs.isEqual2D(brush, savedBrush);
-                return JsxRuntime.jsxs("button", {
-                  children: [
-                    JsxRuntime.jsx("div", {
-                      children: dimI.toString() + ":" + dimJ.toString(),
-                      className: [" text-3xs font-bold border border-b-0 w-8 text-center"].join(" ")
-                    }),
-                    JsxRuntime.jsx("div", {
-                      children: savedBrush.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
-                        className: "w-full h-full ",
-                        style: {
-                          backgroundColor: cell ? "#000" : "transparent"
-                        }
-                      }, i.toString() + j.toString()))),
-                      className: "h-8 w-8 border",
-                      style: {
-                        display: "grid",
-                        gridTemplateColumns: "repeat(" + dimI.toString() + ", auto)",
-                        gridTemplateRows: "repeat(" + dimJ.toString() + ", auto)"
-                      }
-                    })
-                  ],
-                  className: [selected ? "bg-red-100 text-red-600" : ""].join(" "),
-                  onClick: param => setBrush(param => savedBrush)
-                }, savedBrushIndex.toString());
-              })
-            ],
-            className: "flex flex-col "
+          JsxRuntime.jsx(App$SavedBrushesPanel, {
+            board: board,
+            brush: brush,
+            setBrush: match$3[1],
+            savedBrushes: savedBrushes,
+            setSavedBrushes: setSavedBrushes,
+            canDeleteSelectedBrush: canDeleteSelectedBrush,
+            handleDeleteSelectedBrush: handleDeleteSelectedBrush
           }),
-          JsxRuntime.jsxs("div", {
-            children: [
-              JsxRuntime.jsxs("div", {
-                children: [
-                  JsxRuntime.jsx("button", {
-                    children: "x",
-                    className: [
-                      "w-4 h-4 leading-none",
-                      canDeleteSelectedTileMask ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    ].join(" "),
-                    disabled: !canDeleteSelectedTileMask,
-                    onClick: param => handleDeleteSelectedTileMask()
-                  }),
-                  JsxRuntime.jsx("button", {
-                    children: "+",
-                    className: "bg-gray-200 w-4 h-4 leading-none",
-                    onClick: param => {
-                      let newTileMask = board.map(row => row.map(cell => !(cell == null)));
-                      setSavedTileMasks(v => v.concat([newTileMask]));
-                      setTileMask(param => newTileMask);
-                    }
-                  })
-                ]
-              }),
-              savedTileMasks.map((savedTileMask, savedTileMaskIndex) => {
-                let match = dims2D(savedTileMask);
-                let selected = OtherJs.isEqual2D(tileMask, savedTileMask);
-                return JsxRuntime.jsx("button", {
-                  children: savedTileMask.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
-                    className: "w-full h-full ",
-                    style: {
-                      backgroundColor: cell ? "#ffa700" : "transparent"
-                    }
-                  }, i.toString() + j.toString()))),
-                  className: [
-                    "h-8 w-8 border",
-                    selected ? "bg-orange-100 border-orange-500" : "border-gray-200"
-                  ].join(" "),
-                  style: {
-                    display: "grid",
-                    gridTemplateColumns: "repeat(" + match[0].toString() + ", auto)",
-                    gridTemplateRows: "repeat(" + match[1].toString() + ", auto)"
-                  },
-                  onClick: param => setTileMask(param => savedTileMask)
-                }, savedTileMaskIndex.toString());
-              })
-            ],
-            className: "flex flex-col"
+          JsxRuntime.jsx(App$SavedTileMasksPanel, {
+            board: board,
+            tileMask: tileMask,
+            setTileMask: match$6[1],
+            savedTileMasks: savedTileMasks,
+            setSavedTileMasks: setSavedTileMasks,
+            canDeleteSelectedTileMask: canDeleteSelectedTileMask,
+            handleDeleteSelectedTileMask: handleDeleteSelectedTileMask
           })
         ],
         className: "flex flex-row h-lg"
       }),
       JsxRuntime.jsxs("div", {
         children: [
-          JsxRuntime.jsx("div", {
-            children: JsxRuntime.jsx("div", {
-              children: board.map((line, i) => line.map((cell, j) => {
-                let backgroundColor = Stdlib_Nullable.getOr(cell, "transparent");
-                let overlayBackgroundColor = Stdlib_Nullable.mapOr(cell, "black", v => {
-                  if (isLight(v)) {
-                    return "black";
-                  } else {
-                    return "white";
-                  }
-                });
-                return JsxRuntime.jsxs("div", {
-                  children: [
-                    JsxRuntime.jsx("div", {
-                      className: "w-full h-full absolute",
-                      style: {
-                        backgroundColor: backgroundColor
-                      }
-                    }),
-                    hoveredCell !== undefined && !(cursorOverlayOff || !showCursorOverlay || !canApply(i, j, hoveredCell[0], hoveredCell[1])) ? JsxRuntime.jsx("div", {
-                        className: "absolute w-full h-full inset-0 opacity-20",
-                        style: {
-                          backgroundColor: overlayBackgroundColor
-                        }
-                      }) : null
-                  ],
-                  className: "w-full h-full group relative",
-                  onMouseDown: param => {
-                    applyBrush(i, j);
-                    setCursorOverlayOff(param => true);
-                  },
-                  onMouseEnter: param => {
-                    setHoveredCell(param => [
-                      i,
-                      j
-                    ]);
-                    if (isMouseDown) {
-                      return applyBrush(i, j);
-                    }
-                    
-                  },
-                  onMouseLeave: param => setHoveredCell(param => {})
-                }, i.toString() + j.toString());
-              })),
-              className: "absolute top-0 left-0 border",
-              style: {
-                display: "grid",
-                gridTemplateColumns: "repeat(" + boardDimI.toString() + ", 1rem)",
-                gridTemplateRows: "repeat(" + boardDimJ.toString() + ", 1rem)",
-                transform: transformValue,
-                transformOrigin: "top left"
-              }
-            }),
-            ref: Primitive_option.some(canvasContainerRef),
-            className: "relative border border-gray-300 overflow-hidden bg-white",
-            style: {
-              height: "384px",
-              width: "384px"
-            }
+          JsxRuntime.jsx(App$CanvasViewport, {
+            canvasContainerRef: canvasContainerRef,
+            board: board,
+            boardDimI: boardDimI,
+            boardDimJ: boardDimJ,
+            transformValue: transformValue,
+            hoveredCell: match$10[0],
+            setHoveredCell: setHoveredCell,
+            cursorOverlayOff: match$9[0],
+            setCursorOverlayOff: setCursorOverlayOff,
+            isMouseDown: isMouseDown,
+            applyBrush: applyBrush,
+            canApply: canApply,
+            showCursorOverlay: showCursorOverlay
           }),
           JsxRuntime.jsx("div", {
-            children: JsxRuntime.jsxs("div", {
-              children: [
-                canvases.map((canvasBoard, canvasIndex) => {
-                  let match = dims2D(canvasBoard);
-                  let isSelectedCanvas = canvasIndex === currentCanvasIndex;
-                  return JsxRuntime.jsxs("div", {
-                    children: [
-                      JsxRuntime.jsx("button", {
-                        children: JsxRuntime.jsx("div", {
-                          children: canvasBoard.map((line, i) => line.map((cell, j) => JsxRuntime.jsx("div", {
-                            className: "w-full h-full",
-                            style: {
-                              backgroundColor: Stdlib_Nullable.getOr(cell, "transparent")
-                            }
-                          }, i.toString() + j.toString()))),
-                          className: "h-16 w-16 grid",
-                          style: {
-                            gridTemplateColumns: "repeat(" + match[0].toString() + ", minmax(0, 1fr))",
-                            gridTemplateRows: "repeat(" + match[1].toString() + ", minmax(0, 1fr))"
-                          }
-                        }),
-                        className: ["absolute w-fit h-fit"].join(" "),
-                        onClick: param => {
-                          setSelectedCanvasIndex(param => canvasIndex);
-                          setHoveredCell(param => {});
-                          setCursorOverlayOff(param => true);
-                        }
-                      }),
-                      isSelectedCanvas ? JsxRuntime.jsx("button", {
-                          children: "x",
-                          className: [
-                            " w-4 h-4 leading-none text-sm font-medium absolute right-0 bottom-0",
-                            canDeleteCanvas ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                          ].join(" "),
-                          disabled: !canDeleteCanvas,
-                          onClick: e => {
-                            e.stopPropagation();
-                            handleDeleteCanvas();
-                          }
-                        }) : null
-                    ],
-                    className: [
-                      "relative flex-shrink-0 border w-16 h-16",
-                      isSelectedCanvas ? "border-blue-500" : "border-gray-200"
-                    ].join(" ")
-                  }, canvasIndex.toString());
-                }),
-                JsxRuntime.jsx("button", {
-                  children: "+",
-                  className: "flex-shrink-0 h-16 w-16 border-2 border-dashed border-gray-300 flex items-center justify-center text-3xl text-gray-400",
-                  onClick: param => handleAddCanvas()
-                })
-              ],
-              className: "flex flex-row items-start gap-3 overflow-x-auto"
+            children: JsxRuntime.jsx(App$CanvasThumbnails, {
+              canvases: canvases,
+              currentCanvasIndex: currentCanvasIndex,
+              canDeleteCanvas: canDeleteCanvas,
+              handleDeleteCanvas: handleDeleteCanvas,
+              handleAddCanvas: handleAddCanvas,
+              onSelectCanvas: handleSelectCanvas
             }),
             className: "flex flex-col gap-2 w-full"
           })
         ],
         className: "flex flex-col gap-2"
       }),
-      JsxRuntime.jsxs("div", {
-        children: [
-          JsxRuntime.jsxs("div", {
-            children: [
-              JsxRuntime.jsx("button", {
-                children: "Color",
-                className: [
-                  brushMode === "Color" ? " bg-blue-500 text-white" : "bg-gray-200",
-                  "px-2 font-medium rounded"
-                ].join(" "),
-                onClick: param => setBrushMode(param => "Color")
-              }),
-              JsxRuntime.jsx("button", {
-                children: "Erase",
-                className: [
-                  brushMode === "Erase" ? " bg-blue-500 text-white" : "bg-gray-200",
-                  "px-2 font-medium rounded"
-                ].join(" "),
-                onClick: param => setBrushMode(param => "Erase")
-              })
-            ],
-            className: "flex flex-row gap-2"
-          }),
-          JsxRuntime.jsx(ReactColorful.HexColorPicker, {
-            color: myColor,
-            onChange: newColor => setMyColor(param => newColor)
-          }),
-          JsxRuntime.jsxs("div", {
-            children: [
-              JsxRuntime.jsx("div", {
-                children: "Show Brush Overlay",
-                className: "flex flex-row"
-              }),
-              JsxRuntime.jsx(make, {
-                checked: showCursorOverlay,
-                onChange: v => setShowCursorOverlay(param => v)
-              })
-            ]
-          }),
-          JsxRuntime.jsxs("div", {
-            children: [
-              JsxRuntime.jsxs("button", {
-                children: [
-                  "Canvas Size",
-                  JsxRuntime.jsx("span", {
-                    children: isResizeOpen ? "-" : "+"
-                  })
-                ],
-                className: [
-                  "flex flex-row items-center justify-between font-medium",
-                  "w-full"
-                ].join(" "),
-                onClick: param => setIsResizeOpen(v => !v)
-              }),
-              isResizeOpen ? JsxRuntime.jsxs("div", {
-                  children: [
-                    JsxRuntime.jsxs("div", {
-                      children: [
-                        JsxRuntime.jsx("input", {
-                          className: "border rounded px-2 py-1 text-sm flex-1 min-w-0",
-                          value: resizeRowsInput,
-                          onChange: event => {
-                            let value = event.target.value;
-                            setResizeRowsInput(param => value);
-                          }
-                        }),
-                        JsxRuntime.jsx("span", {
-                          children: "x",
-                          className: "flex-none px-1"
-                        }),
-                        JsxRuntime.jsx("input", {
-                          className: "border rounded px-2 py-1 text-sm flex-1  min-w-0",
-                          value: resizeColsInput,
-                          onChange: event => {
-                            let value = event.target.value;
-                            setResizeColsInput(param => value);
-                          }
-                        })
-                      ],
-                      className: "flex flex-row w-full gap-2"
-                    }),
-                    JsxRuntime.jsx("button", {
-                      children: "Save",
-                      className: [
-                        "rounded px-2 py-1 text-sm font-medium",
-                        canSubmitResize ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                      ].join(" "),
-                      disabled: !canSubmitResize,
-                      onClick: param => {
-                        let match = parsePositiveInt(resizeRowsInput);
-                        let match$1 = parsePositiveInt(resizeColsInput);
-                        if (match !== undefined && match$1 !== undefined) {
-                          updateCanvasAtIndex(currentCanvasIndex, prev => make2D(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => Stdlib_Option.getOr(check2D(prev, rowI, colJ), null))));
-                          setHoveredCell(param => {});
-                          setCursorOverlayOff(param => true);
-                          return setIsResizeOpen(param => false);
-                        }
-                        
-                      }
-                    })
-                  ],
-                  className: "flex flex-col gap-2"
-                }) : null
-            ],
-            className: "border rounded p-2 flex flex-col gap-2 w-48"
-          })
-        ],
-        className: "flex flex-col gap-2"
+      JsxRuntime.jsx(App$ControlsPanel, {
+        brushMode: brushMode,
+        setBrushMode: match[1],
+        myColor: myColor,
+        setMyColor: match$8[1],
+        showCursorOverlay: showCursorOverlay,
+        setShowCursorOverlay: match$7[1],
+        isResizeOpen: match$17[0],
+        setIsResizeOpen: setIsResizeOpen,
+        resizeRowsInput: resizeRowsInput,
+        setResizeRowsInput: setResizeRowsInput,
+        resizeColsInput: resizeColsInput,
+        setResizeColsInput: setResizeColsInput,
+        canSubmitResize: canSubmitResize,
+        onSubmitResize: handleResizeSubmit
       })
     ],
     className: " flex flex-row gap-5 p-5"
