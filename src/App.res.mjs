@@ -410,6 +410,7 @@ function App$CanvasThumbnails(props) {
 }
 
 function App$ControlsPanel(props) {
+  let onCenterCanvas = props.onCenterCanvas;
   let onZoomReset = props.onZoomReset;
   let onZoomOut = props.onZoomOut;
   let onZoomIn = props.onZoomIn;
@@ -554,6 +555,11 @@ function App$ControlsPanel(props) {
               })
             ],
             className: "flex flex-row gap-2"
+          }),
+          JsxRuntime.jsx("button", {
+            children: "Center",
+            className: "rounded px-2 py-1 text-sm font-medium bg-gray-200",
+            onClick: param => onCenterCanvas()
           })
         ],
         className: "border rounded p-2 flex flex-col gap-2 w-48"
@@ -705,6 +711,17 @@ function App(props) {
   let match$16 = dims2D(tileMask);
   let tileMaskDimJ = match$16[1];
   let tileMaskDimI = match$16[0];
+  let centerCanvas = () => {
+    let boardWidth = boardDimI * 16;
+    let boardHeight = boardDimJ * 16;
+    let currentZoom = zoomRef.current;
+    let nextPanX = viewportCenter[0] - boardWidth * currentZoom / 2;
+    let nextPanY = viewportCenter[1] - boardHeight * currentZoom / 2;
+    setPan(param => [
+      nextPanX,
+      nextPanY
+    ]);
+  };
   let match$17 = React.useState(() => false);
   let setIsResizeOpen = match$17[1];
   let match$18 = React.useState(() => boardDimI.toString());
@@ -933,7 +950,8 @@ function App(props) {
         zoom: zoom,
         onZoomIn: zoomIn,
         onZoomOut: zoomOut,
-        onZoomReset: resetZoom
+        onZoomReset: resetZoom,
+        onCenterCanvas: centerCanvas
       })
     ],
     className: " flex flex-row gap-5 p-5"

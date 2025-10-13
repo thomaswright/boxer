@@ -433,6 +433,7 @@ module ControlsPanel = {
     ~onZoomIn,
     ~onZoomOut,
     ~onZoomReset,
+    ~onCenterCanvas,
   ) => {
     let zoomPercentString = (zoom *. 100.)->Float.toFixed(~digits=0)
 
@@ -534,6 +535,11 @@ module ControlsPanel = {
             {"+"->React.string}
           </button>
         </div>
+        <button
+          className="rounded px-2 py-1 text-sm font-medium bg-gray-200"
+          onClick={_ => onCenterCanvas()}>
+          {"Center"->React.string}
+        </button>
       </div>
     </div>
   }
@@ -632,7 +638,6 @@ let make = () => {
   let resetZoom = () => updateZoom(_ => 1.)
   let zoomIn = () => adjustZoomByFactor(zoom_factor)
   let zoomOut = () => adjustZoomByFactor(1. /. zoom_factor)
-
   let isMouseDown = useIsMouseDown()
 
   // Canvas selection & derived state
@@ -681,6 +686,16 @@ let make = () => {
   let brushCenterDimI = brushDimI / 2
   let brushCenterDimJ = brushDimJ / 2
   let (tileMaskDimI, tileMaskDimJ) = tileMask->Array.dims2D
+  let centerCanvas = () => {
+    let (centerX, centerY) = viewportCenter
+    let cellSize = 16.
+    let boardWidth = Float.fromInt(boardDimI) *. cellSize
+    let boardHeight = Float.fromInt(boardDimJ) *. cellSize
+    let currentZoom = zoomRef.current
+    let nextPanX = centerX -. (boardWidth *. currentZoom) /. 2.
+    let nextPanY = centerY -. (boardHeight *. currentZoom) /. 2.
+    setPan(_ => (nextPanX, nextPanY))
+  }
 
   // Resize controls
   let (isResizeOpen, setIsResizeOpen) = React.useState(() => false)
@@ -941,6 +956,7 @@ let make = () => {
       onZoomIn={zoomIn}
       onZoomOut={zoomOut}
       onZoomReset={resetZoom}
+      onCenterCanvas={centerCanvas}
     />
   </div>
 }
