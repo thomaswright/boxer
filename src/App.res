@@ -342,18 +342,6 @@ let make = () => {
     Some(() => window->Window.removeKeyDownEventListener(handleKeyDown))
   })
 
-  let handleCanvasWheel = event => {
-    ReactEvent.Wheel.preventDefault(event)
-    let deltaY = ReactEvent.Wheel.deltaY(event)
-    if deltaY == 0. {
-      ()
-    } else if deltaY < 0. {
-      adjustZoomByFactor(1.1)
-    } else {
-      adjustZoomByFactor(0.9)
-    }
-  }
-
   let transformValue = {
     let (offsetX, offsetY) = pan
     let offsetXString = offsetX->Js.Float.toString
@@ -506,8 +494,7 @@ let make = () => {
         style={{
           width: "384px",
           height: "384px",
-        }}
-        onWheel={handleCanvasWheel}>
+        }}>
         <div
           className={"absolute top-0 left-0 border"}
           style={{

@@ -387,17 +387,6 @@ function App(props) {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
-  let handleCanvasWheel = event => {
-    event.preventDefault();
-    let deltaY = event.deltaY;
-    if (deltaY === 0) {
-      return;
-    } else if (deltaY < 0) {
-      return adjustZoomByFactor(1.1);
-    } else {
-      return adjustZoomByFactor(0.9);
-    }
-  };
   let offsetXString = pan[0].toString();
   let offsetYString = pan[1].toString();
   let zoomString = zoom.toString();
@@ -574,8 +563,7 @@ function App(props) {
             style: {
               height: "384px",
               width: "384px"
-            },
-            onWheel: handleCanvasWheel
+            }
           }),
           JsxRuntime.jsx("div", {
             children: JsxRuntime.jsxs("div", {
