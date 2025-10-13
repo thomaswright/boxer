@@ -609,7 +609,6 @@ function App(props) {
       let boardCenterY = (centerY - match[1]) / prev;
       let nextPanX = centerX - boardCenterX * next;
       let nextPanY = centerY - boardCenterY * next;
-      console.log(viewportCenter, boardCenterX, boardCenterY);
       setPan(param => [
         nextPanX,
         nextPanY
@@ -683,7 +682,6 @@ function App(props) {
   let match$20 = parsePositiveInt(resizeRowsInput);
   let match$21 = parsePositiveInt(resizeColsInput);
   let canSubmitResize = match$20 !== undefined && match$21 !== undefined ? match$20 !== boardDimI || match$21 !== boardDimJ : false;
-  let canDeleteCanvas = canvasCount > 1;
   let handleResizeSubmit = () => {
     let match = parsePositiveInt(resizeRowsInput);
     let match$1 = parsePositiveInt(resizeColsInput);
@@ -711,6 +709,7 @@ function App(props) {
     }
     
   };
+  let canDeleteCanvas = canvasCount > 1;
   let handleAddCanvas = () => {
     let newCanvas = make2D(boardDimI, boardDimJ, () => null);
     setCanvases(prev => prev.concat([newCanvas]));

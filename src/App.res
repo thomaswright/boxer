@@ -49,6 +49,7 @@ let makeTileMask = (i, j) => Array.make2D(i, j, () => true)
 let useIsMouseDown = () => {
   let (isMouseDown, setIsMouseDown) = React.useState(() => false)
 
+  // Global listeners
   React.useEffect0(() => {
     let downHandler = _ => setIsMouseDown(_ => true)
     let upHandler = _ => setIsMouseDown(_ => false)
@@ -524,27 +525,28 @@ module ControlsPanel = {
 
 @react.component
 let make = () => {
+  // Persistent tool state
   let (brushMode, setBrushMode, _) = useLocalStorage("brush-mode", Color)
-  // let (toolTrayMode, setToolTrayMode, _) = useLocalStorage("tool-tray-mode", Brush)
-
   let makeDefaultCanvas = () => makeBoard(12, 12)
   let (canvases, setCanvases, _) = useLocalStorage("canvases", [makeDefaultCanvas()])
   let (selectedCanvasIndex, setSelectedCanvasIndex, _) = useLocalStorage("selected-canvas-index", 0)
   let (brush, setBrush, _) = useLocalStorage("brush", makeBrush(3, 3))
   let (savedBrushes, setSavedBrushes, _) = useLocalStorage("saved-brushes", defaultBrushes)
   let (savedTileMasks, setSavedTileMasks, _) = useLocalStorage("saved-tile-masks", defaultTileMasks)
-
   let (tileMask, setTileMask, _) = useLocalStorage("tile-mask", makeTileMask(4, 4))
-
   let (showCursorOverlay, setShowCursorOverlay, _) = useLocalStorage("show-cursor-overlay", true)
   let (myColor, setMyColor, _) = useLocalStorage("my-color", "blue")
+
+  // Transient UI state
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
   let (hoveredCell, setHoveredCell) = React.useState(() => None)
 
+  // Camera positioning
   let (zoom, setZoom, _) = useLocalStorage("canvas-zoom", 1.)
   let zoomRef = React.useRef(zoom)
   zoomRef.current = zoom
 
+  // Layout helpers
   let canvasContainerRef = React.useRef(Js.Nullable.null)
   let (viewportCenter, setViewportCenter) = React.useState(() => (192., 192.))
 
@@ -592,7 +594,6 @@ let make = () => {
         let boardCenterY = (centerY -. prevPanY) /. prev
         let nextPanX = centerX -. boardCenterX *. next
         let nextPanY = centerY -. boardCenterY *. next
-        Js.log3(viewportCenter, boardCenterX, boardCenterY)
         setPan(_ => (nextPanX, nextPanY))
       }
       next
@@ -600,6 +601,7 @@ let make = () => {
 
   let isMouseDown = useIsMouseDown()
 
+  // Canvas selection & derived state
   let canvasCount = canvases->Array.length
 
   React.useEffect0(() => {
@@ -645,6 +647,8 @@ let make = () => {
   let brushCenterDimI = brushDimI / 2
   let brushCenterDimJ = brushDimJ / 2
   let (tileMaskDimI, tileMaskDimJ) = tileMask->Array.dims2D
+
+  // Resize controls
   let (isResizeOpen, setIsResizeOpen) = React.useState(() => false)
   let (resizeRowsInput, setResizeRowsInput) = React.useState(() => boardDimI->Int.toString)
   let (resizeColsInput, setResizeColsInput) = React.useState(() => boardDimJ->Int.toString)
@@ -669,8 +673,6 @@ let make = () => {
   | _ => false
   }
 
-  let canDeleteCanvas = canvasCount > 1
-
   let handleResizeSubmit = () =>
     switch (parsePositiveInt(resizeRowsInput), parsePositiveInt(resizeColsInput)) {
     | (Some(nextRows), Some(nextCols)) =>
@@ -687,6 +689,7 @@ let make = () => {
     | _ => ()
     }
 
+  // Saved asset helpers
   let selectedSavedBrushIndex =
     savedBrushes->Belt.Array.getIndexBy(savedBrush => Array.isEqual2D(savedBrush, brush))
 
@@ -709,6 +712,9 @@ let make = () => {
       setSavedTileMasks(prev => prev->Belt.Array.keepWithIndex((_, idx) => idx != selectedIndex))
     | None => ()
     }
+
+  // Canvas collection actions
+  let canDeleteCanvas = canvasCount > 1
 
   let handleAddCanvas = () => {
     let newCanvas = makeBoard(boardDimI, boardDimJ)
@@ -740,6 +746,7 @@ let make = () => {
     setCursorOverlayOff(_ => true)
   }
 
+  // Painting helpers
   let onMouseMove = _ => setCursorOverlayOff(_ => false)
 
   let canApply = (boardI, boardJ, clickI, clickJ) => {
@@ -775,6 +782,7 @@ let make = () => {
     )
   }
 
+  // Global listeners
   React.useEffect0(() => {
     window->Window.addMouseMoveEventListener(onMouseMove)
 
@@ -818,6 +826,7 @@ let make = () => {
     Some(() => window->Window.removeKeyDownEventListener(handleKeyDown))
   })
 
+  // Canvas transform
   let transformValue = {
     let (offsetX, offsetY) = pan
     let offsetXString = offsetX->Js.Float.toString
@@ -830,6 +839,7 @@ let make = () => {
     "px, 0) scale(" ++
     zoomString ++ ")"
   }
+
   <div className=" flex flex-row gap-5 p-5">
     <div className="flex flex-row h-lg">
       <SavedBrushesPanel
