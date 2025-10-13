@@ -189,7 +189,7 @@ function App(props) {
   let match$10 = React.useState(() => {});
   let setHoveredCell = match$10[1];
   let hoveredCell = match$10[0];
-  let match$11 = React.useState(() => 1);
+  let match$11 = UseLocalStorageJs("canvas-zoom", 1);
   let setZoom = match$11[1];
   let zoom = match$11[0];
   let zoomRef = React.useRef(zoom);
@@ -228,7 +228,7 @@ function App(props) {
       return cappedMax;
     }
   };
-  let match$13 = React.useState(() => [
+  let match$13 = UseLocalStorageJs("canvas-pan", [
     0,
     0
   ]);

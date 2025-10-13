@@ -124,7 +124,7 @@ let make = () => {
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
   let (hoveredCell, setHoveredCell) = React.useState(() => None)
 
-  let (zoom, setZoom) = React.useState(() => 1.)
+  let (zoom, setZoom, _) = useLocalStorage("canvas-zoom", 1.)
   let zoomRef = React.useRef(zoom)
   zoomRef.current = zoom
 
@@ -159,7 +159,7 @@ let make = () => {
     }
   }
 
-  let (pan, setPan) = React.useState(() => (0., 0.))
+  let (pan, setPan, _) = useLocalStorage("canvas-pan", (0., 0.))
   let panRef = React.useRef(pan)
   panRef.current = pan
 
