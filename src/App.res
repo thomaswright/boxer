@@ -38,6 +38,8 @@ type brush = array<array<bool>>
 
 type brushMode = | @as("Color") Color | @as("Erase") Erase
 
+let zoom_factor = 1.1
+
 // type toolTray = | @as("Hidden") Hidden | @as("Brush") Brush | @as("TileMask") TileMask
 
 let makeBoard = (i, j) => Array.make2D(i, j, () => Nullable.null)
@@ -126,6 +128,24 @@ let make = () => {
   let zoomRef = React.useRef(zoom)
   zoomRef.current = zoom
 
+  let canvasContainerRef = React.useRef(Js.Nullable.null)
+  let (viewportCenter, setViewportCenter) = React.useState(() => (192., 192.))
+
+  let updateViewportCenter = () =>
+    switch canvasContainerRef.current->Js.Nullable.toOption {
+    | Some(element) =>
+      let rect = element->Element.getBoundingClientRect
+      setViewportCenter(_ => (rect->DomRect.width /. 2., rect->DomRect.height /. 2.))
+    | None => ()
+    }
+
+  React.useEffect0(() => {
+    updateViewportCenter()
+    let handleResize = _ => updateViewportCenter()
+    window->Window.addEventListener("resize", handleResize)
+    Some(() => window->Window.removeEventListener("resize", handleResize))
+  })
+
   let clampZoom = value => {
     let cappedMax = if value > 4. {
       4.
@@ -139,10 +159,27 @@ let make = () => {
     }
   }
 
-  let adjustZoomByFactor = factor => setZoom(prev => clampZoom(prev *. factor))
-
   let (pan, setPan) = React.useState(() => (0., 0.))
+  let panRef = React.useRef(pan)
+  panRef.current = pan
+
   let adjustPan = (deltaX, deltaY) => setPan(((prevX, prevY)) => (prevX +. deltaX, prevY +. deltaY))
+
+  let adjustZoomByFactor = factor =>
+    setZoom(prev => {
+      let next = clampZoom(prev *. factor)
+      if next != prev {
+        let (centerX, centerY) = viewportCenter
+        let (prevPanX, prevPanY) = panRef.current
+        let boardCenterX = (centerX -. prevPanX) /. prev
+        let boardCenterY = (centerY -. prevPanY) /. prev
+        let nextPanX = centerX -. boardCenterX *. next
+        let nextPanY = centerY -. boardCenterY *. next
+        Js.log3(viewportCenter, boardCenterX, boardCenterY)
+        setPan(_ => (nextPanX, nextPanY))
+      }
+      next
+    })
 
   let isMouseDown = useIsMouseDown()
 
@@ -311,10 +348,10 @@ let make = () => {
         switch event->KeyboardEvent.key {
         | "]" =>
           event->KeyboardEvent.preventDefault
-          adjustZoomByFactor(1.1)
+          adjustZoomByFactor(zoom_factor)
         | "[" =>
           event->KeyboardEvent.preventDefault
-          adjustZoomByFactor(0.9)
+          adjustZoomByFactor(1. /. zoom_factor)
         | _ => ()
         }
       } else {
@@ -382,10 +419,11 @@ let make = () => {
         </div>
 
         {savedBrushes
-        ->Array.map(savedBrush => {
+        ->Array.mapWithIndex((savedBrush, savedBrushIndex) => {
           let (dimI, dimJ) = savedBrush->Array.dims2D
           let selected = Array.isEqual2D(brush, savedBrush)
           <button
+            key={savedBrushIndex->Int.toString}
             onClick={_ => setBrush(_ => savedBrush)}
             className={[selected ? "bg-red-100 text-red-600" : ""]->Array.join(" ")}>
             <div
@@ -451,10 +489,11 @@ let make = () => {
         </div>
 
         {savedTileMasks
-        ->Array.map(savedTileMask => {
+        ->Array.mapWithIndex((savedTileMask, savedTileMaskIndex) => {
           let (dimI, dimJ) = savedTileMask->Array.dims2D
           let selected = Array.isEqual2D(tileMask, savedTileMask)
           <button
+            key={savedTileMaskIndex->Int.toString}
             onClick={_ => setTileMask(_ => savedTileMask)}
             style={{
               display: "grid",
@@ -490,6 +529,7 @@ let make = () => {
 
     <div className="flex flex-col gap-2">
       <div
+        ref={ReactDOM.Ref.domRef(canvasContainerRef)}
         className="relative border border-gray-300 overflow-hidden bg-white"
         style={{
           width: "384px",
@@ -561,12 +601,12 @@ let make = () => {
             let (thumbDimI, thumbDimJ) = canvasBoard->Array.dims2D
             let isSelectedCanvas = canvasIndex == currentCanvasIndex
             <div
+              key={canvasIndex->Int.toString}
               className={[
                 "relative flex-shrink-0 border w-16 h-16",
                 isSelectedCanvas ? "border-blue-500" : "border-gray-200",
               ]->Array.join(" ")}>
               <button
-                key={canvasIndex->Int.toString}
                 onClick={_ => {
                   setSelectedCanvasIndex(_ => canvasIndex)
                   setHoveredCell(_ => None)

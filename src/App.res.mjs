@@ -11,6 +11,7 @@ import * as Primitive_int from "rescript/lib/es6/Primitive_int.js";
 import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
 import * as ReactColorful from "react-colorful";
 import * as Stdlib_Nullable from "rescript/lib/es6/Stdlib_Nullable.js";
+import * as Primitive_option from "rescript/lib/es6/Primitive_option.js";
 import * as JsxRuntime from "react/jsx-runtime";
 import UseLocalStorageJs from "./useLocalStorage.js";
 
@@ -193,25 +194,70 @@ function App(props) {
   let zoom = match$11[0];
   let zoomRef = React.useRef(zoom);
   zoomRef.current = zoom;
-  let adjustZoomByFactor = factor => setZoom(prev => {
-    let value = prev * factor;
+  let canvasContainerRef = React.useRef(null);
+  let match$12 = React.useState(() => [
+    192,
+    192
+  ]);
+  let setViewportCenter = match$12[1];
+  let viewportCenter = match$12[0];
+  let updateViewportCenter = () => {
+    let element = canvasContainerRef.current;
+    if (element == null) {
+      return;
+    }
+    let rect = element.getBoundingClientRect();
+    setViewportCenter(param => [
+      rect.width / 2,
+      rect.height / 2
+    ]);
+  };
+  React.useEffect(() => {
+    updateViewportCenter();
+    let handleResize = param => updateViewportCenter();
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+  let clampZoom = value => {
     let cappedMax = value > 4 ? 4 : value;
     if (cappedMax < 0.25) {
       return 0.25;
     } else {
       return cappedMax;
     }
-  });
-  let match$12 = React.useState(() => [
+  };
+  let match$13 = React.useState(() => [
     0,
     0
   ]);
-  let setPan = match$12[1];
-  let pan = match$12[0];
+  let setPan = match$13[1];
+  let pan = match$13[0];
+  let panRef = React.useRef(pan);
+  panRef.current = pan;
   let adjustPan = (deltaX, deltaY) => setPan(param => [
     param[0] + deltaX,
     param[1] + deltaY
   ]);
+  let adjustZoomByFactor = factor => setZoom(prev => {
+    let next = clampZoom(prev * factor);
+    if (next !== prev) {
+      let centerY = viewportCenter[1];
+      let centerX = viewportCenter[0];
+      let match = panRef.current;
+      let boardCenterX = (centerX - match[0]) / prev;
+      let boardCenterY = (centerY - match[1]) / prev;
+      let nextPanX = centerX - boardCenterX * next;
+      let nextPanY = centerY - boardCenterY * next;
+      console.log(viewportCenter, boardCenterX, boardCenterY);
+      setPan(param => [
+        nextPanX,
+        nextPanY
+      ]);
+    }
+    return next;
+  });
   let isMouseDown = useIsMouseDown();
   let canvasCount = canvases.length;
   React.useEffect(() => {
@@ -244,24 +290,24 @@ function App(props) {
       });
     }
   });
-  let match$13 = dims2D(board);
-  let boardDimJ = match$13[1];
-  let boardDimI = match$13[0];
-  let match$14 = dims2D(brush);
-  let brushCenterDimI = match$14[0] / 2 | 0;
-  let brushCenterDimJ = match$14[1] / 2 | 0;
-  let match$15 = dims2D(tileMask);
-  let tileMaskDimJ = match$15[1];
-  let tileMaskDimI = match$15[0];
-  let match$16 = React.useState(() => false);
-  let setIsResizeOpen = match$16[1];
-  let isResizeOpen = match$16[0];
-  let match$17 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$17[1];
-  let resizeRowsInput = match$17[0];
-  let match$18 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$18[1];
-  let resizeColsInput = match$18[0];
+  let match$14 = dims2D(board);
+  let boardDimJ = match$14[1];
+  let boardDimI = match$14[0];
+  let match$15 = dims2D(brush);
+  let brushCenterDimI = match$15[0] / 2 | 0;
+  let brushCenterDimJ = match$15[1] / 2 | 0;
+  let match$16 = dims2D(tileMask);
+  let tileMaskDimJ = match$16[1];
+  let tileMaskDimI = match$16[0];
+  let match$17 = React.useState(() => false);
+  let setIsResizeOpen = match$17[1];
+  let isResizeOpen = match$17[0];
+  let match$18 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$18[1];
+  let resizeRowsInput = match$18[0];
+  let match$19 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$19[1];
+  let resizeColsInput = match$19[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -276,9 +322,9 @@ function App(props) {
     }
     
   };
-  let match$19 = parsePositiveInt(resizeRowsInput);
-  let match$20 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$19 !== undefined && match$20 !== undefined ? match$19 !== boardDimI || match$20 !== boardDimJ : false;
+  let match$20 = parsePositiveInt(resizeRowsInput);
+  let match$21 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$20 !== undefined && match$21 !== undefined ? match$20 !== boardDimI || match$21 !== boardDimJ : false;
   let canDeleteCanvas = canvasCount > 1;
   let selectedSavedBrushIndex = Belt_Array.getIndexBy(savedBrushes, savedBrush => OtherJs.isEqual2D(savedBrush, brush));
   let selectedSavedTileMaskIndex = Belt_Array.getIndexBy(savedTileMasks, savedTileMask => OtherJs.isEqual2D(savedTileMask, tileMask));
@@ -354,7 +400,7 @@ function App(props) {
         switch (match) {
           case "[" :
             event.preventDefault();
-            return adjustZoomByFactor(0.9);
+            return adjustZoomByFactor(1 / 1.1);
           case "]" :
             event.preventDefault();
             return adjustZoomByFactor(1.1);
@@ -419,7 +465,7 @@ function App(props) {
                   })
                 ]
               }),
-              savedBrushes.map(savedBrush => {
+              savedBrushes.map((savedBrush, savedBrushIndex) => {
                 let match = dims2D(savedBrush);
                 let dimJ = match[1];
                 let dimI = match[0];
@@ -447,7 +493,7 @@ function App(props) {
                   ],
                   className: [selected ? "bg-red-100 text-red-600" : ""].join(" "),
                   onClick: param => setBrush(param => savedBrush)
-                });
+                }, savedBrushIndex.toString());
               })
             ],
             className: "flex flex-col "
@@ -476,7 +522,7 @@ function App(props) {
                   })
                 ]
               }),
-              savedTileMasks.map(savedTileMask => {
+              savedTileMasks.map((savedTileMask, savedTileMaskIndex) => {
                 let match = dims2D(savedTileMask);
                 let selected = OtherJs.isEqual2D(tileMask, savedTileMask);
                 return JsxRuntime.jsx("button", {
@@ -496,7 +542,7 @@ function App(props) {
                     gridTemplateRows: "repeat(" + match[1].toString() + ", auto)"
                   },
                   onClick: param => setTileMask(param => savedTileMask)
-                });
+                }, savedTileMaskIndex.toString());
               })
             ],
             className: "flex flex-col"
@@ -559,6 +605,7 @@ function App(props) {
                 transformOrigin: "top left"
               }
             }),
+            ref: Primitive_option.some(canvasContainerRef),
             className: "relative border border-gray-300 overflow-hidden bg-white",
             style: {
               height: "384px",
@@ -593,7 +640,7 @@ function App(props) {
                           setHoveredCell(param => {});
                           setCursorOverlayOff(param => true);
                         }
-                      }, canvasIndex.toString()),
+                      }),
                       isSelectedCanvas ? JsxRuntime.jsx("button", {
                           children: "x",
                           className: [
@@ -611,7 +658,7 @@ function App(props) {
                       "relative flex-shrink-0 border w-16 h-16",
                       isSelectedCanvas ? "border-blue-500" : "border-gray-200"
                     ].join(" ")
-                  });
+                  }, canvasIndex.toString());
                 }),
                 JsxRuntime.jsx("button", {
                   children: "+",
