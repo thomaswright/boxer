@@ -465,8 +465,8 @@ module ControlsPanel = {
           setMyColor(_ => newColor)
         }}
       />
-      <div>
-        <div className="flex flex-row"> {"Show Brush Overlay"->React.string} </div>
+      <div className="flex flex-row justify-between border rounded p-2 w-48">
+        <div className="flex flex-row font-medium"> {"Brush Overlay"->React.string} </div>
         <Switch checked={showCursorOverlay} onChange={v => setShowCursorOverlay(_ => v)} />
       </div>
       <div className="border rounded p-2 flex flex-col gap-2 w-48">

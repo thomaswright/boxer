@@ -460,14 +460,15 @@ function App$ControlsPanel(props) {
       JsxRuntime.jsxs("div", {
         children: [
           JsxRuntime.jsx("div", {
-            children: "Show Brush Overlay",
-            className: "flex flex-row"
+            children: "Brush Overlay",
+            className: "flex flex-row font-medium"
           }),
           JsxRuntime.jsx(make, {
             checked: props.showCursorOverlay,
             onChange: v => setShowCursorOverlay(param => v)
           })
-        ]
+        ],
+        className: "flex flex-row justify-between border rounded p-2 w-48"
       }),
       JsxRuntime.jsxs("div", {
         children: [
