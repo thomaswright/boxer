@@ -413,7 +413,7 @@ function App$CanvasThumbnails(props) {
                   gridTemplateRows: "repeat(" + match[1].toString() + ", minmax(0, 1fr))"
                 }
               }),
-              className: [" w-fit h-fit"].join(" "),
+              className: [" w-fit h-fit block"].join(" "),
               onClick: param => onSelectCanvas(canvasIndex)
             }),
             isSelectedCanvas ? JsxRuntime.jsx("button", {
@@ -430,7 +430,7 @@ function App$CanvasThumbnails(props) {
               }) : null
           ],
           className: [
-            "relative flex-shrink-0 border w-fit h-fit",
+            "relative flex-shrink-0 border-2 w-fit h-fit",
             isSelectedCanvas ? "border-blue-500" : "border-gray-200"
           ].join(" ")
         }, canvasIndex.toString());
