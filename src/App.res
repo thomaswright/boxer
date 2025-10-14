@@ -403,12 +403,12 @@ module CanvasThumbnails = {
         <div
           key={canvasIndex->Int.toString}
           className={[
-            "relative flex-shrink-0 border w-16 h-16",
+            "relative flex-shrink-0 border w-fit h-fit",
             isSelectedCanvas ? "border-blue-500" : "border-gray-200",
           ]->Array.join(" ")}>
           <button
             onClick={_ => onSelectCanvas(canvasIndex)}
-            className={["absolute w-fit h-fit"]->Array.join(" ")}>
+            className={[" w-fit h-fit"]->Array.join(" ")}>
             <div
               className="h-16 w-16 grid"
               style={{
