@@ -459,6 +459,45 @@ function App$CanvasThumbnails(props) {
   });
 }
 
+function App$ColorControl(props) {
+  let setMyColor = props.setMyColor;
+  let setBrushMode = props.setBrushMode;
+  let brushMode = props.brushMode;
+  return JsxRuntime.jsxs("div", {
+    children: [
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsx("button", {
+            children: "Color",
+            className: [
+              brushMode === "Color" ? " bg-blue-500 text-white" : "bg-gray-200",
+              "px-2 font-medium rounded"
+            ].join(" "),
+            onClick: param => setBrushMode(param => "Color")
+          }),
+          JsxRuntime.jsx("button", {
+            children: "Erase",
+            className: [
+              brushMode === "Erase" ? " bg-blue-500 text-white" : "bg-gray-200",
+              "px-2 font-medium rounded"
+            ].join(" "),
+            onClick: param => setBrushMode(param => "Erase")
+          })
+        ],
+        className: "flex flex-row gap-2 justify-center"
+      }),
+      JsxRuntime.jsx(ReactColorful.HexColorPicker, {
+        color: props.myColor,
+        onChange: newColor => setMyColor(param => newColor),
+        style: {
+          width: "96%"
+        }
+      })
+    ],
+    className: "relative flex flex-col gap-2 w-full overflow-x-visible items-center flex-none"
+  });
+}
+
 function App$CanvasColorsControl(props) {
   let setViewportBackgroundColor = props.setViewportBackgroundColor;
   let setCanvasBackgroundColor = props.setCanvasBackgroundColor;
@@ -523,46 +562,7 @@ function App$CanvasColorsControl(props) {
         className: "flex flex-col gap-1"
       })
     ],
-    className: "border rounded p-2 flex flex-col gap-2 w-full"
-  });
-}
-
-function App$ColorControl(props) {
-  let setMyColor = props.setMyColor;
-  let setBrushMode = props.setBrushMode;
-  let brushMode = props.brushMode;
-  return JsxRuntime.jsxs("div", {
-    children: [
-      JsxRuntime.jsxs("div", {
-        children: [
-          JsxRuntime.jsx("button", {
-            children: "Color",
-            className: [
-              brushMode === "Color" ? " bg-blue-500 text-white" : "bg-gray-200",
-              "px-2 font-medium rounded"
-            ].join(" "),
-            onClick: param => setBrushMode(param => "Color")
-          }),
-          JsxRuntime.jsx("button", {
-            children: "Erase",
-            className: [
-              brushMode === "Erase" ? " bg-blue-500 text-white" : "bg-gray-200",
-              "px-2 font-medium rounded"
-            ].join(" "),
-            onClick: param => setBrushMode(param => "Erase")
-          })
-        ],
-        className: "flex flex-row gap-2 justify-center"
-      }),
-      JsxRuntime.jsx(ReactColorful.HexColorPicker, {
-        color: props.myColor,
-        onChange: newColor => setMyColor(param => newColor),
-        style: {
-          width: "96%"
-        }
-      })
-    ],
-    className: "relative flex flex-col gap-2 w-full overflow-x-visible items-center flex-none"
+    className: " p-2 flex flex-col gap-2 w-full"
   });
 }
 
@@ -579,7 +579,7 @@ function App$BrushOverlayControl(props) {
         onChange: v => setShowCursorOverlay(param => v)
       })
     ],
-    className: "flex flex-row justify-between border rounded p-2 w-full"
+    className: "flex flex-row justify-between p-2 w-full"
   });
 }
 
@@ -637,7 +637,7 @@ function App$CanvasSizeControl(props) {
         className: "flex flex-col gap-2"
       })
     ],
-    className: "border rounded p-2 flex flex-col gap-2 w-full"
+    className: " p-2 flex flex-col gap-2 w-full"
   });
 }
 
@@ -688,7 +688,7 @@ function App$ZoomControl(props) {
         onClick: param => onCenterCanvas()
       })
     ],
-    className: "border rounded p-2 flex flex-col gap-2 w-full"
+    className: "p-2 flex flex-col gap-2 w-full"
   });
 }
 
@@ -705,7 +705,7 @@ function App$SilhouetteControl(props) {
         onChange: value => setIsSilhouette(param => value)
       })
     ],
-    className: "flex flex-row items-center justify-between border rounded p-2 w-full"
+    className: "flex flex-row items-center justify-between p-2 w-full"
   });
 }
 
@@ -771,7 +771,7 @@ function App$ExportControl(props) {
         className: "flex flex-row items-center gap-2 text-sm"
       })
     ],
-    className: "border rounded p-2 flex flex-col gap-2 w-full"
+    className: " p-2 flex flex-col gap-2 w-full"
   });
 }
 
@@ -826,7 +826,7 @@ function App$ControlsPanel(props) {
             setShowCursorOverlay: props.setShowCursorOverlay
           })
         ],
-        className: "overflow-y-scroll flex-1 gap-2 flex flex-col py-2"
+        className: "overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"
       })
     ],
     className: " h-full overflow-x-visible flex flex-col w-48"
@@ -1378,7 +1378,7 @@ function App(props) {
             handleDeleteSelectedTileMask: handleDeleteSelectedTileMask
           })
         ],
-        className: "flex flex-row gap-2 h-full p-2 border rounded flex-none"
+        className: "flex flex-row gap-2 h-full flex-none"
       }),
       JsxRuntime.jsxs("div", {
         children: [

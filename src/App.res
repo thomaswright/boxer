@@ -482,6 +482,41 @@ module CanvasThumbnails = {
   }
 }
 
+module ColorControl = {
+  @react.component
+  let make = (~brushMode, ~setBrushMode, ~myColor, ~setMyColor) => {
+    <div className="relative flex flex-col gap-2 w-full overflow-x-visible items-center flex-none">
+      <div className="flex flex-row gap-2 justify-center">
+        <button
+          className={[
+            brushMode == Color ? " bg-blue-500 text-white" : "bg-gray-200",
+            "px-2 font-medium rounded",
+          ]->Array.join(" ")}
+          onClick={_ => setBrushMode(_ => Color)}>
+          {"Color"->React.string}
+        </button>
+        <button
+          className={[
+            brushMode == Erase ? " bg-blue-500 text-white" : "bg-gray-200",
+            "px-2 font-medium rounded",
+          ]->Array.join(" ")}
+          onClick={_ => setBrushMode(_ => Erase)}>
+          {"Erase"->React.string}
+        </button>
+      </div>
+      <HexColorPicker
+        color={myColor}
+        onChange={newColor => {
+          setMyColor(_ => newColor)
+        }}
+        style={{
+          width: "96%",
+        }}
+      />
+    </div>
+  }
+}
+
 module CanvasColorsControl = {
   @react.component
   let make = (
@@ -491,7 +526,7 @@ module CanvasColorsControl = {
     ~viewportBackgroundColor,
     ~setViewportBackgroundColor,
   ) => {
-    <div className="border rounded p-2 flex flex-col gap-2 w-full">
+    <div className=" p-2 flex flex-col gap-2 w-full">
       <div className="flex flex-row">
         <span className="font-medium flex-1"> {"Canvas Colors"->React.string} </span>
         <button
@@ -534,45 +569,10 @@ module CanvasColorsControl = {
   }
 }
 
-module ColorControl = {
-  @react.component
-  let make = (~brushMode, ~setBrushMode, ~myColor, ~setMyColor) => {
-    <div className="relative flex flex-col gap-2 w-full overflow-x-visible items-center flex-none">
-      <div className="flex flex-row gap-2 justify-center">
-        <button
-          className={[
-            brushMode == Color ? " bg-blue-500 text-white" : "bg-gray-200",
-            "px-2 font-medium rounded",
-          ]->Array.join(" ")}
-          onClick={_ => setBrushMode(_ => Color)}>
-          {"Color"->React.string}
-        </button>
-        <button
-          className={[
-            brushMode == Erase ? " bg-blue-500 text-white" : "bg-gray-200",
-            "px-2 font-medium rounded",
-          ]->Array.join(" ")}
-          onClick={_ => setBrushMode(_ => Erase)}>
-          {"Erase"->React.string}
-        </button>
-      </div>
-      <HexColorPicker
-        color={myColor}
-        onChange={newColor => {
-          setMyColor(_ => newColor)
-        }}
-        style={{
-          width: "96%",
-        }}
-      />
-    </div>
-  }
-}
-
 module BrushOverlayControl = {
   @react.component
   let make = (~showCursorOverlay, ~setShowCursorOverlay) => {
-    <div className="flex flex-row justify-between border rounded p-2 w-full">
+    <div className="flex flex-row justify-between p-2 w-full">
       <div className="flex flex-row font-medium"> {"Brush Overlay"->React.string} </div>
       <Switch checked={showCursorOverlay} onChange={v => setShowCursorOverlay(_ => v)} />
     </div>
@@ -589,7 +589,7 @@ module CanvasSizeControl = {
     ~canSubmitResize,
     ~onSubmitResize,
   ) => {
-    <div className="border rounded p-2 flex flex-col gap-2 w-full">
+    <div className=" p-2 flex flex-col gap-2 w-full">
       <div
         className={["flex flex-row items-center justify-between font-medium", "w-full"]->Array.join(
           " ",
@@ -638,7 +638,7 @@ module ZoomControl = {
   let make = (~onZoomOut, ~onZoomReset, ~onZoomIn, ~onCenterCanvas, ~zoom) => {
     let zoomPercentString = (zoom *. 100.)->Float.toFixed(~digits=0)
 
-    <div className="border rounded p-2 flex flex-col gap-2 w-full">
+    <div className="p-2 flex flex-col gap-2 w-full">
       <div className="flex flex-row items-center justify-between">
         <span className="font-medium"> {"Zoom"->React.string} </span>
         <span className="text-sm font-mono"> {`${zoomPercentString}%`->React.string} </span>
@@ -672,7 +672,7 @@ module ZoomControl = {
 module SilhouetteControl = {
   @react.component
   let make = (~isSilhouette, ~setIsSilhouette) => {
-    <div className="flex flex-row items-center justify-between border rounded p-2 w-full">
+    <div className="flex flex-row items-center justify-between p-2 w-full">
       <div className="font-medium"> {"Silhouette"->React.string} </div>
       <Switch checked={isSilhouette} onChange={value => setIsSilhouette(_ => value)} />
     </div>
@@ -689,7 +689,7 @@ module ExportControl = {
     ~canExport,
     ~onExport,
   ) => {
-    <div className="border rounded p-2 flex flex-col gap-2 w-full">
+    <div className=" p-2 flex flex-col gap-2 w-full">
       <span className="font-medium"> {"Export PNG"->React.string} </span>
       <div className="flex flex-row  gap-2 items-end">
         <label className="flex flex-col gap-1 text-sm">
@@ -768,7 +768,7 @@ module ControlsPanel = {
   ) => {
     <div className=" h-full overflow-x-visible flex flex-col w-48">
       <ColorControl brushMode setBrushMode myColor setMyColor />
-      <div className={"overflow-y-scroll flex-1 gap-2 flex flex-col py-2"}>
+      <div className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"}>
         <CanvasColorsControl
           myColor
           canvasBackgroundColor
@@ -1306,7 +1306,7 @@ let make = () => {
   }
 
   <div className=" flex flex-row gap-5 p-3 h-dvh overflow-x-hidden">
-    <div className="flex flex-row gap-2 h-full p-2 border rounded flex-none">
+    <div className="flex flex-row gap-2 h-full flex-none">
       <SavedBrushesPanel
         board={board}
         brush={brush}
