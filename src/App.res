@@ -41,6 +41,12 @@ module Initials = {
 }
 
 type board = array<array<Nullable.t<string>>>
+type canvasState = {
+  id: string,
+  board: board,
+  zoom: float,
+  pan: (float, float),
+}
 type exportOptions = {
   includeBackground: bool,
   backgroundColor: string,
@@ -51,6 +57,16 @@ type brushMode = | @as("Color") Color | @as("Erase") Erase
 let makeBoard = (i, j) => Array.make2D(i, j, () => Nullable.null)
 let makeBrush = (i, j) => Array.make2D(i, j, () => true)
 let makeTileMask = (i, j) => Array.make2D(i, j, () => true)
+
+let generateCanvasId = () => {
+  let timestamp = Js.Date.now()->Float.toString
+  let random = Js.Math.random()->Float.toString
+  timestamp ++ "-" ++ random
+}
+
+let makeCanvas = (~board, ~zoom, ~pan) => {
+  {id: generateCanvasId(), board, zoom, pan}
+}
 
 @module("./exportBoard.js")
 external exportBoardAsPng: (board, float, exportOptions) => unit = "exportBoardAsPng"
@@ -389,7 +405,7 @@ module CanvasThumbnails = {
   @react.component
   let make = (
     ~canvases,
-    ~currentCanvasIndex,
+    ~currentCanvasId,
     ~canDeleteCanvas,
     ~handleDeleteCanvas,
     ~handleAddCanvas,
@@ -397,17 +413,18 @@ module CanvasThumbnails = {
   ) => {
     <div className="flex flex-row items-start gap-3 overflow-x-auto">
       {canvases
-      ->Array.mapWithIndex((canvasBoard, canvasIndex) => {
+      ->Array.map(canvas => {
+        let canvasBoard = canvas.board
         let (thumbDimI, thumbDimJ) = canvasBoard->Array.dims2D
-        let isSelectedCanvas = canvasIndex == currentCanvasIndex
+        let isSelectedCanvas = canvas.id == currentCanvasId
         <div
-          key={canvasIndex->Int.toString}
+          key={canvas.id}
           className={[
             "relative flex-shrink-0 border-2 w-fit h-fit",
             isSelectedCanvas ? "border-blue-500" : "border-gray-200",
           ]->Array.join(" ")}>
           <button
-            onClick={_ => onSelectCanvas(canvasIndex)}
+            onClick={_ => onSelectCanvas(canvas.id)}
             className={[" w-fit h-fit block"]->Array.join(" ")}>
             <div
               className="h-16 w-16 grid"
@@ -790,9 +807,9 @@ module ControlsPanel = {
 let make = () => {
   // Persistent tool state
   let (brushMode, setBrushMode, _) = useLocalStorage("brush-mode", Color)
-  let makeDefaultCanvas = () => makeBoard(12, 12)
+  let makeDefaultCanvas = () => makeCanvas(~board=makeBoard(12, 12), ~zoom=1., ~pan=(0., 0.))
   let (canvases, setCanvases, _) = useLocalStorage("canvases", [makeDefaultCanvas()])
-  let (selectedCanvasIndex, setSelectedCanvasIndex, _) = useLocalStorage("selected-canvas-index", 0)
+  let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage("selected-canvas-id", "")
   let (brush, setBrush, _) = useLocalStorage("brush", makeBrush(3, 3))
   let (savedBrushes, setSavedBrushes, _) = useLocalStorage("saved-brushes", defaultBrushes)
   let (savedTileMasks, setSavedTileMasks, _) = useLocalStorage("saved-tile-masks", defaultTileMasks)
@@ -820,9 +837,8 @@ let make = () => {
   let (includeExportBackground, setIncludeExportBackground) = React.useState(() => true)
 
   // Camera positioning
-  let (zoom, setZoom, _) = useLocalStorage("canvas-zoom", 1.)
-  let zoomRef = React.useRef(zoom)
-  zoomRef.current = zoom
+  let zoomRef = React.useRef(1.)
+  let panRef = React.useRef((0., 0.))
 
   // Layout helpers
   let canvasContainerRef = React.useRef(Js.Nullable.null)
@@ -856,34 +872,6 @@ let make = () => {
     }
   }
 
-  let (pan, setPan, _) = useLocalStorage("canvas-pan", (0., 0.))
-  let panRef = React.useRef(pan)
-  panRef.current = pan
-
-  let updatePan = updater => setPan(prev => updater(prev))
-
-  let adjustPan = (deltaX, deltaY) =>
-    updatePan(((prevX, prevY)) => (prevX +. deltaX, prevY +. deltaY))
-
-  let updateZoom = updater =>
-    setZoom(prev => {
-      let next = clampZoom(updater(prev))
-      if next != prev {
-        let (centerX, centerY) = viewportCenter
-        let (prevPanX, prevPanY) = panRef.current
-        let boardCenterX = (centerX -. prevPanX) /. prev
-        let boardCenterY = (centerY -. prevPanY) /. prev
-        let nextPanX = centerX -. boardCenterX *. next
-        let nextPanY = centerY -. boardCenterY *. next
-        setPan(_ => (nextPanX, nextPanY))
-      }
-      next
-    })
-
-  let adjustZoomByFactor = factor => updateZoom(prev => prev *. factor)
-  let resetZoom = () => updateZoom(_ => 1.)
-  let zoomIn = () => adjustZoomByFactor(Initials.zoom_factor)
-  let zoomOut = () => adjustZoomByFactor(1. /. Initials.zoom_factor)
   let isMouseDown = useIsMouseDown()
 
   // Canvas selection & derived state
@@ -891,41 +879,117 @@ let make = () => {
 
   React.useEffect0(() => {
     if canvasCount == 0 {
-      setCanvases(_ => [makeDefaultCanvas()])
+      let defaultCanvas = makeDefaultCanvas()
+      setCanvases(_ => [defaultCanvas])
+      setSelectedCanvasId(_ => defaultCanvas.id)
     }
     None
   })
 
-  React.useEffect0(() => {
-    if canvasCount > 0 && selectedCanvasIndex >= canvasCount {
-      setSelectedCanvasIndex(_ => canvasCount - 1)
-    }
-    None
-  })
-
-  let currentCanvasIndex = if canvasCount == 0 {
-    0
-  } else if selectedCanvasIndex >= canvasCount {
-    canvasCount - 1
-  } else {
-    selectedCanvasIndex
-  }
-
-  let board = switch canvases->Array.get(currentCanvasIndex) {
+  let currentCanvas = switch canvases->Belt.Array.getBy(canvas => canvas.id == selectedCanvasId) {
   | Some(canvas) => canvas
-  | None => canvases->Array.get(0)->Option.getOr(makeDefaultCanvas())
+  | None =>
+    switch canvases->Array.get(0) {
+    | Some(firstCanvas) => firstCanvas
+    | None => makeDefaultCanvas()
+    }
   }
 
-  let updateCanvasAtIndex = (index, updater) =>
+  let currentCanvasId = currentCanvas.id
+  let currentCanvasIdRef = React.useRef(currentCanvasId)
+  currentCanvasIdRef.current = currentCanvasId
+
+  React.useEffect2(() => {
+    let hasValidSelection = canvases->Belt.Array.some(canvas => canvas.id == selectedCanvasId)
+    if !hasValidSelection {
+      switch canvases->Array.get(0) {
+      | Some(firstCanvas) =>
+        if firstCanvas.id != selectedCanvasId {
+          setSelectedCanvasId(_ => firstCanvas.id)
+        }
+      | None => ()
+      }
+    }
+    None
+  }, (canvases, selectedCanvasId))
+
+  React.useEffect1(() => {
+    let requiresMigration =
+      canvases->Belt.Array.some(canvas => Js.typeof(canvas.id) != "string" || canvas.id == "")
+    if requiresMigration {
+      setCanvases(prev =>
+        prev->Array.mapWithIndex(
+          (canvas, idx) =>
+            if Js.typeof(canvas.id) == "string" && canvas.id != "" {
+              canvas
+            } else {
+              let uniqueSuffix = "-" ++ idx->Int.toString
+              {...canvas, id: generateCanvasId() ++ uniqueSuffix}
+            },
+        )
+      )
+    }
+    None
+  }, canvases)
+
+  let board = currentCanvas.board
+  let zoom = currentCanvas.zoom
+  let pan = currentCanvas.pan
+
+  zoomRef.current = zoom
+  panRef.current = pan
+
+  let updateCanvasById = (targetId, updater) =>
     setCanvases(prev =>
       if prev->Array.length == 0 {
         [updater(makeDefaultCanvas())]
       } else {
-        prev->Array.mapWithIndex((canvas, idx) => idx == index ? updater(canvas) : canvas)
+        prev->Array.map(canvas => canvas.id == targetId ? updater(canvas) : canvas)
       }
     )
 
-  let setBoard = updater => updateCanvasAtIndex(currentCanvasIndex, updater)
+  let setBoard = updater =>
+    updateCanvasById(currentCanvasIdRef.current, canvas => {
+      ...canvas,
+      board: updater(canvas.board),
+    })
+
+  let updatePan = updater => {
+    updateCanvasById(currentCanvasIdRef.current, canvas => {
+      let nextPan = updater(canvas.pan)
+      panRef.current = nextPan
+      {...canvas, pan: nextPan}
+    })
+  }
+
+  let adjustPan = (deltaX, deltaY) =>
+    updatePan(((prevX, prevY)) => (prevX +. deltaX, prevY +. deltaY))
+
+  let updateZoom = updater =>
+    updateCanvasById(currentCanvasIdRef.current, canvas => {
+      let prevZoom = canvas.zoom
+      let nextZoom = clampZoom(updater(prevZoom))
+      if nextZoom != prevZoom {
+        let (centerX, centerY) = viewportCenter
+        let (prevPanX, prevPanY) = canvas.pan
+        let boardCenterX = (centerX -. prevPanX) /. prevZoom
+        let boardCenterY = (centerY -. prevPanY) /. prevZoom
+        let nextPanX = centerX -. boardCenterX *. nextZoom
+        let nextPanY = centerY -. boardCenterY *. nextZoom
+        let nextPan = (nextPanX, nextPanY)
+        zoomRef.current = nextZoom
+        panRef.current = nextPan
+        {...canvas, zoom: nextZoom, pan: nextPan}
+      } else {
+        zoomRef.current = nextZoom
+        canvas
+      }
+    })
+
+  let adjustZoomByFactor = factor => updateZoom(prev => prev *. factor)
+  let resetZoom = () => updateZoom(_ => 1.)
+  let zoomIn = () => adjustZoomByFactor(Initials.zoom_factor)
+  let zoomOut = () => adjustZoomByFactor(1. /. Initials.zoom_factor)
 
   let (boardDimI, boardDimJ) = board->Array.dims2D
   let lastAutoCenteredDimsRef = React.useRef(None)
@@ -933,14 +997,18 @@ let make = () => {
   let brushCenterDimI = brushDimI / 2
   let brushCenterDimJ = brushDimJ / 2
   let (tileMaskDimI, tileMaskDimJ) = tileMask->Array.dims2D
-  let centerCanvas = () => {
+  let computeCenteredPan = (dimI, dimJ, zoomValue) => {
     let (centerX, centerY) = viewportCenter
     let cellSize = 16.
-    let boardWidth = Float.fromInt(boardDimI) *. cellSize
-    let boardHeight = Float.fromInt(boardDimJ) *. cellSize
-    let currentZoom = zoomRef.current
-    let nextPanX = centerX -. boardWidth *. currentZoom /. 2.
-    let nextPanY = centerY -. boardHeight *. currentZoom /. 2.
+    let boardWidth = Float.fromInt(dimI) *. cellSize
+    let boardHeight = Float.fromInt(dimJ) *. cellSize
+    let nextPanX = centerX -. boardWidth *. zoomValue /. 2.
+    let nextPanY = centerY -. boardHeight *. zoomValue /. 2.
+    (nextPanX, nextPanY)
+  }
+
+  let centerCanvas = () => {
+    let (nextPanX, nextPanY) = computeCenteredPan(boardDimI, boardDimJ, zoomRef.current)
     updatePan(((prevX, prevY)) =>
       if prevX == nextPanX && prevY == nextPanY {
         (prevX, prevY)
@@ -950,13 +1018,7 @@ let make = () => {
     )
   }
   let centerCanvasForDimensions = (dimI, dimJ) => {
-    let (centerX, centerY) = viewportCenter
-    let cellSize = 16.
-    let boardWidth = Float.fromInt(dimI) *. cellSize
-    let boardHeight = Float.fromInt(dimJ) *. cellSize
-    let currentZoom = zoomRef.current
-    let nextPanX = centerX -. boardWidth *. currentZoom /. 2.
-    let nextPanY = centerY -. boardHeight *. currentZoom /. 2.
+    let (nextPanX, nextPanY) = computeCenteredPan(dimI, dimJ, zoomRef.current)
     updatePan(((prevX, prevY)) =>
       if prevX == nextPanX && prevY == nextPanY {
         (prevX, prevY)
@@ -978,11 +1040,10 @@ let make = () => {
   }, (boardDimI, boardDimJ))
 
   React.useEffect3(() => {
-    let shouldCenter =
-      switch lastAutoCenteredDimsRef.current {
-      | Some((prevI, prevJ)) => prevI != boardDimI || prevJ != boardDimJ
-      | None => true
-      }
+    let shouldCenter = switch lastAutoCenteredDimsRef.current {
+    | Some((prevI, prevJ)) => prevI != boardDimI || prevJ != boardDimJ
+    | None => true
+    }
     let (panX, panY) = panRef.current
     if shouldCenter || (panX == 0. && panY == 0.) {
       centerCanvasForDimensions(boardDimI, boardDimJ)
@@ -1099,33 +1160,56 @@ let make = () => {
   let canDeleteCanvas = canvasCount > 1
 
   let handleAddCanvas = () => {
-    let newCanvas = makeBoard(boardDimI, boardDimJ)
+    let defaultZoom = 1.
+    let newBoard = makeBoard(boardDimI, boardDimJ)
+    let newPan = computeCenteredPan(boardDimI, boardDimJ, defaultZoom)
+    let newCanvas = makeCanvas(~board=newBoard, ~zoom=defaultZoom, ~pan=newPan)
     setCanvases(prev => prev->Array.concat([newCanvas]))
-    setSelectedCanvasIndex(_ => canvasCount)
+    setSelectedCanvasId(_ => newCanvas.id)
     setHoveredCell(_ => None)
     setCursorOverlayOff(_ => true)
-    centerCanvasForDimensions(boardDimI, boardDimJ)
     lastAutoCenteredDimsRef.current = Some((boardDimI, boardDimJ))
   }
 
   let handleDeleteCanvas = () => {
     if canDeleteCanvas {
-      let nextSelected = if selectedCanvasIndex >= canvasCount - 1 {
-        selectedCanvasIndex == 0 ? 0 : selectedCanvasIndex - 1
-      } else {
-        selectedCanvasIndex
+      let nextSelectionId = switch canvases->Belt.Array.getIndexBy(canvas =>
+        canvas.id == currentCanvasId
+      ) {
+      | Some(currentIndex) =>
+        switch canvases->Array.get(currentIndex + 1) {
+        | Some(nextCanvas) => Some(nextCanvas.id)
+        | None =>
+          if currentIndex > 0 {
+            switch canvases->Array.get(currentIndex - 1) {
+            | Some(prevCanvas) => Some(prevCanvas.id)
+            | None => None
+            }
+          } else {
+            None
+          }
+        }
+      | None =>
+        canvases
+        ->Array.get(0)
+        ->Option.flatMap(canvas => canvas.id == currentCanvasId ? None : Some(canvas.id))
       }
-      setCanvases(prev =>
-        Belt.Array.keepWithIndex(prev, (_canvas, idx) => idx != selectedCanvasIndex)
-      )
-      setSelectedCanvasIndex(_ => nextSelected)
+
+      setCanvases(prev => prev->Belt.Array.keep(canvas => canvas.id != currentCanvasId))
+
+      switch nextSelectionId {
+      | Some(nextId) => setSelectedCanvasId(_ => nextId)
+      | None => ()
+      }
       setHoveredCell(_ => None)
       setCursorOverlayOff(_ => true)
     }
   }
 
-  let handleSelectCanvas = canvasIndex => {
-    setSelectedCanvasIndex(_ => canvasIndex)
+  let handleSelectCanvas = canvasId => {
+    if canvasId != selectedCanvasId {
+      setSelectedCanvasId(_ => canvasId)
+    }
     setHoveredCell(_ => None)
     setCursorOverlayOff(_ => true)
   }
@@ -1268,7 +1352,7 @@ let make = () => {
       <div className="flex flex-col gap-2 w-full">
         <CanvasThumbnails
           canvases
-          currentCanvasIndex
+          currentCanvasId
           canDeleteCanvas
           handleDeleteCanvas
           handleAddCanvas

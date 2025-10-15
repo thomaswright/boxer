@@ -40,6 +40,21 @@ let canvasBackgroundColor = "#ffffff";
 
 let viewportBackgroundColor = "#e5e7eb";
 
+function generateCanvasId() {
+  let timestamp = Date.now().toString();
+  let random = Math.random().toString();
+  return timestamp + "-" + random;
+}
+
+function makeCanvas(board, zoom, pan) {
+  return {
+    id: generateCanvasId(),
+    board: board,
+    zoom: zoom,
+    pan: pan
+  };
+}
+
 function useIsMouseDown() {
   let match = React.useState(() => false);
   let setIsMouseDown = match[1];
@@ -391,12 +406,13 @@ function App$CanvasThumbnails(props) {
   let handleAddCanvas = props.handleAddCanvas;
   let handleDeleteCanvas = props.handleDeleteCanvas;
   let canDeleteCanvas = props.canDeleteCanvas;
-  let currentCanvasIndex = props.currentCanvasIndex;
+  let currentCanvasId = props.currentCanvasId;
   return JsxRuntime.jsxs("div", {
     children: [
-      props.canvases.map((canvasBoard, canvasIndex) => {
+      props.canvases.map(canvas => {
+        let canvasBoard = canvas.board;
         let match = dims2D(canvasBoard);
-        let isSelectedCanvas = canvasIndex === currentCanvasIndex;
+        let isSelectedCanvas = canvas.id === currentCanvasId;
         return JsxRuntime.jsxs("div", {
           children: [
             JsxRuntime.jsx("button", {
@@ -414,7 +430,7 @@ function App$CanvasThumbnails(props) {
                 }
               }),
               className: [" w-fit h-fit block"].join(" "),
-              onClick: param => onSelectCanvas(canvasIndex)
+              onClick: param => onSelectCanvas(canvas.id)
             }),
             isSelectedCanvas ? JsxRuntime.jsx("button", {
                 children: "x",
@@ -433,7 +449,7 @@ function App$CanvasThumbnails(props) {
             "relative flex-shrink-0 border-2 w-fit h-fit",
             isSelectedCanvas ? "border-blue-500" : "border-gray-200"
           ].join(" ")
-        }, canvasIndex.toString());
+        }, canvas.id);
       }),
       JsxRuntime.jsx("button", {
         children: "+",
@@ -824,12 +840,16 @@ function App$ControlsPanel(props) {
 function App(props) {
   let match = UseLocalStorageJs("brush-mode", "Color");
   let brushMode = match[0];
-  let match$1 = UseLocalStorageJs("canvases", [make2D(12, 12, () => null)]);
+  let makeDefaultCanvas = () => makeCanvas(make2D(12, 12, () => null), 1, [
+    0,
+    0
+  ]);
+  let match$1 = UseLocalStorageJs("canvases", [makeDefaultCanvas()]);
   let setCanvases = match$1[1];
   let canvases = match$1[0];
-  let match$2 = UseLocalStorageJs("selected-canvas-index", 0);
-  let setSelectedCanvasIndex = match$2[1];
-  let selectedCanvasIndex = match$2[0];
+  let match$2 = UseLocalStorageJs("selected-canvas-id", "");
+  let setSelectedCanvasId = match$2[1];
+  let selectedCanvasId = match$2[0];
   let match$3 = UseLocalStorageJs("brush", make2D(3, 3, () => true));
   let brush = match$3[0];
   let match$4 = UseLocalStorageJs("saved-brushes", defaultBrushes);
@@ -862,18 +882,18 @@ function App(props) {
   let exportScaleInput = match$15[0];
   let match$16 = React.useState(() => true);
   let includeExportBackground = match$16[0];
-  let match$17 = UseLocalStorageJs("canvas-zoom", 1);
-  let setZoom = match$17[1];
-  let zoom = match$17[0];
-  let zoomRef = React.useRef(zoom);
-  zoomRef.current = zoom;
+  let zoomRef = React.useRef(1);
+  let panRef = React.useRef([
+    0,
+    0
+  ]);
   let canvasContainerRef = React.useRef(null);
-  let match$18 = React.useState(() => [
+  let match$17 = React.useState(() => [
     192,
     192
   ]);
-  let setViewportCenter = match$18[1];
-  let viewportCenter = match$18[0];
+  let setViewportCenter = match$17[1];
+  let viewportCenter = match$17[0];
   let updateViewportCenter = () => {
     let element = canvasContainerRef.current;
     if (element == null) {
@@ -901,68 +921,76 @@ function App(props) {
       return cappedMax;
     }
   };
-  let match$19 = UseLocalStorageJs("canvas-pan", [
-    0,
-    0
-  ]);
-  let setPan = match$19[1];
-  let pan = match$19[0];
-  let panRef = React.useRef(pan);
-  panRef.current = pan;
-  let adjustPan = (deltaX, deltaY) => {
-    setPan(prev => [
-      prev[0] + deltaX,
-      prev[1] + deltaY
-    ]);
-  };
-  let updateZoom = updater => setZoom(prev => {
-    let next = clampZoom(updater(prev));
-    if (next !== prev) {
-      let centerY = viewportCenter[1];
-      let centerX = viewportCenter[0];
-      let match = panRef.current;
-      let boardCenterX = (centerX - match[0]) / prev;
-      let boardCenterY = (centerY - match[1]) / prev;
-      let nextPanX = centerX - boardCenterX * next;
-      let nextPanY = centerY - boardCenterY * next;
-      setPan(param => [
-        nextPanX,
-        nextPanY
-      ]);
-    }
-    return next;
-  });
-  let resetZoom = () => updateZoom(param => 1);
-  let zoomIn = () => updateZoom(prev => prev * 1.1);
-  let zoomOut = () => {
-    let factor = 1 / 1.1;
-    updateZoom(prev => prev * factor);
-  };
   let isMouseDown = useIsMouseDown();
   let canvasCount = canvases.length;
   React.useEffect(() => {
     if (canvasCount === 0) {
-      setCanvases(param => [make2D(12, 12, () => null)]);
+      let defaultCanvas = makeDefaultCanvas();
+      setCanvases(param => [defaultCanvas]);
+      setSelectedCanvasId(param => defaultCanvas.id);
     }
     
   }, []);
+  let canvas = Belt_Array.getBy(canvases, canvas => canvas.id === selectedCanvasId);
+  let currentCanvas;
+  if (canvas !== undefined) {
+    currentCanvas = canvas;
+  } else {
+    let firstCanvas = canvases[0];
+    currentCanvas = firstCanvas !== undefined ? firstCanvas : makeDefaultCanvas();
+  }
+  let currentCanvasId = currentCanvas.id;
+  let currentCanvasIdRef = React.useRef(currentCanvasId);
+  currentCanvasIdRef.current = currentCanvasId;
   React.useEffect(() => {
-    if (canvasCount > 0 && selectedCanvasIndex >= canvasCount) {
-      setSelectedCanvasIndex(param => canvasCount - 1 | 0);
+    let hasValidSelection = Belt_Array.some(canvases, canvas => canvas.id === selectedCanvasId);
+    if (!hasValidSelection) {
+      let firstCanvas = canvases[0];
+      if (firstCanvas !== undefined && firstCanvas.id !== selectedCanvasId) {
+        setSelectedCanvasId(param => firstCanvas.id);
+      }
+      
     }
     
-  }, []);
-  let currentCanvasIndex = canvasCount === 0 ? 0 : (
-      selectedCanvasIndex >= canvasCount ? canvasCount - 1 | 0 : selectedCanvasIndex
-    );
-  let canvas = canvases[currentCanvasIndex];
-  let board = canvas !== undefined ? canvas : Stdlib_Option.getOr(canvases[0], make2D(12, 12, () => null));
-  let updateCanvasAtIndex = (index, updater) => setCanvases(prev => {
+  }, [
+    canvases,
+    selectedCanvasId
+  ]);
+  React.useEffect(() => {
+    let requiresMigration = Belt_Array.some(canvases, canvas => {
+      if (typeof canvas.id !== "string") {
+        return true;
+      } else {
+        return canvas.id === "";
+      }
+    });
+    if (requiresMigration) {
+      setCanvases(prev => prev.map((canvas, idx) => {
+        if (typeof canvas.id === "string" && canvas.id !== "") {
+          return canvas;
+        }
+        let uniqueSuffix = "-" + idx.toString();
+        return {
+          id: generateCanvasId() + uniqueSuffix,
+          board: canvas.board,
+          zoom: canvas.zoom,
+          pan: canvas.pan
+        };
+      }));
+    }
+    
+  }, canvases);
+  let board = currentCanvas.board;
+  let zoom = currentCanvas.zoom;
+  let pan = currentCanvas.pan;
+  zoomRef.current = zoom;
+  panRef.current = pan;
+  let updateCanvasById = (targetId, updater) => setCanvases(prev => {
     if (prev.length === 0) {
-      return [updater(make2D(12, 12, () => null))];
+      return [updater(makeDefaultCanvas())];
     } else {
-      return prev.map((canvas, idx) => {
-        if (idx === index) {
+      return prev.map(canvas => {
+        if (canvas.id === targetId) {
           return updater(canvas);
         } else {
           return canvas;
@@ -970,25 +998,86 @@ function App(props) {
       });
     }
   });
-  let match$20 = dims2D(board);
-  let boardDimJ = match$20[1];
-  let boardDimI = match$20[0];
+  let setBoard = updater => updateCanvasById(currentCanvasIdRef.current, canvas => ({
+    id: canvas.id,
+    board: updater(canvas.board),
+    zoom: canvas.zoom,
+    pan: canvas.pan
+  }));
+  let updatePan = updater => updateCanvasById(currentCanvasIdRef.current, canvas => {
+    let nextPan = updater(canvas.pan);
+    panRef.current = nextPan;
+    return {
+      id: canvas.id,
+      board: canvas.board,
+      zoom: canvas.zoom,
+      pan: nextPan
+    };
+  });
+  let adjustPan = (deltaX, deltaY) => updatePan(param => [
+    param[0] + deltaX,
+    param[1] + deltaY
+  ]);
+  let updateZoom = updater => updateCanvasById(currentCanvasIdRef.current, canvas => {
+    let prevZoom = canvas.zoom;
+    let nextZoom = clampZoom(updater(prevZoom));
+    if (nextZoom !== prevZoom) {
+      let centerY = viewportCenter[1];
+      let centerX = viewportCenter[0];
+      let match = canvas.pan;
+      let boardCenterX = (centerX - match[0]) / prevZoom;
+      let boardCenterY = (centerY - match[1]) / prevZoom;
+      let nextPanX = centerX - boardCenterX * nextZoom;
+      let nextPanY = centerY - boardCenterY * nextZoom;
+      let nextPan = [
+        nextPanX,
+        nextPanY
+      ];
+      zoomRef.current = nextZoom;
+      panRef.current = nextPan;
+      return {
+        id: canvas.id,
+        board: canvas.board,
+        zoom: nextZoom,
+        pan: nextPan
+      };
+    }
+    zoomRef.current = nextZoom;
+    return canvas;
+  });
+  let resetZoom = () => updateZoom(param => 1);
+  let zoomIn = () => updateZoom(prev => prev * 1.1);
+  let zoomOut = () => {
+    let factor = 1 / 1.1;
+    updateZoom(prev => prev * factor);
+  };
+  let match$18 = dims2D(board);
+  let boardDimJ = match$18[1];
+  let boardDimI = match$18[0];
   let lastAutoCenteredDimsRef = React.useRef(undefined);
-  let match$21 = dims2D(brush);
-  let brushCenterDimI = match$21[0] / 2 | 0;
-  let brushCenterDimJ = match$21[1] / 2 | 0;
-  let match$22 = dims2D(tileMask);
-  let tileMaskDimJ = match$22[1];
-  let tileMaskDimI = match$22[0];
+  let match$19 = dims2D(brush);
+  let brushCenterDimI = match$19[0] / 2 | 0;
+  let brushCenterDimJ = match$19[1] / 2 | 0;
+  let match$20 = dims2D(tileMask);
+  let tileMaskDimJ = match$20[1];
+  let tileMaskDimI = match$20[0];
+  let computeCenteredPan = (dimI, dimJ, zoomValue) => {
+    let boardWidth = dimI * 16;
+    let boardHeight = dimJ * 16;
+    let nextPanX = viewportCenter[0] - boardWidth * zoomValue / 2;
+    let nextPanY = viewportCenter[1] - boardHeight * zoomValue / 2;
+    return [
+      nextPanX,
+      nextPanY
+    ];
+  };
   let centerCanvas = () => {
-    let boardWidth = boardDimI * 16;
-    let boardHeight = boardDimJ * 16;
-    let currentZoom = zoomRef.current;
-    let nextPanX = viewportCenter[0] - boardWidth * currentZoom / 2;
-    let nextPanY = viewportCenter[1] - boardHeight * currentZoom / 2;
-    setPan(prev => {
-      let prevY = prev[1];
-      let prevX = prev[0];
+    let match = computeCenteredPan(boardDimI, boardDimJ, zoomRef.current);
+    let nextPanY = match[1];
+    let nextPanX = match[0];
+    updatePan(param => {
+      let prevY = param[1];
+      let prevX = param[0];
       if (prevX === nextPanX && prevY === nextPanY) {
         return [
           prevX,
@@ -1003,14 +1092,12 @@ function App(props) {
     });
   };
   let centerCanvasForDimensions = (dimI, dimJ) => {
-    let boardWidth = dimI * 16;
-    let boardHeight = dimJ * 16;
-    let currentZoom = zoomRef.current;
-    let nextPanX = viewportCenter[0] - boardWidth * currentZoom / 2;
-    let nextPanY = viewportCenter[1] - boardHeight * currentZoom / 2;
-    setPan(prev => {
-      let prevY = prev[1];
-      let prevX = prev[0];
+    let match = computeCenteredPan(dimI, dimJ, zoomRef.current);
+    let nextPanY = match[1];
+    let nextPanX = match[0];
+    updatePan(param => {
+      let prevY = param[1];
+      let prevX = param[0];
       if (prevX === nextPanX && prevY === nextPanY) {
         return [
           prevX,
@@ -1024,14 +1111,14 @@ function App(props) {
       }
     });
   };
-  let match$23 = React.useState(() => false);
-  let setIsResizeOpen = match$23[1];
-  let match$24 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$24[1];
-  let resizeRowsInput = match$24[0];
-  let match$25 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$25[1];
-  let resizeColsInput = match$25[0];
+  let match$21 = React.useState(() => false);
+  let setIsResizeOpen = match$21[1];
+  let match$22 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$22[1];
+  let resizeRowsInput = match$22[0];
+  let match$23 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$23[1];
+  let resizeColsInput = match$23[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -1087,16 +1174,16 @@ function App(props) {
     }
     
   };
-  let match$26 = parsePositiveInt(resizeRowsInput);
-  let match$27 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$26 !== undefined && match$27 !== undefined ? match$26 !== boardDimI || match$27 !== boardDimJ : false;
+  let match$24 = parsePositiveInt(resizeRowsInput);
+  let match$25 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$24 !== undefined && match$25 !== undefined ? match$24 !== boardDimI || match$25 !== boardDimJ : false;
   let exportScaleValue = parsePositiveFloat(exportScaleInput);
   let canExport = Stdlib_Option.isSome(exportScaleValue);
   let handleResizeSubmit = () => {
     let match = parsePositiveInt(resizeRowsInput);
     let match$1 = parsePositiveInt(resizeColsInput);
     if (match !== undefined && match$1 !== undefined) {
-      updateCanvasAtIndex(currentCanvasIndex, prev => make2D(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => Stdlib_Option.getOr(check2D(prev, rowI, colJ), null))));
+      setBoard(prev => make2D(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => Stdlib_Option.getOr(check2D(prev, rowI, colJ), null))));
       setHoveredCell(param => {});
       setCursorOverlayOff(param => true);
       return setIsResizeOpen(param => false);
@@ -1143,12 +1230,13 @@ function App(props) {
   };
   let canDeleteCanvas = canvasCount > 1;
   let handleAddCanvas = () => {
-    let newCanvas = make2D(boardDimI, boardDimJ, () => null);
+    let newBoard = make2D(boardDimI, boardDimJ, () => null);
+    let newPan = computeCenteredPan(boardDimI, boardDimJ, 1);
+    let newCanvas = makeCanvas(newBoard, 1, newPan);
     setCanvases(prev => prev.concat([newCanvas]));
-    setSelectedCanvasIndex(param => canvasCount);
+    setSelectedCanvasId(param => newCanvas.id);
     setHoveredCell(param => {});
     setCursorOverlayOff(param => true);
-    centerCanvasForDimensions(boardDimI, boardDimJ);
     lastAutoCenteredDimsRef.current = [
       boardDimI,
       boardDimJ
@@ -1158,16 +1246,38 @@ function App(props) {
     if (!canDeleteCanvas) {
       return;
     }
-    let nextSelected = selectedCanvasIndex >= (canvasCount - 1 | 0) ? (
-        selectedCanvasIndex === 0 ? 0 : selectedCanvasIndex - 1 | 0
-      ) : selectedCanvasIndex;
-    setCanvases(prev => Belt_Array.keepWithIndex(prev, (_canvas, idx) => idx !== selectedCanvasIndex));
-    setSelectedCanvasIndex(param => nextSelected);
+    let currentIndex = Belt_Array.getIndexBy(canvases, canvas => canvas.id === currentCanvasId);
+    let nextSelectionId;
+    if (currentIndex !== undefined) {
+      let nextCanvas = canvases[currentIndex + 1 | 0];
+      if (nextCanvas !== undefined) {
+        nextSelectionId = nextCanvas.id;
+      } else if (currentIndex > 0) {
+        let prevCanvas = canvases[currentIndex - 1 | 0];
+        nextSelectionId = prevCanvas !== undefined ? prevCanvas.id : undefined;
+      } else {
+        nextSelectionId = undefined;
+      }
+    } else {
+      nextSelectionId = Stdlib_Option.flatMap(canvases[0], canvas => {
+        if (canvas.id === currentCanvasId) {
+          return;
+        } else {
+          return canvas.id;
+        }
+      });
+    }
+    setCanvases(prev => Belt_Array.keep(prev, canvas => canvas.id !== currentCanvasId));
+    if (nextSelectionId !== undefined) {
+      setSelectedCanvasId(param => nextSelectionId);
+    }
     setHoveredCell(param => {});
     setCursorOverlayOff(param => true);
   };
-  let handleSelectCanvas = canvasIndex => {
-    setSelectedCanvasIndex(param => canvasIndex);
+  let handleSelectCanvas = canvasId => {
+    if (canvasId !== selectedCanvasId) {
+      setSelectedCanvasId(param => canvasId);
+    }
     setHoveredCell(param => {});
     setCursorOverlayOff(param => true);
   };
@@ -1190,7 +1300,7 @@ function App(props) {
       return null;
     }
   };
-  let applyBrush = (clickI, clickJ) => updateCanvasAtIndex(currentCanvasIndex, b => b.map((row, boardI) => row.map((cell, boardJ) => {
+  let applyBrush = (clickI, clickJ) => setBoard(b => b.map((row, boardI) => row.map((cell, boardJ) => {
     if (canApply(boardI, boardJ, clickI, clickJ)) {
       return getBrushColor();
     } else {
@@ -1297,7 +1407,7 @@ function App(props) {
           JsxRuntime.jsx("div", {
             children: JsxRuntime.jsx(App$CanvasThumbnails, {
               canvases: canvases,
-              currentCanvasIndex: currentCanvasIndex,
+              currentCanvasId: currentCanvasId,
               canDeleteCanvas: canDeleteCanvas,
               handleDeleteCanvas: handleDeleteCanvas,
               handleAddCanvas: handleAddCanvas,
@@ -1321,7 +1431,7 @@ function App(props) {
         setIsSilhouette: match$12[1],
         showCursorOverlay: showCursorOverlay,
         setShowCursorOverlay: match$8[1],
-        isResizeOpen: match$23[0],
+        isResizeOpen: match$21[0],
         setIsResizeOpen: setIsResizeOpen,
         resizeRowsInput: resizeRowsInput,
         setResizeRowsInput: setResizeRowsInput,
