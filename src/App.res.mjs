@@ -909,10 +909,12 @@ function App(props) {
   let pan = match$19[0];
   let panRef = React.useRef(pan);
   panRef.current = pan;
-  let adjustPan = (deltaX, deltaY) => setPan(param => [
-    param[0] + deltaX,
-    param[1] + deltaY
-  ]);
+  let adjustPan = (deltaX, deltaY) => {
+    setPan(prev => [
+      prev[0] + deltaX,
+      prev[1] + deltaY
+    ]);
+  };
   let updateZoom = updater => setZoom(prev => {
     let next = clampZoom(updater(prev));
     if (next !== prev) {
@@ -971,6 +973,7 @@ function App(props) {
   let match$20 = dims2D(board);
   let boardDimJ = match$20[1];
   let boardDimI = match$20[0];
+  let lastAutoCenteredDimsRef = React.useRef(undefined);
   let match$21 = dims2D(brush);
   let brushCenterDimI = match$21[0] / 2 | 0;
   let brushCenterDimJ = match$21[1] / 2 | 0;
@@ -983,10 +986,43 @@ function App(props) {
     let currentZoom = zoomRef.current;
     let nextPanX = viewportCenter[0] - boardWidth * currentZoom / 2;
     let nextPanY = viewportCenter[1] - boardHeight * currentZoom / 2;
-    setPan(param => [
-      nextPanX,
-      nextPanY
-    ]);
+    setPan(prev => {
+      let prevY = prev[1];
+      let prevX = prev[0];
+      if (prevX === nextPanX && prevY === nextPanY) {
+        return [
+          prevX,
+          prevY
+        ];
+      } else {
+        return [
+          nextPanX,
+          nextPanY
+        ];
+      }
+    });
+  };
+  let centerCanvasForDimensions = (dimI, dimJ) => {
+    let boardWidth = dimI * 16;
+    let boardHeight = dimJ * 16;
+    let currentZoom = zoomRef.current;
+    let nextPanX = viewportCenter[0] - boardWidth * currentZoom / 2;
+    let nextPanY = viewportCenter[1] - boardHeight * currentZoom / 2;
+    setPan(prev => {
+      let prevY = prev[1];
+      let prevX = prev[0];
+      if (prevX === nextPanX && prevY === nextPanY) {
+        return [
+          prevX,
+          prevY
+        ];
+      } else {
+        return [
+          nextPanX,
+          nextPanY
+        ];
+      }
+    });
   };
   let match$23 = React.useState(() => false);
   let setIsResizeOpen = match$23[1];
@@ -1002,6 +1038,23 @@ function App(props) {
   }, [
     boardDimI,
     boardDimJ
+  ]);
+  React.useEffect(() => {
+    let match = lastAutoCenteredDimsRef.current;
+    let shouldCenter = match !== undefined ? match[0] !== boardDimI || match[1] !== boardDimJ : true;
+    let match$1 = panRef.current;
+    if (shouldCenter || match$1[0] === 0 && match$1[1] === 0) {
+      centerCanvasForDimensions(boardDimI, boardDimJ);
+      lastAutoCenteredDimsRef.current = [
+        boardDimI,
+        boardDimJ
+      ];
+    }
+    
+  }, [
+    boardDimI,
+    boardDimJ,
+    viewportCenter
   ]);
   React.useEffect(() => {
     let mask = savedTileMasks[selectedTileMaskIndex];
@@ -1095,6 +1148,11 @@ function App(props) {
     setSelectedCanvasIndex(param => canvasCount);
     setHoveredCell(param => {});
     setCursorOverlayOff(param => true);
+    centerCanvasForDimensions(boardDimI, boardDimJ);
+    lastAutoCenteredDimsRef.current = [
+      boardDimI,
+      boardDimJ
+    ];
   };
   let handleDeleteCanvas = () => {
     if (!canDeleteCanvas) {

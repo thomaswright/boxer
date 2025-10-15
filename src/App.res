@@ -860,7 +860,10 @@ let make = () => {
   let panRef = React.useRef(pan)
   panRef.current = pan
 
-  let adjustPan = (deltaX, deltaY) => setPan(((prevX, prevY)) => (prevX +. deltaX, prevY +. deltaY))
+  let updatePan = updater => setPan(prev => updater(prev))
+
+  let adjustPan = (deltaX, deltaY) =>
+    updatePan(((prevX, prevY)) => (prevX +. deltaX, prevY +. deltaY))
 
   let updateZoom = updater =>
     setZoom(prev => {
@@ -925,6 +928,7 @@ let make = () => {
   let setBoard = updater => updateCanvasAtIndex(currentCanvasIndex, updater)
 
   let (boardDimI, boardDimJ) = board->Array.dims2D
+  let lastAutoCenteredDimsRef = React.useRef(None)
   let (brushDimI, brushDimJ) = brush->Array.dims2D
   let brushCenterDimI = brushDimI / 2
   let brushCenterDimJ = brushDimJ / 2
@@ -937,7 +941,29 @@ let make = () => {
     let currentZoom = zoomRef.current
     let nextPanX = centerX -. boardWidth *. currentZoom /. 2.
     let nextPanY = centerY -. boardHeight *. currentZoom /. 2.
-    setPan(_ => (nextPanX, nextPanY))
+    updatePan(((prevX, prevY)) =>
+      if prevX == nextPanX && prevY == nextPanY {
+        (prevX, prevY)
+      } else {
+        (nextPanX, nextPanY)
+      }
+    )
+  }
+  let centerCanvasForDimensions = (dimI, dimJ) => {
+    let (centerX, centerY) = viewportCenter
+    let cellSize = 16.
+    let boardWidth = Float.fromInt(dimI) *. cellSize
+    let boardHeight = Float.fromInt(dimJ) *. cellSize
+    let currentZoom = zoomRef.current
+    let nextPanX = centerX -. boardWidth *. currentZoom /. 2.
+    let nextPanY = centerY -. boardHeight *. currentZoom /. 2.
+    updatePan(((prevX, prevY)) =>
+      if prevX == nextPanX && prevY == nextPanY {
+        (prevX, prevY)
+      } else {
+        (nextPanX, nextPanY)
+      }
+    )
   }
 
   // Resize controls
@@ -950,6 +976,20 @@ let make = () => {
     setResizeColsInput(_ => boardDimJ->Int.toString)
     None
   }, (boardDimI, boardDimJ))
+
+  React.useEffect3(() => {
+    let shouldCenter =
+      switch lastAutoCenteredDimsRef.current {
+      | Some((prevI, prevJ)) => prevI != boardDimI || prevJ != boardDimJ
+      | None => true
+      }
+    let (panX, panY) = panRef.current
+    if shouldCenter || (panX == 0. && panY == 0.) {
+      centerCanvasForDimensions(boardDimI, boardDimJ)
+      lastAutoCenteredDimsRef.current = Some((boardDimI, boardDimJ))
+    }
+    None
+  }, (boardDimI, boardDimJ, viewportCenter))
 
   React.useEffect2(() => {
     switch savedTileMasks->Array.get(selectedTileMaskIndex) {
@@ -1064,6 +1104,8 @@ let make = () => {
     setSelectedCanvasIndex(_ => canvasCount)
     setHoveredCell(_ => None)
     setCursorOverlayOff(_ => true)
+    centerCanvasForDimensions(boardDimI, boardDimJ)
+    lastAutoCenteredDimsRef.current = Some((boardDimI, boardDimJ))
   }
 
   let handleDeleteCanvas = () => {
