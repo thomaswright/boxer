@@ -894,6 +894,8 @@ function App(props) {
   ]);
   let setViewportCenter = match$17[1];
   let viewportCenter = match$17[0];
+  let viewportCenterRef = React.useRef(viewportCenter);
+  viewportCenterRef.current = viewportCenter;
   let updateViewportCenter = () => {
     let element = canvasContainerRef.current;
     if (element == null) {
@@ -1022,11 +1024,12 @@ function App(props) {
     let prevZoom = canvas.zoom;
     let nextZoom = clampZoom(updater(prevZoom));
     if (nextZoom !== prevZoom) {
-      let centerY = viewportCenter[1];
-      let centerX = viewportCenter[0];
-      let match = canvas.pan;
-      let boardCenterX = (centerX - match[0]) / prevZoom;
-      let boardCenterY = (centerY - match[1]) / prevZoom;
+      let match = viewportCenterRef.current;
+      let centerY = match[1];
+      let centerX = match[0];
+      let match$1 = canvas.pan;
+      let boardCenterX = (centerX - match$1[0]) / prevZoom;
+      let boardCenterY = (centerY - match$1[1]) / prevZoom;
       let nextPanX = centerX - boardCenterX * nextZoom;
       let nextPanY = centerY - boardCenterY * nextZoom;
       let nextPan = [

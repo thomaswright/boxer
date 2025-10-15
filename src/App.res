@@ -843,6 +843,8 @@ let make = () => {
   // Layout helpers
   let canvasContainerRef = React.useRef(Js.Nullable.null)
   let (viewportCenter, setViewportCenter) = React.useState(() => (192., 192.))
+  let viewportCenterRef = React.useRef(viewportCenter)
+  viewportCenterRef.current = viewportCenter
 
   let updateViewportCenter = () =>
     switch canvasContainerRef.current->Js.Nullable.toOption {
@@ -970,7 +972,7 @@ let make = () => {
       let prevZoom = canvas.zoom
       let nextZoom = clampZoom(updater(prevZoom))
       if nextZoom != prevZoom {
-        let (centerX, centerY) = viewportCenter
+        let (centerX, centerY) = viewportCenterRef.current
         let (prevPanX, prevPanY) = canvas.pan
         let boardCenterX = (centerX -. prevPanX) /. prevZoom
         let boardCenterY = (centerY -. prevPanY) /. prevZoom
