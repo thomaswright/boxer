@@ -1389,23 +1389,26 @@ function App(props) {
       }),
       JsxRuntime.jsxs("div", {
         children: [
-          JsxRuntime.jsx(App$CanvasViewport, {
-            canvasContainerRef: canvasContainerRef,
-            board: board,
-            boardDimI: boardDimI,
-            boardDimJ: boardDimJ,
-            transformValue: transformValue,
-            hoveredCell: match$14[0],
-            setHoveredCell: setHoveredCell,
-            cursorOverlayOff: match$13[0],
-            setCursorOverlayOff: setCursorOverlayOff,
-            isMouseDown: isMouseDown,
-            applyBrush: applyBrush,
-            canApply: canApply,
-            showCursorOverlay: showCursorOverlay,
-            canvasBackgroundColor: canvasBackgroundColor$1,
-            viewportBackgroundColor: viewportBackgroundColor$1,
-            isSilhouette: isSilhouette
+          JsxRuntime.jsx("div", {
+            children: JsxRuntime.jsx(App$CanvasViewport, {
+              canvasContainerRef: canvasContainerRef,
+              board: board,
+              boardDimI: boardDimI,
+              boardDimJ: boardDimJ,
+              transformValue: transformValue,
+              hoveredCell: match$14[0],
+              setHoveredCell: setHoveredCell,
+              cursorOverlayOff: match$13[0],
+              setCursorOverlayOff: setCursorOverlayOff,
+              isMouseDown: isMouseDown,
+              applyBrush: applyBrush,
+              canApply: canApply,
+              showCursorOverlay: showCursorOverlay,
+              canvasBackgroundColor: canvasBackgroundColor$1,
+              viewportBackgroundColor: viewportBackgroundColor$1,
+              isSilhouette: isSilhouette
+            }),
+            className: "flex-1"
           }),
           JsxRuntime.jsx("div", {
             children: JsxRuntime.jsx(App$CanvasThumbnails, {
@@ -1416,7 +1419,7 @@ function App(props) {
               handleAddCanvas: handleAddCanvas,
               onSelectCanvas: handleSelectCanvas
             }),
-            className: "flex flex-col gap-2 w-full"
+            className: "flex-none flex flex-col gap-2 w-full"
           })
         ],
         className: "flex flex-col gap-2 flex-1"

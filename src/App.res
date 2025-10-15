@@ -1333,25 +1333,28 @@ let make = () => {
       />
     </div>
     <div className="flex flex-col gap-2 flex-1">
-      <CanvasViewport
-        canvasContainerRef
-        board
-        boardDimI
-        boardDimJ
-        transformValue
-        hoveredCell
-        setHoveredCell
-        cursorOverlayOff
-        setCursorOverlayOff
-        isMouseDown
-        applyBrush
-        canApply
-        showCursorOverlay
-        canvasBackgroundColor
-        viewportBackgroundColor
-        isSilhouette
-      />
-      <div className="flex flex-col gap-2 w-full">
+      <div className={"flex-1"}>
+        <CanvasViewport
+          canvasContainerRef
+          board
+          boardDimI
+          boardDimJ
+          transformValue
+          hoveredCell
+          setHoveredCell
+          cursorOverlayOff
+          setCursorOverlayOff
+          isMouseDown
+          applyBrush
+          canApply
+          showCursorOverlay
+          canvasBackgroundColor
+          viewportBackgroundColor
+          isSilhouette
+        />
+      </div>
+
+      <div className="flex-none flex flex-col gap-2 w-full">
         <CanvasThumbnails
           canvases
           currentCanvasId
