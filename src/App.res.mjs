@@ -585,62 +585,54 @@ function App$CanvasSizeControl(props) {
   let canSubmitResize = props.canSubmitResize;
   let setResizeColsInput = props.setResizeColsInput;
   let setResizeRowsInput = props.setResizeRowsInput;
-  let setIsResizeOpen = props.setIsResizeOpen;
-  let isResizeOpen = props.isResizeOpen;
   return JsxRuntime.jsxs("div", {
     children: [
-      JsxRuntime.jsxs("button", {
-        children: [
-          "Canvas Size",
-          JsxRuntime.jsx("span", {
-            children: isResizeOpen ? "-" : "+"
-          })
-        ],
+      JsxRuntime.jsx("div", {
+        children: "Canvas Size",
         className: [
           "flex flex-row items-center justify-between font-medium",
           "w-full"
-        ].join(" "),
-        onClick: param => setIsResizeOpen(v => !v)
+        ].join(" ")
       }),
-      isResizeOpen ? JsxRuntime.jsxs("div", {
-          children: [
-            JsxRuntime.jsxs("div", {
-              children: [
-                JsxRuntime.jsx("input", {
-                  className: "border rounded px-2 py-1 text-sm flex-1 min-w-0",
-                  value: props.resizeRowsInput,
-                  onChange: event => {
-                    let value = event.target.value;
-                    setResizeRowsInput(param => value);
-                  }
-                }),
-                JsxRuntime.jsx("span", {
-                  children: "x",
-                  className: "flex-none px-1"
-                }),
-                JsxRuntime.jsx("input", {
-                  className: "border rounded px-2 py-1 text-sm flex-1  min-w-0",
-                  value: props.resizeColsInput,
-                  onChange: event => {
-                    let value = event.target.value;
-                    setResizeColsInput(param => value);
-                  }
-                })
-              ],
-              className: "flex flex-row w-full gap-2"
-            }),
-            JsxRuntime.jsx("button", {
-              children: "Save",
-              className: [
-                "rounded px-2 py-1 text-sm font-medium",
-                canSubmitResize ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
-              ].join(" "),
-              disabled: !canSubmitResize,
-              onClick: param => onSubmitResize()
-            })
-          ],
-          className: "flex flex-col gap-2"
-        }) : null
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsxs("div", {
+            children: [
+              JsxRuntime.jsx("input", {
+                className: "border rounded px-2 py-1 text-sm flex-none w-16 ",
+                value: props.resizeRowsInput,
+                onChange: event => {
+                  let value = event.target.value;
+                  setResizeRowsInput(param => value);
+                }
+              }),
+              JsxRuntime.jsx("span", {
+                children: "x",
+                className: "flex-none px-1"
+              }),
+              JsxRuntime.jsx("input", {
+                className: "border rounded px-2 py-1 text-sm flex-none w-16 ",
+                value: props.resizeColsInput,
+                onChange: event => {
+                  let value = event.target.value;
+                  setResizeColsInput(param => value);
+                }
+              })
+            ],
+            className: "flex flex-row w-full gap-2 justify-between"
+          }),
+          JsxRuntime.jsx("button", {
+            children: "Save",
+            className: [
+              "rounded px-2 py-1 text-sm font-medium",
+              canSubmitResize ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            ].join(" "),
+            disabled: !canSubmitResize,
+            onClick: param => onSubmitResize()
+          })
+        ],
+        className: "flex flex-col gap-2"
+      })
     ],
     className: "border rounded p-2 flex flex-col gap-2 w-full"
   });
@@ -817,8 +809,6 @@ function App$ControlsPanel(props) {
         onExport: props.onExport
       }),
       JsxRuntime.jsx(App$CanvasSizeControl, {
-        isResizeOpen: props.isResizeOpen,
-        setIsResizeOpen: props.setIsResizeOpen,
         resizeRowsInput: props.resizeRowsInput,
         setResizeRowsInput: props.setResizeRowsInput,
         resizeColsInput: props.resizeColsInput,
@@ -1112,14 +1102,12 @@ function App(props) {
       }
     });
   };
-  let match$21 = React.useState(() => false);
-  let setIsResizeOpen = match$21[1];
-  let match$22 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$22[1];
-  let resizeRowsInput = match$22[0];
-  let match$23 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$23[1];
-  let resizeColsInput = match$23[0];
+  let match$21 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$21[1];
+  let resizeRowsInput = match$21[0];
+  let match$22 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$22[1];
+  let resizeColsInput = match$22[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -1175,9 +1163,9 @@ function App(props) {
     }
     
   };
-  let match$24 = parsePositiveInt(resizeRowsInput);
-  let match$25 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$24 !== undefined && match$25 !== undefined ? match$24 !== boardDimI || match$25 !== boardDimJ : false;
+  let match$23 = parsePositiveInt(resizeRowsInput);
+  let match$24 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$23 !== undefined && match$24 !== undefined ? match$23 !== boardDimI || match$24 !== boardDimJ : false;
   let exportScaleValue = parsePositiveFloat(exportScaleInput);
   let canExport = Stdlib_Option.isSome(exportScaleValue);
   let handleResizeSubmit = () => {
@@ -1186,8 +1174,7 @@ function App(props) {
     if (match !== undefined && match$1 !== undefined) {
       setBoard(prev => make2D(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => Stdlib_Option.getOr(check2D(prev, rowI, colJ), null))));
       setHoveredCell(param => {});
-      setCursorOverlayOff(param => true);
-      return setIsResizeOpen(param => false);
+      return setCursorOverlayOff(param => true);
     }
     
   };
@@ -1435,8 +1422,6 @@ function App(props) {
         setIsSilhouette: match$12[1],
         showCursorOverlay: showCursorOverlay,
         setShowCursorOverlay: match$8[1],
-        isResizeOpen: match$21[0],
-        setIsResizeOpen: setIsResizeOpen,
         resizeRowsInput: resizeRowsInput,
         setResizeRowsInput: setResizeRowsInput,
         resizeColsInput: resizeColsInput,

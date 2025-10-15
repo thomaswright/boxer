@@ -574,8 +574,6 @@ module BrushOverlayControl = {
 module CanvasSizeControl = {
   @react.component
   let make = (
-    ~isResizeOpen,
-    ~setIsResizeOpen,
     ~resizeRowsInput,
     ~setResizeRowsInput,
     ~resizeColsInput,
@@ -584,50 +582,45 @@ module CanvasSizeControl = {
     ~onSubmitResize,
   ) => {
     <div className="border rounded p-2 flex flex-col gap-2 w-full">
-      <button
-        onClick={_ => setIsResizeOpen(v => !v)}
+      <div
         className={["flex flex-row items-center justify-between font-medium", "w-full"]->Array.join(
           " ",
         )}>
         {"Canvas Size"->React.string}
-        <span> {isResizeOpen ? "-"->React.string : "+"->React.string} </span>
-      </button>
+      </div>
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-row w-full gap-2 justify-between">
+          <input
+            className="border rounded px-2 py-1 text-sm flex-none w-16 "
+            value={resizeRowsInput}
+            onChange={event => {
+              let value = ReactEvent.Form.target(event)["value"]
+              setResizeRowsInput(_ => value)
+            }}
+          />
+          <span className={"flex-none px-1"}> {"x"->React.string} </span>
+          <input
+            className="border rounded px-2 py-1 text-sm flex-none w-16 "
+            value={resizeColsInput}
+            onChange={event => {
+              let value = ReactEvent.Form.target(event)["value"]
+              setResizeColsInput(_ => value)
+            }}
+          />
+        </div>
 
-      {isResizeOpen
-        ? <div className="flex flex-col gap-2">
-            <div className="flex flex-row w-full gap-2">
-              <input
-                className="border rounded px-2 py-1 text-sm flex-1 min-w-0"
-                value={resizeRowsInput}
-                onChange={event => {
-                  let value = ReactEvent.Form.target(event)["value"]
-                  setResizeRowsInput(_ => value)
-                }}
-              />
-              <span className={"flex-none px-1"}> {"x"->React.string} </span>
-              <input
-                className="border rounded px-2 py-1 text-sm flex-1  min-w-0"
-                value={resizeColsInput}
-                onChange={event => {
-                  let value = ReactEvent.Form.target(event)["value"]
-                  setResizeColsInput(_ => value)
-                }}
-              />
-            </div>
-
-            <button
-              className={[
-                "rounded px-2 py-1 text-sm font-medium",
-                canSubmitResize
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-500 cursor-not-allowed",
-              ]->Array.join(" ")}
-              disabled={!canSubmitResize}
-              onClick={_ => onSubmitResize()}>
-              {"Save"->React.string}
-            </button>
-          </div>
-        : React.null}
+        <button
+          className={[
+            "rounded px-2 py-1 text-sm font-medium",
+            canSubmitResize
+              ? "bg-blue-500 text-white"
+              : "bg-gray-200 text-gray-500 cursor-not-allowed",
+          ]->Array.join(" ")}
+          disabled={!canSubmitResize}
+          onClick={_ => onSubmitResize()}>
+          {"Save"->React.string}
+        </button>
+      </div>
     </div>
   }
 }
@@ -747,8 +740,6 @@ module ControlsPanel = {
     ~setIsSilhouette,
     ~showCursorOverlay,
     ~setShowCursorOverlay,
-    ~isResizeOpen,
-    ~setIsResizeOpen,
     ~resizeRowsInput,
     ~setResizeRowsInput,
     ~resizeColsInput,
@@ -787,8 +778,6 @@ module ControlsPanel = {
         onExport
       />
       <CanvasSizeControl
-        isResizeOpen
-        setIsResizeOpen
         resizeRowsInput
         setResizeRowsInput
         resizeColsInput
@@ -1029,7 +1018,6 @@ let make = () => {
   }
 
   // Resize controls
-  let (isResizeOpen, setIsResizeOpen) = React.useState(() => false)
   let (resizeRowsInput, setResizeRowsInput) = React.useState(() => boardDimI->Int.toString)
   let (resizeColsInput, setResizeColsInput) = React.useState(() => boardDimJ->Int.toString)
 
@@ -1105,7 +1093,6 @@ let make = () => {
       )
       setHoveredCell(_ => None)
       setCursorOverlayOff(_ => true)
-      setIsResizeOpen(_ => false)
     | _ => ()
     }
 
@@ -1376,8 +1363,6 @@ let make = () => {
       setIsSilhouette={setIsSilhouette}
       showCursorOverlay={showCursorOverlay}
       setShowCursorOverlay={setShowCursorOverlay}
-      isResizeOpen={isResizeOpen}
-      setIsResizeOpen={setIsResizeOpen}
       resizeRowsInput={resizeRowsInput}
       setResizeRowsInput={setResizeRowsInput}
       resizeColsInput={resizeColsInput}
