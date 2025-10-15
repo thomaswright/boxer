@@ -392,11 +392,9 @@ function App$CanvasViewport(props) {
       }
     }),
     ref: Primitive_option.some(props.canvasContainerRef),
-    className: "relative border border-gray-300 overflow-hidden",
+    className: "relative border border-gray-300 overflow-hidden w-full h-full",
     style: {
-      backgroundColor: props.viewportBackgroundColor,
-      height: "384px",
-      width: "384px"
+      backgroundColor: props.viewportBackgroundColor
     }
   });
 }

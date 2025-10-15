@@ -326,10 +326,8 @@ module CanvasViewport = {
   ) => {
     <div
       ref={ReactDOM.Ref.domRef(canvasContainerRef)}
-      className="relative border border-gray-300 overflow-hidden"
+      className="relative border border-gray-300 overflow-hidden w-full h-full"
       style={{
-        width: "384px",
-        height: "384px",
         backgroundColor: viewportBackgroundColor,
       }}>
       <div
