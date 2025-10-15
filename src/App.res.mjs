@@ -552,14 +552,17 @@ function App$ColorControl(props) {
             onClick: param => setBrushMode(param => "Erase")
           })
         ],
-        className: "flex flex-row gap-2"
+        className: "flex flex-row gap-2 justify-center"
       }),
       JsxRuntime.jsx(ReactColorful.HexColorPicker, {
         color: props.myColor,
-        onChange: newColor => setMyColor(param => newColor)
+        onChange: newColor => setMyColor(param => newColor),
+        style: {
+          width: "96%"
+        }
       })
     ],
-    className: "flex flex-col gap-2"
+    className: "relative flex flex-col gap-2 w-full overflow-x-visible items-center flex-none"
   });
 }
 
@@ -782,46 +785,51 @@ function App$ControlsPanel(props) {
         myColor: myColor,
         setMyColor: props.setMyColor
       }),
-      JsxRuntime.jsx(App$CanvasColorsControl, {
-        myColor: myColor,
-        canvasBackgroundColor: props.canvasBackgroundColor,
-        setCanvasBackgroundColor: props.setCanvasBackgroundColor,
-        viewportBackgroundColor: props.viewportBackgroundColor,
-        setViewportBackgroundColor: props.setViewportBackgroundColor
-      }),
-      JsxRuntime.jsx(App$ZoomControl, {
-        onZoomOut: props.onZoomOut,
-        onZoomReset: props.onZoomReset,
-        onZoomIn: props.onZoomIn,
-        onCenterCanvas: props.onCenterCanvas,
-        zoom: props.zoom
-      }),
-      JsxRuntime.jsx(App$SilhouetteControl, {
-        isSilhouette: props.isSilhouette,
-        setIsSilhouette: props.setIsSilhouette
-      }),
-      JsxRuntime.jsx(App$ExportControl, {
-        exportScaleInput: props.exportScaleInput,
-        setExportScaleInput: props.setExportScaleInput,
-        includeBackground: props.includeExportBackground,
-        setIncludeBackground: props.setIncludeExportBackground,
-        canExport: props.canExport,
-        onExport: props.onExport
-      }),
-      JsxRuntime.jsx(App$CanvasSizeControl, {
-        resizeRowsInput: props.resizeRowsInput,
-        setResizeRowsInput: props.setResizeRowsInput,
-        resizeColsInput: props.resizeColsInput,
-        setResizeColsInput: props.setResizeColsInput,
-        canSubmitResize: props.canSubmitResize,
-        onSubmitResize: props.onSubmitResize
-      }),
-      JsxRuntime.jsx(App$BrushOverlayControl, {
-        showCursorOverlay: props.showCursorOverlay,
-        setShowCursorOverlay: props.setShowCursorOverlay
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsx(App$CanvasColorsControl, {
+            myColor: myColor,
+            canvasBackgroundColor: props.canvasBackgroundColor,
+            setCanvasBackgroundColor: props.setCanvasBackgroundColor,
+            viewportBackgroundColor: props.viewportBackgroundColor,
+            setViewportBackgroundColor: props.setViewportBackgroundColor
+          }),
+          JsxRuntime.jsx(App$ZoomControl, {
+            onZoomOut: props.onZoomOut,
+            onZoomReset: props.onZoomReset,
+            onZoomIn: props.onZoomIn,
+            onCenterCanvas: props.onCenterCanvas,
+            zoom: props.zoom
+          }),
+          JsxRuntime.jsx(App$SilhouetteControl, {
+            isSilhouette: props.isSilhouette,
+            setIsSilhouette: props.setIsSilhouette
+          }),
+          JsxRuntime.jsx(App$ExportControl, {
+            exportScaleInput: props.exportScaleInput,
+            setExportScaleInput: props.setExportScaleInput,
+            includeBackground: props.includeExportBackground,
+            setIncludeBackground: props.setIncludeExportBackground,
+            canExport: props.canExport,
+            onExport: props.onExport
+          }),
+          JsxRuntime.jsx(App$CanvasSizeControl, {
+            resizeRowsInput: props.resizeRowsInput,
+            setResizeRowsInput: props.setResizeRowsInput,
+            resizeColsInput: props.resizeColsInput,
+            setResizeColsInput: props.setResizeColsInput,
+            canSubmitResize: props.canSubmitResize,
+            onSubmitResize: props.onSubmitResize
+          }),
+          JsxRuntime.jsx(App$BrushOverlayControl, {
+            showCursorOverlay: props.showCursorOverlay,
+            setShowCursorOverlay: props.setShowCursorOverlay
+          })
+        ],
+        className: "overflow-y-scroll flex-1 gap-2 flex flex-col py-2"
       })
     ],
-    className: "flex flex-col gap-2 flex-none width-48 h-full overflow-y-scroll"
+    className: " h-full overflow-x-visible flex flex-col w-48"
   });
 }
 
@@ -1441,7 +1449,7 @@ function App(props) {
         onExport: handleExportPng
       })
     ],
-    className: " flex flex-row gap-5 p-3 h-dvh"
+    className: " flex flex-row gap-5 p-3 h-dvh overflow-x-hidden"
   });
 }
 

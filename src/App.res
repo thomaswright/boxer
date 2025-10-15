@@ -6,7 +6,12 @@ external useLocalStorage: (string, 'a) => ('a, ('a => 'a) => unit, unit => 'a) =
 
 module HexColorPicker = {
   @module("react-colorful") @react.component
-  external make: (~color: string, ~onChange: string => unit) => React.element = "HexColorPicker"
+  external make: (
+    ~color: string,
+    ~onChange: string => unit,
+    ~style: ReactDOMStyle.t=?,
+    ~className: string=?,
+  ) => React.element = "HexColorPicker"
 }
 
 module Switch = {
@@ -532,8 +537,8 @@ module CanvasColorsControl = {
 module ColorControl = {
   @react.component
   let make = (~brushMode, ~setBrushMode, ~myColor, ~setMyColor) => {
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-row gap-2">
+    <div className="relative flex flex-col gap-2 w-full overflow-x-visible items-center flex-none">
+      <div className="flex flex-row gap-2 justify-center">
         <button
           className={[
             brushMode == Color ? " bg-blue-500 text-white" : "bg-gray-200",
@@ -555,6 +560,9 @@ module ColorControl = {
         color={myColor}
         onChange={newColor => {
           setMyColor(_ => newColor)
+        }}
+        style={{
+          width: "96%",
         }}
       />
     </div>
@@ -758,34 +766,36 @@ module ControlsPanel = {
     ~canExport,
     ~onExport,
   ) => {
-    <div className="flex flex-col gap-2 flex-none width-48 h-full overflow-y-scroll">
+    <div className=" h-full overflow-x-visible flex flex-col w-48">
       <ColorControl brushMode setBrushMode myColor setMyColor />
-      <CanvasColorsControl
-        myColor
-        canvasBackgroundColor
-        setCanvasBackgroundColor
-        viewportBackgroundColor
-        setViewportBackgroundColor
-      />
-      <ZoomControl onZoomOut onZoomReset onZoomIn onCenterCanvas zoom />
-      <SilhouetteControl isSilhouette setIsSilhouette />
-      <ExportControl
-        exportScaleInput
-        setExportScaleInput
-        includeBackground={includeExportBackground}
-        setIncludeBackground={setIncludeExportBackground}
-        canExport
-        onExport
-      />
-      <CanvasSizeControl
-        resizeRowsInput
-        setResizeRowsInput
-        resizeColsInput
-        setResizeColsInput
-        canSubmitResize
-        onSubmitResize
-      />
-      <BrushOverlayControl showCursorOverlay setShowCursorOverlay />
+      <div className={"overflow-y-scroll flex-1 gap-2 flex flex-col py-2"}>
+        <CanvasColorsControl
+          myColor
+          canvasBackgroundColor
+          setCanvasBackgroundColor
+          viewportBackgroundColor
+          setViewportBackgroundColor
+        />
+        <ZoomControl onZoomOut onZoomReset onZoomIn onCenterCanvas zoom />
+        <SilhouetteControl isSilhouette setIsSilhouette />
+        <ExportControl
+          exportScaleInput
+          setExportScaleInput
+          includeBackground={includeExportBackground}
+          setIncludeBackground={setIncludeExportBackground}
+          canExport
+          onExport
+        />
+        <CanvasSizeControl
+          resizeRowsInput
+          setResizeRowsInput
+          resizeColsInput
+          setResizeColsInput
+          canSubmitResize
+          onSubmitResize
+        />
+        <BrushOverlayControl showCursorOverlay setShowCursorOverlay />
+      </div>
     </div>
   }
 }
@@ -1295,7 +1305,7 @@ let make = () => {
     zoomString ++ ")"
   }
 
-  <div className=" flex flex-row gap-5 p-3 h-dvh">
+  <div className=" flex flex-row gap-5 p-3 h-dvh overflow-x-hidden">
     <div className="flex flex-row gap-2 h-full p-2 border rounded flex-none">
       <SavedBrushesPanel
         board={board}
