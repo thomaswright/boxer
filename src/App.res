@@ -180,8 +180,8 @@ module SavedBrushesPanel = {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: `repeat(${dimI->Int.toString}, auto)`,
-              gridTemplateRows: `repeat(${dimJ->Int.toString}, auto)`,
+              gridTemplateColumns: `repeat(${dimJ->Int.toString}, auto)`,
+              gridTemplateRows: `repeat(${dimI->Int.toString}, auto)`,
             }}
             className={[
               selected ? "bg-orange-500" : "bg-gray-400",
@@ -270,8 +270,8 @@ module SavedTileMasksPanel = {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: `repeat(${dimI->Int.toString}, auto)`,
-              gridTemplateRows: `repeat(${dimJ->Int.toString}, auto)`,
+              gridTemplateColumns: `repeat(${dimJ->Int.toString}, auto)`,
+              gridTemplateRows: `repeat(${dimI->Int.toString}, auto)`,
             }}
             className={[
               "h-8 w-8 rounded-xs overflow-hidden",
@@ -340,8 +340,8 @@ module CanvasViewport = {
         className={"absolute top-0 left-0"}
         style={{
           display: "grid",
-          gridTemplateColumns: `repeat(${boardDimI->Int.toString}, 1rem)`,
-          gridTemplateRows: `repeat(${boardDimJ->Int.toString}, 1rem)`,
+          gridTemplateColumns: `repeat(${boardDimJ->Int.toString}, 1rem)`,
+          gridTemplateRows: `repeat(${boardDimI->Int.toString}, 1rem)`,
           transform: transformValue,
           transformOrigin: "top left",
           backgroundColor: canvasBackgroundColor,
@@ -433,8 +433,8 @@ module CanvasThumbnails = {
             <div
               className="h-16 w-16 grid"
               style={{
-                gridTemplateColumns: `repeat(${thumbDimI->Int.toString}, minmax(0, 1fr))`,
-                gridTemplateRows: `repeat(${thumbDimJ->Int.toString}, minmax(0, 1fr))`,
+                gridTemplateColumns: `repeat(${thumbDimJ->Int.toString}, minmax(0, 1fr))`,
+                gridTemplateRows: `repeat(${thumbDimI->Int.toString}, minmax(0, 1fr))`,
               }}>
               {canvasBoard
               ->Array.mapWithIndex((line, i) => {

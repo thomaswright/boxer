@@ -241,8 +241,8 @@ function App$SavedBrushesPanel(props) {
               ].join(" "),
               style: {
                 display: "grid",
-                gridTemplateColumns: "repeat(" + dimI.toString() + ", auto)",
-                gridTemplateRows: "repeat(" + dimJ.toString() + ", auto)"
+                gridTemplateColumns: "repeat(" + dimJ.toString() + ", auto)",
+                gridTemplateRows: "repeat(" + dimI.toString() + ", auto)"
               }
             })
           ],
@@ -312,8 +312,8 @@ function App$SavedTileMasksPanel(props) {
             ].join(" "),
             style: {
               display: "grid",
-              gridTemplateColumns: "repeat(" + match[0].toString() + ", auto)",
-              gridTemplateRows: "repeat(" + match[1].toString() + ", auto)"
+              gridTemplateColumns: "repeat(" + match[1].toString() + ", auto)",
+              gridTemplateRows: "repeat(" + match[0].toString() + ", auto)"
             }
           }),
           onClick: param => {
@@ -385,8 +385,8 @@ function App$CanvasViewport(props) {
       style: {
         backgroundColor: props.canvasBackgroundColor,
         display: "grid",
-        gridTemplateColumns: "repeat(" + props.boardDimI.toString() + ", 1rem)",
-        gridTemplateRows: "repeat(" + props.boardDimJ.toString() + ", 1rem)",
+        gridTemplateColumns: "repeat(" + props.boardDimJ.toString() + ", 1rem)",
+        gridTemplateRows: "repeat(" + props.boardDimI.toString() + ", 1rem)",
         transform: props.transformValue,
         transformOrigin: "top left"
       }
@@ -423,8 +423,8 @@ function App$CanvasThumbnails(props) {
                 }, i.toString() + j.toString()))),
                 className: "h-16 w-16 grid",
                 style: {
-                  gridTemplateColumns: "repeat(" + match[0].toString() + ", minmax(0, 1fr))",
-                  gridTemplateRows: "repeat(" + match[1].toString() + ", minmax(0, 1fr))"
+                  gridTemplateColumns: "repeat(" + match[1].toString() + ", minmax(0, 1fr))",
+                  gridTemplateRows: "repeat(" + match[0].toString() + ", minmax(0, 1fr))"
                 }
               }),
               className: [" w-fit h-fit block"].join(" "),
