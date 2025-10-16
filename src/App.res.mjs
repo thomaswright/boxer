@@ -13,7 +13,6 @@ import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
 import * as ReactColorful from "react-colorful";
 import * as Stdlib_Nullable from "rescript/lib/es6/Stdlib_Nullable.js";
 import * as ExportBoardJs from "./exportBoard.js";
-import * as Primitive_object from "rescript/lib/es6/Primitive_object.js";
 import * as Primitive_option from "rescript/lib/es6/Primitive_option.js";
 import * as JsxRuntime from "react/jsx-runtime";
 import UseLocalStorageJs from "./useLocalStorage.js";
@@ -347,47 +346,11 @@ function App$CanvasViewport(props) {
   let boardDimJ = props.boardDimJ;
   let boardDimI = props.boardDimI;
   let board = props.board;
-  let match = React.useState(() => []);
-  let setOverlayCells = match[1];
-  let overlayCells = match[0];
-  let overlayCellsRef = React.useRef(overlayCells);
+  let gridRef = React.useRef(null);
   let hoveredAnchorRef = React.useRef(undefined);
+  let activeCellsRef = React.useRef([]);
   let gridTemplateColumnsValue = "repeat(" + boardDimJ.toString() + ", 1rem)";
   let gridTemplateRowsValue = "repeat(" + boardDimI.toString() + ", 1rem)";
-  let overlayCellsEqual = (a, b) => {
-    let lengthA = a.length;
-    let lengthB = b.length;
-    if (lengthA !== lengthB) {
-      return false;
-    }
-    let _idx = 0;
-    while (true) {
-      let idx = _idx;
-      if (idx >= lengthA) {
-        return true;
-      }
-      let match = a[idx];
-      let match$1 = b[idx];
-      if (match === undefined) {
-        return false;
-      }
-      if (match$1 === undefined) {
-        return false;
-      }
-      if (!(Primitive_object.equal(match[0], match$1[0]) && Primitive_object.equal(match[1], match$1[1]))) {
-        return false;
-      }
-      _idx = idx + 1 | 0;
-      continue;
-    };
-  };
-  let setOverlayCellsIfChanged = nextCells => {
-    if (!overlayCellsEqual(overlayCellsRef.current, nextCells)) {
-      overlayCellsRef.current = nextCells;
-      return setOverlayCells(param => nextCells);
-    }
-    
-  };
   let computeOverlayCells = (hoverI, hoverJ) => {
     let startI = hoverI - brushCenterDimI | 0;
     let startJ = hoverJ - brushCenterDimJ | 0;
@@ -405,12 +368,13 @@ function App$CanvasViewport(props) {
             if (brushJ >= brushDimJ) {
               return innerAcc;
             }
+            let match = check2D(brush, brushI, brushJ);
             let nextAcc;
-            if (Stdlib_Option.getOr(check2D(brush, brushI, brushJ), false)) {
+            if (match !== undefined && match) {
               let boardI = startI + brushI | 0;
               let boardJ = startJ + brushJ | 0;
               if (boardI >= 0 && boardI < boardDimI && boardJ >= 0 && boardJ < boardDimJ) {
-                let maskAllows = tileMaskDimI <= 0 || tileMaskDimJ <= 0 ? true : Stdlib_Option.getOr(check2D(tileMask, Primitive_int.mod_(boardI, tileMaskDimI), Primitive_int.mod_(boardJ, tileMaskDimJ)), false);
+                let maskAllows = tileMaskDimI <= 0 || tileMaskDimJ <= 0 ? false : Stdlib_Option.getOr(check2D(tileMask, Primitive_int.mod_(boardI, tileMaskDimI), Primitive_int.mod_(boardJ, tileMaskDimJ)), false);
                 nextAcc = maskAllows ? Belt_Array.concatMany([
                     [[
                         boardI,
@@ -436,67 +400,71 @@ function App$CanvasViewport(props) {
     };
     return loopRows(0, []).toReversed();
   };
+  let findOverlayElement = (gridElement, cellI, cellJ) => {
+    if (boardDimJ === 0) {
+      return;
+    }
+    let index = (cellI * boardDimJ | 0) + cellJ | 0;
+    let cellElement = gridElement.children.item(index);
+    if (!(cellElement == null)) {
+      return Primitive_option.fromNullable(cellElement.querySelector(".cell-overlay"));
+    }
+    
+  };
+  let setCellsActive = (cells, isActive) => {
+    let gridElement = gridRef.current;
+    if (gridElement == null) {
+      return;
+    }
+    let value = isActive ? "true" : "false";
+    cells.forEach(param => {
+      let overlayElement = findOverlayElement(gridElement, param[0], param[1]);
+      if (overlayElement !== undefined) {
+        Primitive_option.valFromOption(overlayElement).setAttribute("data-active", value);
+        return;
+      }
+      
+    });
+  };
+  let applyOverlayCells = cells => {
+    setCellsActive(activeCellsRef.current, false);
+    setCellsActive(cells, true);
+    activeCellsRef.current = cells;
+  };
   let updateOverlay = anchor => {
     hoveredAnchorRef.current = anchor;
     if (anchor !== undefined) {
       if (cursorOverlayOff || !showCursorOverlay) {
-        return setOverlayCellsIfChanged([]);
+        return applyOverlayCells([]);
       } else {
-        return setOverlayCellsIfChanged(computeOverlayCells(anchor[0], anchor[1]));
+        return applyOverlayCells(computeOverlayCells(anchor[0], anchor[1]));
       }
     } else {
-      return setOverlayCellsIfChanged([]);
+      return applyOverlayCells([]);
     }
   };
   React.useEffect(() => {
     clearHoverRef.current = () => updateOverlay(undefined);
     return () => {
       clearHoverRef.current = () => {};
+      setCellsActive(activeCellsRef.current, false);
+      activeCellsRef.current = [];
     };
   }, []);
   React.useEffect(() => {
-    let match = hoveredAnchorRef.current;
-    if (match !== undefined) {
-      updateOverlay([
-        match[0],
-        match[1]
-      ]);
-    } else {
-      updateOverlay(undefined);
-    }
+    updateOverlay(hoveredAnchorRef.current);
   }, [
     cursorOverlayOff,
     showCursorOverlay
   ]);
   React.useEffect(() => {
-    let match = hoveredAnchorRef.current;
-    if (match !== undefined) {
-      updateOverlay([
-        match[0],
-        match[1]
-      ]);
-    }
-    
+    updateOverlay(hoveredAnchorRef.current);
   }, brush);
   React.useEffect(() => {
-    let match = hoveredAnchorRef.current;
-    if (match !== undefined) {
-      updateOverlay([
-        match[0],
-        match[1]
-      ]);
-    }
-    
+    updateOverlay(hoveredAnchorRef.current);
   }, tileMask);
   React.useEffect(() => {
-    let match = hoveredAnchorRef.current;
-    if (match !== undefined) {
-      updateOverlay([
-        match[0],
-        match[1]
-      ]);
-    }
-    
+    updateOverlay(hoveredAnchorRef.current);
   }, [
     boardDimI,
     boardDimJ
@@ -518,62 +486,45 @@ function App$CanvasViewport(props) {
       return "black";
     }
   };
-  let overlayElements = overlayCells.map(param => {
-    let cellJ = param[1];
-    let cellI = param[0];
-    let rowStart = (cellI + 1 | 0).toString();
-    let colStart = (cellJ + 1 | 0).toString();
-    return JsxRuntime.jsx("div", {
-      className: "w-full h-full",
-      style: {
-        backgroundColor: getOverlayColor(cellI, cellJ),
-        gridColumnStart: colStart,
-        gridRowStart: rowStart,
-        opacity: "0.2"
-      }
-    }, rowStart + "-" + colStart);
-  });
   return JsxRuntime.jsx("div", {
     children: JsxRuntime.jsx("div", {
-      children: JsxRuntime.jsxs("div", {
-        children: [
-          board.map((line, i) => line.map((cell, j) => {
-            let cellColor = isSilhouette ? Stdlib_Nullable.mapOr(cell, "transparent", param => "#000000") : Stdlib_Nullable.getOr(cell, "transparent");
-            return JsxRuntime.jsx("div", {
-              children: JsxRuntime.jsx("div", {
+      children: JsxRuntime.jsx("div", {
+        children: board.map((line, i) => line.map((cell, j) => {
+          let cellColor = isSilhouette ? Stdlib_Nullable.mapOr(cell, "transparent", param => "#000000") : Stdlib_Nullable.getOr(cell, "transparent");
+          return JsxRuntime.jsxs("div", {
+            children: [
+              JsxRuntime.jsx("div", {
                 className: "w-full h-full absolute",
                 style: {
                   backgroundColor: cellColor
                 }
               }),
-              className: "w-full h-full group relative",
-              onMouseDown: param => {
-                applyBrush(i, j);
-                setCursorOverlayOff(param => true);
-              },
-              onMouseEnter: param => {
-                updateOverlay([
-                  i,
-                  j
-                ]);
-                if (isMouseDown) {
-                  return applyBrush(i, j);
+              JsxRuntime.jsx("div", {
+                className: "w-full h-full absolute inset-0 pointer-events-none cell-overlay",
+                style: {
+                  backgroundColor: getOverlayColor(i, j)
                 }
-                
-              },
-              onMouseLeave: param => updateOverlay(undefined)
-            }, i.toString() + j.toString());
-          })),
-          JsxRuntime.jsx("div", {
-            children: overlayElements,
-            className: "pointer-events-none absolute inset-0",
-            style: {
-              display: "grid",
-              gridTemplateColumns: gridTemplateColumnsValue,
-              gridTemplateRows: gridTemplateRowsValue
-            }
-          })
-        ],
+              })
+            ],
+            className: "w-full h-full group relative",
+            onMouseDown: param => {
+              applyBrush(i, j);
+              setCursorOverlayOff(param => true);
+            },
+            onMouseEnter: param => {
+              updateOverlay([
+                i,
+                j
+              ]);
+              if (isMouseDown) {
+                return applyBrush(i, j);
+              }
+              
+            },
+            onMouseLeave: param => updateOverlay(undefined)
+          }, i.toString() + j.toString());
+        })),
+        ref: Primitive_option.some(gridRef),
         className: "relative",
         style: {
           display: "grid",

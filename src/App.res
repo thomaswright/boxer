@@ -310,6 +310,20 @@ module SavedTileMasksPanel = {
   }
 }
 
+// module MyOverrides = {
+//   module Elements = {
+//     type props = {
+//       ...JsxDOM.domProps,
+//       \"data-active": bool,
+//     }
+
+//     @module("react")
+//     external jsx: (string, props) => Jsx.element = "jsx"
+//   }
+// }
+
+// @@jsxConfig({module_: "MyOverrides"})
+
 module CanvasViewport = {
   @react.component
   let make = (
@@ -336,42 +350,11 @@ module CanvasViewport = {
     ~tileMaskDimI,
     ~tileMaskDimJ,
   ) => {
-    let (overlayCells, setOverlayCells) = React.useState(() => [])
-    let overlayCellsRef = React.useRef(overlayCells)
+    let gridRef = React.useRef(Js.Nullable.null)
     let hoveredAnchorRef = React.useRef(None)
+    let activeCellsRef = React.useRef([])
     let gridTemplateColumnsValue = `repeat(${boardDimJ->Int.toString}, 1rem)`
     let gridTemplateRowsValue = `repeat(${boardDimI->Int.toString}, 1rem)`
-
-    let overlayCellsEqual = (a, b) => {
-      let lengthA = a->Array.length
-      let lengthB = b->Array.length
-      if lengthA != lengthB {
-        false
-      } else {
-        let rec loop = idx =>
-          if idx >= lengthA {
-            true
-          } else {
-            switch (a->Array.get(idx), b->Array.get(idx)) {
-            | (Some((ai, aj)), Some((bi, bj))) =>
-              if ai == bi && aj == bj {
-                loop(idx + 1)
-              } else {
-                false
-              }
-            | _ => false
-            }
-          }
-        loop(0)
-      }
-    }
-
-    let setOverlayCellsIfChanged = nextCells => {
-      if !overlayCellsEqual(overlayCellsRef.current, nextCells) {
-        overlayCellsRef.current = nextCells
-        setOverlayCells(_ => nextCells)
-      }
-    }
 
     let computeOverlayCells = (hoverI, hoverJ) => {
       let startI = hoverI - brushCenterDimI
@@ -385,12 +368,13 @@ module CanvasViewport = {
             if brushJ >= brushDimJ {
               innerAcc
             } else {
-              let nextAcc = if brush->Array.check2D(brushI, brushJ)->Option.getOr(false) {
+              let nextAcc = switch Array.check2D(brush, brushI, brushJ) {
+              | Some(true) =>
                 let boardI = startI + brushI
                 let boardJ = startJ + brushJ
                 if boardI >= 0 && boardI < boardDimI && boardJ >= 0 && boardJ < boardDimJ {
                   let maskAllows = if tileMaskDimI <= 0 || tileMaskDimJ <= 0 {
-                    true
+                    false
                   } else {
                     Array.check2D(
                       tileMask,
@@ -406,8 +390,7 @@ module CanvasViewport = {
                 } else {
                   innerAcc
                 }
-              } else {
-                innerAcc
+              | _ => innerAcc
               }
               loopCols(brushJ + 1, nextAcc)
             }
@@ -417,53 +400,83 @@ module CanvasViewport = {
       loopRows(0, [])->Array.toReversed
     }
 
+    let findOverlayElement = (gridElement, cellI, cellJ) =>
+      if boardDimJ == 0 {
+        None
+      } else {
+        let index = cellI * boardDimJ + cellJ
+        switch gridElement->Element.children->HtmlCollection.item(index) {
+        | Some(cellElement) => cellElement->Element.querySelector(".cell-overlay")
+        | None => None
+        }
+      }
+
+    let setCellsActive = (cells, isActive) =>
+      switch gridRef.current->Js.Nullable.toOption {
+      | Some(gridElement) =>
+        let value = if isActive {
+          "true"
+        } else {
+          "false"
+        }
+        cells->Array.forEach(((cellI, cellJ)) =>
+          switch findOverlayElement(gridElement, cellI, cellJ) {
+          | Some(overlayElement) => overlayElement->Element.setAttribute("data-active", value)
+          | None => ()
+          }
+        )
+      | None => ()
+      }
+
+    let applyOverlayCells = cells => {
+      setCellsActive(activeCellsRef.current, false)
+      setCellsActive(cells, true)
+      activeCellsRef.current = cells
+    }
+
     let updateOverlay = anchor => {
       hoveredAnchorRef.current = anchor
       switch anchor {
       | Some((hoverI, hoverJ)) =>
         if cursorOverlayOff || !showCursorOverlay {
-          setOverlayCellsIfChanged([])
+          applyOverlayCells([])
         } else {
-          setOverlayCellsIfChanged(computeOverlayCells(hoverI, hoverJ))
+          applyOverlayCells(computeOverlayCells(hoverI, hoverJ))
         }
-      | None => setOverlayCellsIfChanged([])
+      | None => applyOverlayCells([])
       }
     }
 
+    let reapplyOverlay = () => updateOverlay(hoveredAnchorRef.current)
+
     React.useEffect0(() => {
       clearHoverRef.current = () => updateOverlay(None)
-      Some(() => clearHoverRef.current = () => ())
+      Some(
+        () => {
+          clearHoverRef.current = () => ()
+          setCellsActive(activeCellsRef.current, false)
+          activeCellsRef.current = []
+        },
+      )
     })
 
     React.useEffect2(() => {
-      switch hoveredAnchorRef.current {
-      | Some((hoverI, hoverJ)) => updateOverlay(Some((hoverI, hoverJ)))
-      | None => updateOverlay(None)
-      }
+      reapplyOverlay()
       None
     }, (cursorOverlayOff, showCursorOverlay))
 
     React.useEffect1(() => {
-      switch hoveredAnchorRef.current {
-      | Some((hoverI, hoverJ)) => updateOverlay(Some((hoverI, hoverJ)))
-      | None => ()
-      }
+      reapplyOverlay()
       None
     }, brush)
 
     React.useEffect1(() => {
-      switch hoveredAnchorRef.current {
-      | Some((hoverI, hoverJ)) => updateOverlay(Some((hoverI, hoverJ)))
-      | None => ()
-      }
+      reapplyOverlay()
       None
     }, tileMask)
 
     React.useEffect2(() => {
-      switch hoveredAnchorRef.current {
-      | Some((hoverI, hoverJ)) => updateOverlay(Some((hoverI, hoverJ)))
-      | None => ()
-      }
+      reapplyOverlay()
       None
     }, (boardDimI, boardDimJ))
 
@@ -476,24 +489,6 @@ module CanvasViewport = {
         | None => "black"
         }
       }
-
-    let overlayElements =
-      overlayCells
-      ->Array.map(((cellI, cellJ)) => {
-        let rowStart = (cellI + 1)->Int.toString
-        let colStart = (cellJ + 1)->Int.toString
-        <div
-          key={rowStart ++ "-" ++ colStart}
-          className="w-full h-full"
-          style={{
-            gridRowStart: rowStart,
-            gridColumnStart: colStart,
-            backgroundColor: getOverlayColor(cellI, cellJ),
-            opacity: "0.2",
-          }}
-        />
-      })
-      ->React.array
 
     <div
       ref={ReactDOM.Ref.domRef(canvasContainerRef)}
@@ -514,7 +509,8 @@ module CanvasViewport = {
             display: "grid",
             gridTemplateColumns: gridTemplateColumnsValue,
             gridTemplateRows: gridTemplateRowsValue,
-          }}>
+          }}
+          ref={ReactDOM.Ref.domRef(gridRef)}>
           {board
           ->Array.mapWithIndex((line, i) => {
             line
@@ -547,21 +543,17 @@ module CanvasViewport = {
                     backgroundColor: cellColor,
                   }}
                 />
+                <div
+                  className="w-full h-full absolute inset-0 pointer-events-none cell-overlay"
+                  style={{
+                    backgroundColor: getOverlayColor(i, j),
+                  }}
+                />
               </div>
             })
             ->React.array
           })
           ->React.array}
-
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{
-              display: "grid",
-              gridTemplateColumns: gridTemplateColumnsValue,
-              gridTemplateRows: gridTemplateRowsValue,
-            }}>
-            {overlayElements}
-          </div>
         </div>
       </div>
     </div>
