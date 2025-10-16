@@ -318,18 +318,183 @@ module CanvasViewport = {
     ~boardDimI,
     ~boardDimJ,
     ~transformValue,
-    ~hoveredCell,
-    ~setHoveredCell,
     ~cursorOverlayOff,
     ~setCursorOverlayOff,
     ~isMouseDown,
     ~applyBrush,
-    ~canApply,
     ~showCursorOverlay,
     ~canvasBackgroundColor,
     ~viewportBackgroundColor,
     ~isSilhouette,
+    ~clearHoverRef: React.ref<unit => unit>,
+    ~brush,
+    ~brushDimI,
+    ~brushDimJ,
+    ~brushCenterDimI,
+    ~brushCenterDimJ,
+    ~tileMask,
+    ~tileMaskDimI,
+    ~tileMaskDimJ,
   ) => {
+    let (overlayCells, setOverlayCells) = React.useState(() => [])
+    let overlayCellsRef = React.useRef(overlayCells)
+    let hoveredAnchorRef = React.useRef(None)
+    let gridTemplateColumnsValue = `repeat(${boardDimJ->Int.toString}, 1rem)`
+    let gridTemplateRowsValue = `repeat(${boardDimI->Int.toString}, 1rem)`
+
+    let overlayCellsEqual = (a, b) => {
+      let lengthA = a->Array.length
+      let lengthB = b->Array.length
+      if lengthA != lengthB {
+        false
+      } else {
+        let rec loop = idx =>
+          if idx >= lengthA {
+            true
+          } else {
+            switch (a->Array.get(idx), b->Array.get(idx)) {
+            | (Some((ai, aj)), Some((bi, bj))) =>
+              if ai == bi && aj == bj {
+                loop(idx + 1)
+              } else {
+                false
+              }
+            | _ => false
+            }
+          }
+        loop(0)
+      }
+    }
+
+    let setOverlayCellsIfChanged = nextCells => {
+      if !overlayCellsEqual(overlayCellsRef.current, nextCells) {
+        overlayCellsRef.current = nextCells
+        setOverlayCells(_ => nextCells)
+      }
+    }
+
+    let computeOverlayCells = (hoverI, hoverJ) => {
+      let startI = hoverI - brushCenterDimI
+      let startJ = hoverJ - brushCenterDimJ
+
+      let rec loopRows = (brushI, acc) =>
+        if brushI >= brushDimI {
+          acc
+        } else {
+          let rec loopCols = (brushJ, innerAcc) =>
+            if brushJ >= brushDimJ {
+              innerAcc
+            } else {
+              let nextAcc = if brush->Array.check2D(brushI, brushJ)->Option.getOr(false) {
+                let boardI = startI + brushI
+                let boardJ = startJ + brushJ
+                if boardI >= 0 && boardI < boardDimI && boardJ >= 0 && boardJ < boardDimJ {
+                  let maskAllows = if tileMaskDimI <= 0 || tileMaskDimJ <= 0 {
+                    true
+                  } else {
+                    Array.check2D(
+                      tileMask,
+                      mod(boardI, tileMaskDimI),
+                      mod(boardJ, tileMaskDimJ),
+                    )->Option.getOr(false)
+                  }
+                  if maskAllows {
+                    [(boardI, boardJ), ...innerAcc]
+                  } else {
+                    innerAcc
+                  }
+                } else {
+                  innerAcc
+                }
+              } else {
+                innerAcc
+              }
+              loopCols(brushJ + 1, nextAcc)
+            }
+          loopRows(brushI + 1, loopCols(0, acc))
+        }
+
+      loopRows(0, [])->Array.toReversed
+    }
+
+    let updateOverlay = anchor => {
+      hoveredAnchorRef.current = anchor
+      switch anchor {
+      | Some((hoverI, hoverJ)) =>
+        if cursorOverlayOff || !showCursorOverlay {
+          setOverlayCellsIfChanged([])
+        } else {
+          setOverlayCellsIfChanged(computeOverlayCells(hoverI, hoverJ))
+        }
+      | None => setOverlayCellsIfChanged([])
+      }
+    }
+
+    React.useEffect0(() => {
+      clearHoverRef.current = () => updateOverlay(None)
+      Some(() => clearHoverRef.current = () => ())
+    })
+
+    React.useEffect2(() => {
+      switch hoveredAnchorRef.current {
+      | Some((hoverI, hoverJ)) => updateOverlay(Some((hoverI, hoverJ)))
+      | None => updateOverlay(None)
+      }
+      None
+    }, (cursorOverlayOff, showCursorOverlay))
+
+    React.useEffect1(() => {
+      switch hoveredAnchorRef.current {
+      | Some((hoverI, hoverJ)) => updateOverlay(Some((hoverI, hoverJ)))
+      | None => ()
+      }
+      None
+    }, brush)
+
+    React.useEffect1(() => {
+      switch hoveredAnchorRef.current {
+      | Some((hoverI, hoverJ)) => updateOverlay(Some((hoverI, hoverJ)))
+      | None => ()
+      }
+      None
+    }, tileMask)
+
+    React.useEffect2(() => {
+      switch hoveredAnchorRef.current {
+      | Some((hoverI, hoverJ)) => updateOverlay(Some((hoverI, hoverJ)))
+      | None => ()
+      }
+      None
+    }, (boardDimI, boardDimJ))
+
+    let getOverlayColor = (cellI, cellJ) =>
+      if isSilhouette {
+        "white"
+      } else {
+        switch board->Array.check2D(cellI, cellJ) {
+        | Some(cell) => cell->Nullable.mapOr("black", value => value->isLight ? "black" : "white")
+        | None => "black"
+        }
+      }
+
+    let overlayElements =
+      overlayCells
+      ->Array.map(((cellI, cellJ)) => {
+        let rowStart = (cellI + 1)->Int.toString
+        let colStart = (cellJ + 1)->Int.toString
+        <div
+          key={rowStart ++ "-" ++ colStart}
+          className="w-full h-full"
+          style={{
+            gridRowStart: rowStart,
+            gridColumnStart: colStart,
+            backgroundColor: getOverlayColor(cellI, cellJ),
+            opacity: "0.2",
+          }}
+        />
+      })
+      ->React.array
+
     <div
       ref={ReactDOM.Ref.domRef(canvasContainerRef)}
       className="relative border border-gray-300 overflow-hidden w-full h-full"
@@ -339,67 +504,65 @@ module CanvasViewport = {
       <div
         className={"absolute top-0 left-0"}
         style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${boardDimJ->Int.toString}, 1rem)`,
-          gridTemplateRows: `repeat(${boardDimI->Int.toString}, 1rem)`,
           transform: transformValue,
           transformOrigin: "top left",
           backgroundColor: canvasBackgroundColor,
         }}>
-        {board
-        ->Array.mapWithIndex((line, i) => {
-          line
-          ->Array.mapWithIndex((cell, j) => {
-            let cellColor = if isSilhouette {
-              cell->Nullable.mapOr("transparent", _ => "#000000")
-            } else {
-              cell->Nullable.getOr("transparent")
-            }
-            let overlayBackgroundColor = if isSilhouette {
-              "white"
-            } else {
-              cell->Nullable.mapOr("black", value => value->isLight ? "black" : "white")
-            }
+        <div
+          className="relative"
+          style={{
+            display: "grid",
+            gridTemplateColumns: gridTemplateColumnsValue,
+            gridTemplateRows: gridTemplateRowsValue,
+          }}>
+          {board
+          ->Array.mapWithIndex((line, i) => {
+            line
+            ->Array.mapWithIndex((cell, j) => {
+              let cellColor = if isSilhouette {
+                cell->Nullable.mapOr("transparent", _ => "#000000")
+              } else {
+                cell->Nullable.getOr("transparent")
+              }
 
-            <div
-              className={"w-full h-full group relative"}
-              key={i->Int.toString ++ j->Int.toString}
-              onMouseEnter={_ => {
-                setHoveredCell(_ => Some((i, j)))
-                if isMouseDown {
-                  applyBrush(i, j)
-                }
-              }}
-              onMouseLeave={_ => {
-                setHoveredCell(_ => None)
-              }}
-              onMouseDown={_ => {
-                applyBrush(i, j)
-                setCursorOverlayOff(_ => true)
-              }}>
               <div
-                className={"w-full h-full absolute"}
-                style={{
-                  backgroundColor: cellColor,
+                className={"w-full h-full group relative"}
+                key={i->Int.toString ++ j->Int.toString}
+                onMouseEnter={_ => {
+                  updateOverlay(Some((i, j)))
+                  if isMouseDown {
+                    applyBrush(i, j)
+                  }
                 }}
-              />
-              {switch hoveredCell {
-              | Some((hoverI, hoverJ)) =>
-                cursorOverlayOff || !showCursorOverlay || !canApply(i, j, hoverI, hoverJ)
-                  ? React.null
-                  : <div
-                      style={{
-                        backgroundColor: overlayBackgroundColor,
-                      }}
-                      className="absolute w-full h-full inset-0 opacity-20">
-                    </div>
-              | None => React.null
-              }}
-            </div>
+                onMouseLeave={_ => {
+                  updateOverlay(None)
+                }}
+                onMouseDown={_ => {
+                  applyBrush(i, j)
+                  setCursorOverlayOff(_ => true)
+                }}>
+                <div
+                  className={"w-full h-full absolute"}
+                  style={{
+                    backgroundColor: cellColor,
+                  }}
+                />
+              </div>
+            })
+            ->React.array
           })
-          ->React.array
-        })
-        ->React.array}
+          ->React.array}
+
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              display: "grid",
+              gridTemplateColumns: gridTemplateColumnsValue,
+              gridTemplateRows: gridTemplateRowsValue,
+            }}>
+            {overlayElements}
+          </div>
+        </div>
       </div>
     </div>
   }
@@ -868,11 +1031,10 @@ let make = () => {
 
   // Transient UI state
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
-  let (hoveredCell, setHoveredCell) = React.useState(() => None)
   let (exportScaleInput, setExportScaleInput) = React.useState(() => "1")
   let (includeExportBackground, setIncludeExportBackground) = React.useState(() => true)
   let (resizeMode, setResizeMode) = React.useState(() => Scale)
-
+  let clearHoverRef = React.useRef(() => ())
   // Camera positioning
   let zoomRef = React.useRef(1.)
   let panRef = React.useRef((0., 0.))
@@ -1177,7 +1339,7 @@ let make = () => {
       | Scale => setBoard(prev => resizeBoardScale(prev, nextRows, nextCols))
       | Crop => setBoard(prev => resizeBoardCrop(prev, nextRows, nextCols))
       }
-      setHoveredCell(_ => None)
+      clearHoverRef.current()
       setCursorOverlayOff(_ => true)
     | _ => ()
     }
@@ -1239,7 +1401,7 @@ let make = () => {
     let newCanvas = makeCanvas(~board=newBoard, ~zoom=defaultZoom, ~pan=newPan)
     setCanvases(prev => prev->Array.concat([newCanvas]))
     setSelectedCanvasId(_ => newCanvas.id)
-    setHoveredCell(_ => None)
+    clearHoverRef.current()
     setCursorOverlayOff(_ => true)
     lastAutoCenteredDimsRef.current = Some((boardDimI, boardDimJ))
   }
@@ -1274,7 +1436,7 @@ let make = () => {
       | Some(nextId) => setSelectedCanvasId(_ => nextId)
       | None => ()
       }
-      setHoveredCell(_ => None)
+      clearHoverRef.current()
       setCursorOverlayOff(_ => true)
     }
   }
@@ -1283,7 +1445,7 @@ let make = () => {
     if canvasId != selectedCanvasId {
       setSelectedCanvasId(_ => canvasId)
     }
-    setHoveredCell(_ => None)
+    clearHoverRef.current()
     setCursorOverlayOff(_ => true)
   }
 
@@ -1411,17 +1573,23 @@ let make = () => {
           boardDimI
           boardDimJ
           transformValue
-          hoveredCell
-          setHoveredCell
           cursorOverlayOff
           setCursorOverlayOff
           isMouseDown
           applyBrush
-          canApply
           showCursorOverlay
           canvasBackgroundColor
           viewportBackgroundColor
           isSilhouette
+          clearHoverRef
+          brush
+          brushDimI
+          brushDimJ
+          brushCenterDimI
+          brushCenterDimJ
+          tileMask
+          tileMaskDimI
+          tileMaskDimJ
         />
       </div>
 

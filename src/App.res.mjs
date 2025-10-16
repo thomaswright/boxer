@@ -13,6 +13,7 @@ import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
 import * as ReactColorful from "react-colorful";
 import * as Stdlib_Nullable from "rescript/lib/es6/Stdlib_Nullable.js";
 import * as ExportBoardJs from "./exportBoard.js";
+import * as Primitive_object from "rescript/lib/es6/Primitive_object.js";
 import * as Primitive_option from "rescript/lib/es6/Primitive_option.js";
 import * as JsxRuntime from "react/jsx-runtime";
 import UseLocalStorageJs from "./useLocalStorage.js";
@@ -328,65 +329,261 @@ function App$SavedTileMasksPanel(props) {
 }
 
 function App$CanvasViewport(props) {
+  let tileMaskDimJ = props.tileMaskDimJ;
+  let tileMaskDimI = props.tileMaskDimI;
+  let tileMask = props.tileMask;
+  let brushCenterDimJ = props.brushCenterDimJ;
+  let brushCenterDimI = props.brushCenterDimI;
+  let brushDimJ = props.brushDimJ;
+  let brushDimI = props.brushDimI;
+  let brush = props.brush;
+  let clearHoverRef = props.clearHoverRef;
   let isSilhouette = props.isSilhouette;
   let showCursorOverlay = props.showCursorOverlay;
-  let canApply = props.canApply;
   let applyBrush = props.applyBrush;
   let isMouseDown = props.isMouseDown;
   let setCursorOverlayOff = props.setCursorOverlayOff;
   let cursorOverlayOff = props.cursorOverlayOff;
-  let setHoveredCell = props.setHoveredCell;
-  let hoveredCell = props.hoveredCell;
+  let boardDimJ = props.boardDimJ;
+  let boardDimI = props.boardDimI;
+  let board = props.board;
+  let match = React.useState(() => []);
+  let setOverlayCells = match[1];
+  let overlayCells = match[0];
+  let overlayCellsRef = React.useRef(overlayCells);
+  let hoveredAnchorRef = React.useRef(undefined);
+  let gridTemplateColumnsValue = "repeat(" + boardDimJ.toString() + ", 1rem)";
+  let gridTemplateRowsValue = "repeat(" + boardDimI.toString() + ", 1rem)";
+  let overlayCellsEqual = (a, b) => {
+    let lengthA = a.length;
+    let lengthB = b.length;
+    if (lengthA !== lengthB) {
+      return false;
+    }
+    let _idx = 0;
+    while (true) {
+      let idx = _idx;
+      if (idx >= lengthA) {
+        return true;
+      }
+      let match = a[idx];
+      let match$1 = b[idx];
+      if (match === undefined) {
+        return false;
+      }
+      if (match$1 === undefined) {
+        return false;
+      }
+      if (!(Primitive_object.equal(match[0], match$1[0]) && Primitive_object.equal(match[1], match$1[1]))) {
+        return false;
+      }
+      _idx = idx + 1 | 0;
+      continue;
+    };
+  };
+  let setOverlayCellsIfChanged = nextCells => {
+    if (!overlayCellsEqual(overlayCellsRef.current, nextCells)) {
+      overlayCellsRef.current = nextCells;
+      return setOverlayCells(param => nextCells);
+    }
+    
+  };
+  let computeOverlayCells = (hoverI, hoverJ) => {
+    let startI = hoverI - brushCenterDimI | 0;
+    let startJ = hoverJ - brushCenterDimJ | 0;
+    let loopRows = (_brushI, _acc) => {
+      while (true) {
+        let acc = _acc;
+        let brushI = _brushI;
+        if (brushI >= brushDimI) {
+          return acc;
+        }
+        let loopCols = (_brushJ, _innerAcc) => {
+          while (true) {
+            let innerAcc = _innerAcc;
+            let brushJ = _brushJ;
+            if (brushJ >= brushDimJ) {
+              return innerAcc;
+            }
+            let nextAcc;
+            if (Stdlib_Option.getOr(check2D(brush, brushI, brushJ), false)) {
+              let boardI = startI + brushI | 0;
+              let boardJ = startJ + brushJ | 0;
+              if (boardI >= 0 && boardI < boardDimI && boardJ >= 0 && boardJ < boardDimJ) {
+                let maskAllows = tileMaskDimI <= 0 || tileMaskDimJ <= 0 ? true : Stdlib_Option.getOr(check2D(tileMask, Primitive_int.mod_(boardI, tileMaskDimI), Primitive_int.mod_(boardJ, tileMaskDimJ)), false);
+                nextAcc = maskAllows ? Belt_Array.concatMany([
+                    [[
+                        boardI,
+                        boardJ
+                      ]],
+                    innerAcc
+                  ]) : innerAcc;
+              } else {
+                nextAcc = innerAcc;
+              }
+            } else {
+              nextAcc = innerAcc;
+            }
+            _innerAcc = nextAcc;
+            _brushJ = brushJ + 1 | 0;
+            continue;
+          };
+        };
+        _acc = loopCols(0, acc);
+        _brushI = brushI + 1 | 0;
+        continue;
+      };
+    };
+    return loopRows(0, []).toReversed();
+  };
+  let updateOverlay = anchor => {
+    hoveredAnchorRef.current = anchor;
+    if (anchor !== undefined) {
+      if (cursorOverlayOff || !showCursorOverlay) {
+        return setOverlayCellsIfChanged([]);
+      } else {
+        return setOverlayCellsIfChanged(computeOverlayCells(anchor[0], anchor[1]));
+      }
+    } else {
+      return setOverlayCellsIfChanged([]);
+    }
+  };
+  React.useEffect(() => {
+    clearHoverRef.current = () => updateOverlay(undefined);
+    return () => {
+      clearHoverRef.current = () => {};
+    };
+  }, []);
+  React.useEffect(() => {
+    let match = hoveredAnchorRef.current;
+    if (match !== undefined) {
+      updateOverlay([
+        match[0],
+        match[1]
+      ]);
+    } else {
+      updateOverlay(undefined);
+    }
+  }, [
+    cursorOverlayOff,
+    showCursorOverlay
+  ]);
+  React.useEffect(() => {
+    let match = hoveredAnchorRef.current;
+    if (match !== undefined) {
+      updateOverlay([
+        match[0],
+        match[1]
+      ]);
+    }
+    
+  }, brush);
+  React.useEffect(() => {
+    let match = hoveredAnchorRef.current;
+    if (match !== undefined) {
+      updateOverlay([
+        match[0],
+        match[1]
+      ]);
+    }
+    
+  }, tileMask);
+  React.useEffect(() => {
+    let match = hoveredAnchorRef.current;
+    if (match !== undefined) {
+      updateOverlay([
+        match[0],
+        match[1]
+      ]);
+    }
+    
+  }, [
+    boardDimI,
+    boardDimJ
+  ]);
+  let getOverlayColor = (cellI, cellJ) => {
+    if (isSilhouette) {
+      return "white";
+    }
+    let cell = check2D(board, cellI, cellJ);
+    if (cell !== undefined) {
+      return Stdlib_Nullable.mapOr(Primitive_option.valFromOption(cell), "black", value => {
+        if (isLight(value)) {
+          return "black";
+        } else {
+          return "white";
+        }
+      });
+    } else {
+      return "black";
+    }
+  };
+  let overlayElements = overlayCells.map(param => {
+    let cellJ = param[1];
+    let cellI = param[0];
+    let rowStart = (cellI + 1 | 0).toString();
+    let colStart = (cellJ + 1 | 0).toString();
+    return JsxRuntime.jsx("div", {
+      className: "w-full h-full",
+      style: {
+        backgroundColor: getOverlayColor(cellI, cellJ),
+        gridColumnStart: colStart,
+        gridRowStart: rowStart,
+        opacity: "0.2"
+      }
+    }, rowStart + "-" + colStart);
+  });
   return JsxRuntime.jsx("div", {
     children: JsxRuntime.jsx("div", {
-      children: props.board.map((line, i) => line.map((cell, j) => {
-        let cellColor = isSilhouette ? Stdlib_Nullable.mapOr(cell, "transparent", param => "#000000") : Stdlib_Nullable.getOr(cell, "transparent");
-        let overlayBackgroundColor = isSilhouette ? "white" : Stdlib_Nullable.mapOr(cell, "black", value => {
-            if (isLight(value)) {
-              return "black";
-            } else {
-              return "white";
-            }
-          });
-        return JsxRuntime.jsxs("div", {
-          children: [
-            JsxRuntime.jsx("div", {
-              className: "w-full h-full absolute",
-              style: {
-                backgroundColor: cellColor
-              }
-            }),
-            hoveredCell !== undefined && !(cursorOverlayOff || !showCursorOverlay || !canApply(i, j, hoveredCell[0], hoveredCell[1])) ? JsxRuntime.jsx("div", {
-                className: "absolute w-full h-full inset-0 opacity-20",
+      children: JsxRuntime.jsxs("div", {
+        children: [
+          board.map((line, i) => line.map((cell, j) => {
+            let cellColor = isSilhouette ? Stdlib_Nullable.mapOr(cell, "transparent", param => "#000000") : Stdlib_Nullable.getOr(cell, "transparent");
+            return JsxRuntime.jsx("div", {
+              children: JsxRuntime.jsx("div", {
+                className: "w-full h-full absolute",
                 style: {
-                  backgroundColor: overlayBackgroundColor
+                  backgroundColor: cellColor
                 }
-              }) : null
-          ],
-          className: "w-full h-full group relative",
-          onMouseDown: param => {
-            applyBrush(i, j);
-            setCursorOverlayOff(param => true);
-          },
-          onMouseEnter: param => {
-            setHoveredCell(param => [
-              i,
-              j
-            ]);
-            if (isMouseDown) {
-              return applyBrush(i, j);
+              }),
+              className: "w-full h-full group relative",
+              onMouseDown: param => {
+                applyBrush(i, j);
+                setCursorOverlayOff(param => true);
+              },
+              onMouseEnter: param => {
+                updateOverlay([
+                  i,
+                  j
+                ]);
+                if (isMouseDown) {
+                  return applyBrush(i, j);
+                }
+                
+              },
+              onMouseLeave: param => updateOverlay(undefined)
+            }, i.toString() + j.toString());
+          })),
+          JsxRuntime.jsx("div", {
+            children: overlayElements,
+            className: "pointer-events-none absolute inset-0",
+            style: {
+              display: "grid",
+              gridTemplateColumns: gridTemplateColumnsValue,
+              gridTemplateRows: gridTemplateRowsValue
             }
-            
-          },
-          onMouseLeave: param => setHoveredCell(param => {})
-        }, i.toString() + j.toString());
-      })),
+          })
+        ],
+        className: "relative",
+        style: {
+          display: "grid",
+          gridTemplateColumns: gridTemplateColumnsValue,
+          gridTemplateRows: gridTemplateRowsValue
+        }
+      }),
       className: "absolute top-0 left-0",
       style: {
         backgroundColor: props.canvasBackgroundColor,
-        display: "grid",
-        gridTemplateColumns: "repeat(" + props.boardDimJ.toString() + ", 1rem)",
-        gridTemplateRows: "repeat(" + props.boardDimI.toString() + ", 1rem)",
         transform: props.transformValue,
         transformOrigin: "top left"
       }
@@ -908,26 +1105,25 @@ function App(props) {
   let isSilhouette = match$12[0];
   let match$13 = React.useState(() => false);
   let setCursorOverlayOff = match$13[1];
-  let match$14 = React.useState(() => {});
-  let setHoveredCell = match$14[1];
-  let match$15 = React.useState(() => "1");
-  let exportScaleInput = match$15[0];
-  let match$16 = React.useState(() => true);
-  let includeExportBackground = match$16[0];
-  let match$17 = React.useState(() => "Scale");
-  let resizeMode = match$17[0];
+  let match$14 = React.useState(() => "1");
+  let exportScaleInput = match$14[0];
+  let match$15 = React.useState(() => true);
+  let includeExportBackground = match$15[0];
+  let match$16 = React.useState(() => "Scale");
+  let resizeMode = match$16[0];
+  let clearHoverRef = React.useRef(() => {});
   let zoomRef = React.useRef(1);
   let panRef = React.useRef([
     0,
     0
   ]);
   let canvasContainerRef = React.useRef(null);
-  let match$18 = React.useState(() => [
+  let match$17 = React.useState(() => [
     192,
     192
   ]);
-  let setViewportCenter = match$18[1];
-  let viewportCenter = match$18[0];
+  let setViewportCenter = match$17[1];
+  let viewportCenter = match$17[0];
   let viewportCenterRef = React.useRef(viewportCenter);
   viewportCenterRef.current = viewportCenter;
   let updateViewportCenter = () => {
@@ -1088,16 +1284,18 @@ function App(props) {
     let factor = 1 / 1.1;
     updateZoom(prev => prev * factor);
   };
-  let match$19 = dims2D(board);
-  let boardDimJ = match$19[1];
-  let boardDimI = match$19[0];
+  let match$18 = dims2D(board);
+  let boardDimJ = match$18[1];
+  let boardDimI = match$18[0];
   let lastAutoCenteredDimsRef = React.useRef(undefined);
-  let match$20 = dims2D(brush);
-  let brushCenterDimI = match$20[0] / 2 | 0;
-  let brushCenterDimJ = match$20[1] / 2 | 0;
-  let match$21 = dims2D(tileMask);
-  let tileMaskDimJ = match$21[1];
-  let tileMaskDimI = match$21[0];
+  let match$19 = dims2D(brush);
+  let brushDimJ = match$19[1];
+  let brushDimI = match$19[0];
+  let brushCenterDimI = brushDimI / 2 | 0;
+  let brushCenterDimJ = brushDimJ / 2 | 0;
+  let match$20 = dims2D(tileMask);
+  let tileMaskDimJ = match$20[1];
+  let tileMaskDimI = match$20[0];
   let computeCenteredPan = (dimI, dimJ, zoomValue) => {
     let boardWidth = dimI * 16;
     let boardHeight = dimJ * 16;
@@ -1148,12 +1346,12 @@ function App(props) {
       }
     });
   };
-  let match$22 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$22[1];
-  let resizeRowsInput = match$22[0];
-  let match$23 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$23[1];
-  let resizeColsInput = match$23[0];
+  let match$21 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$21[1];
+  let resizeRowsInput = match$21[0];
+  let match$22 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$22[1];
+  let resizeColsInput = match$22[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -1225,9 +1423,9 @@ function App(props) {
       return mapped;
     }
   };
-  let match$24 = parsePositiveInt(resizeRowsInput);
-  let match$25 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$24 !== undefined && match$25 !== undefined ? match$24 !== boardDimI || match$25 !== boardDimJ : false;
+  let match$23 = parsePositiveInt(resizeRowsInput);
+  let match$24 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$23 !== undefined && match$24 !== undefined ? match$23 !== boardDimI || match$24 !== boardDimJ : false;
   let exportScaleValue = parsePositiveFloat(exportScaleInput);
   let canExport = Stdlib_Option.isSome(exportScaleValue);
   let handleResizeSubmit = () => {
@@ -1257,7 +1455,7 @@ function App(props) {
     } else {
       setBoard(prev => make2D(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => Stdlib_Option.getOr(check2D(prev, rowI, colJ), null))));
     }
-    setHoveredCell(param => {});
+    clearHoverRef.current();
     setCursorOverlayOff(param => true);
   };
   let handleExportPng = () => {
@@ -1305,7 +1503,7 @@ function App(props) {
     let newCanvas = makeCanvas(newBoard, 1, newPan);
     setCanvases(prev => prev.concat([newCanvas]));
     setSelectedCanvasId(param => newCanvas.id);
-    setHoveredCell(param => {});
+    clearHoverRef.current();
     setCursorOverlayOff(param => true);
     lastAutoCenteredDimsRef.current = [
       boardDimI,
@@ -1341,14 +1539,14 @@ function App(props) {
     if (nextSelectionId !== undefined) {
       setSelectedCanvasId(param => nextSelectionId);
     }
-    setHoveredCell(param => {});
+    clearHoverRef.current();
     setCursorOverlayOff(param => true);
   };
   let handleSelectCanvas = canvasId => {
     if (canvasId !== selectedCanvasId) {
       setSelectedCanvasId(param => canvasId);
     }
-    setHoveredCell(param => {});
+    clearHoverRef.current();
     setCursorOverlayOff(param => true);
   };
   let onMouseMove = param => setCursorOverlayOff(param => false);
@@ -1463,17 +1661,23 @@ function App(props) {
               boardDimI: boardDimI,
               boardDimJ: boardDimJ,
               transformValue: transformValue,
-              hoveredCell: match$14[0],
-              setHoveredCell: setHoveredCell,
               cursorOverlayOff: match$13[0],
               setCursorOverlayOff: setCursorOverlayOff,
               isMouseDown: isMouseDown,
               applyBrush: applyBrush,
-              canApply: canApply,
               showCursorOverlay: showCursorOverlay,
               canvasBackgroundColor: canvasBackgroundColor$1,
               viewportBackgroundColor: viewportBackgroundColor$1,
-              isSilhouette: isSilhouette
+              isSilhouette: isSilhouette,
+              clearHoverRef: clearHoverRef,
+              brush: brush,
+              brushDimI: brushDimI,
+              brushDimJ: brushDimJ,
+              brushCenterDimI: brushCenterDimI,
+              brushCenterDimJ: brushCenterDimJ,
+              tileMask: tileMask,
+              tileMaskDimI: tileMaskDimI,
+              tileMaskDimJ: tileMaskDimJ
             }),
             className: "flex-1"
           }),
@@ -1505,7 +1709,7 @@ function App(props) {
         showCursorOverlay: showCursorOverlay,
         setShowCursorOverlay: match$8[1],
         resizeMode: resizeMode,
-        setResizeMode: match$17[1],
+        setResizeMode: match$16[1],
         resizeRowsInput: resizeRowsInput,
         setResizeRowsInput: setResizeRowsInput,
         resizeColsInput: resizeColsInput,
@@ -1518,9 +1722,9 @@ function App(props) {
         onZoomReset: resetZoom,
         onCenterCanvas: centerCanvas,
         exportScaleInput: exportScaleInput,
-        setExportScaleInput: match$15[1],
+        setExportScaleInput: match$14[1],
         includeExportBackground: includeExportBackground,
-        setIncludeExportBackground: match$16[1],
+        setIncludeExportBackground: match$15[1],
         canExport: canExport,
         onExport: handleExportPng
       })
