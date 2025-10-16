@@ -58,6 +58,7 @@ type exportOptions = {
 }
 
 type brushMode = | @as("Color") Color | @as("Erase") Erase
+type resizeMode = | @as("Scale") Scale | @as("Crop") Crop
 
 let makeBoard = (i, j) => Array.make2D(i, j, () => Nullable.null)
 let makeBrush = (i, j) => Array.make2D(i, j, () => true)
@@ -586,9 +587,27 @@ module CanvasSizeControl = {
     ~setResizeRowsInput,
     ~resizeColsInput,
     ~setResizeColsInput,
+    ~resizeMode,
+    ~setResizeMode,
     ~canSubmitResize,
     ~onSubmitResize,
   ) => {
+    let baseButtonClasses = "flex-1 rounded px-2 py-1 text-xs font-medium border"
+    let scaleButtonClasses = [
+      baseButtonClasses,
+      switch resizeMode {
+      | Scale => "bg-blue-500 text-white border-blue-500"
+      | Crop => "bg-gray-100 text-gray-700 border-gray-300"
+      },
+    ]->Array.join(" ")
+    let cropButtonClasses = [
+      baseButtonClasses,
+      switch resizeMode {
+      | Crop => "bg-blue-500 text-white border-blue-500"
+      | Scale => "bg-gray-100 text-gray-700 border-gray-300"
+      },
+    ]->Array.join(" ")
+
     <div className=" p-2 flex flex-col gap-2 w-full">
       <div
         className={["flex flex-row items-center justify-between font-medium", "w-full"]->Array.join(
@@ -597,6 +616,22 @@ module CanvasSizeControl = {
         {"Canvas Size"->React.string}
       </div>
       <div className="flex flex-col gap-2">
+        <div className="flex flex-row gap-2">
+          <button
+            type_="button"
+            className={scaleButtonClasses}
+            ariaPressed={resizeMode == Scale ? #"true" : #"false"}
+            onClick={_ => setResizeMode(_ => Scale)}>
+            {"Scale"->React.string}
+          </button>
+          <button
+            type_="button"
+            className={cropButtonClasses}
+            ariaPressed={resizeMode == Crop ? #"true" : #"false"}
+            onClick={_ => setResizeMode(_ => Crop)}>
+            {"Crop"->React.string}
+          </button>
+        </div>
         <div className="flex flex-row w-full gap-2 justify-between">
           <input
             className="border rounded px-2 py-1 text-sm flex-none w-16 "
@@ -748,6 +783,8 @@ module ControlsPanel = {
     ~setIsSilhouette,
     ~showCursorOverlay,
     ~setShowCursorOverlay,
+    ~resizeMode,
+    ~setResizeMode,
     ~resizeRowsInput,
     ~setResizeRowsInput,
     ~resizeColsInput,
@@ -791,6 +828,8 @@ module ControlsPanel = {
           setResizeRowsInput
           resizeColsInput
           setResizeColsInput
+          resizeMode
+          setResizeMode
           canSubmitResize
           onSubmitResize
         />
@@ -832,6 +871,7 @@ let make = () => {
   let (hoveredCell, setHoveredCell) = React.useState(() => None)
   let (exportScaleInput, setExportScaleInput) = React.useState(() => "1")
   let (includeExportBackground, setIncludeExportBackground) = React.useState(() => true)
+  let (resizeMode, setResizeMode) = React.useState(() => Scale)
 
   // Camera positioning
   let zoomRef = React.useRef(1.)
@@ -1081,6 +1121,45 @@ let make = () => {
     | _ => None
     }
 
+  let mapIndex = (~srcSize, ~dstSize, index) =>
+    if srcSize <= 1 || dstSize <= 1 {
+      0
+    } else {
+      let numerator = index * (srcSize - 1) + (dstSize - 1) / 2
+      let denominator = dstSize - 1
+      let mapped = numerator / denominator
+      let maxIndex = srcSize - 1
+      if mapped < 0 {
+        0
+      } else if mapped > maxIndex {
+        maxIndex
+      } else {
+        mapped
+      }
+    }
+
+  let resizeBoardScale = (prev, nextRows, nextCols) => {
+    let (prevRows, prevCols) = prev->Array.dims2D
+    if prevRows == 0 || prevCols == 0 {
+      makeBoard(nextRows, nextCols)
+    } else {
+      Array.make2D(nextRows, nextCols, () => Nullable.null)->Array.mapWithIndex((row, rowI) =>
+        row->Array.mapWithIndex((_, colJ) => {
+          let srcRow = mapIndex(~srcSize=prevRows, ~dstSize=nextRows, rowI)
+          let srcCol = mapIndex(~srcSize=prevCols, ~dstSize=nextCols, colJ)
+          prev->Array.check2D(srcRow, srcCol)->Option.getOr(Nullable.null)
+        })
+      )
+    }
+  }
+
+  let resizeBoardCrop = (prev, nextRows, nextCols) =>
+    Array.make2D(nextRows, nextCols, () => Nullable.null)->Array.mapWithIndex((row, rowI) =>
+      row->Array.mapWithIndex((_, colJ) =>
+        prev->Array.check2D(rowI, colJ)->Option.getOr(Nullable.null)
+      )
+    )
+
   let canSubmitResize = switch (
     parsePositiveInt(resizeRowsInput),
     parsePositiveInt(resizeColsInput),
@@ -1094,13 +1173,10 @@ let make = () => {
   let handleResizeSubmit = () =>
     switch (parsePositiveInt(resizeRowsInput), parsePositiveInt(resizeColsInput)) {
     | (Some(nextRows), Some(nextCols)) =>
-      setBoard(prev =>
-        Array.make2D(nextRows, nextCols, () => Nullable.null)->Array.mapWithIndex((row, rowI) =>
-          row->Array.mapWithIndex(
-            (_, colJ) => prev->Array.check2D(rowI, colJ)->Option.getOr(Nullable.null),
-          )
-        )
-      )
+      switch resizeMode {
+      | Scale => setBoard(prev => resizeBoardScale(prev, nextRows, nextCols))
+      | Crop => setBoard(prev => resizeBoardCrop(prev, nextRows, nextCols))
+      }
       setHoveredCell(_ => None)
       setCursorOverlayOff(_ => true)
     | _ => ()
@@ -1373,6 +1449,8 @@ let make = () => {
       setIsSilhouette={setIsSilhouette}
       showCursorOverlay={showCursorOverlay}
       setShowCursorOverlay={setShowCursorOverlay}
+      resizeMode={resizeMode}
+      setResizeMode={setResizeMode}
       resizeRowsInput={resizeRowsInput}
       setResizeRowsInput={setResizeRowsInput}
       resizeColsInput={resizeColsInput}

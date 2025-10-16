@@ -586,8 +586,23 @@ function App$BrushOverlayControl(props) {
 function App$CanvasSizeControl(props) {
   let onSubmitResize = props.onSubmitResize;
   let canSubmitResize = props.canSubmitResize;
+  let setResizeMode = props.setResizeMode;
+  let resizeMode = props.resizeMode;
   let setResizeColsInput = props.setResizeColsInput;
   let setResizeRowsInput = props.setResizeRowsInput;
+  let baseButtonClasses = "flex-1 rounded px-2 py-1 text-xs font-medium border";
+  let tmp;
+  tmp = resizeMode === "Scale" ? "bg-blue-500 text-white border-blue-500" : "bg-gray-100 text-gray-700 border-gray-300";
+  let scaleButtonClasses = [
+    baseButtonClasses,
+    tmp
+  ].join(" ");
+  let tmp$1;
+  tmp$1 = resizeMode === "Scale" ? "bg-gray-100 text-gray-700 border-gray-300" : "bg-blue-500 text-white border-blue-500";
+  let cropButtonClasses = [
+    baseButtonClasses,
+    tmp$1
+  ].join(" ");
   return JsxRuntime.jsxs("div", {
     children: [
       JsxRuntime.jsx("div", {
@@ -599,6 +614,25 @@ function App$CanvasSizeControl(props) {
       }),
       JsxRuntime.jsxs("div", {
         children: [
+          JsxRuntime.jsxs("div", {
+            children: [
+              JsxRuntime.jsx("button", {
+                children: "Scale",
+                "aria-pressed": resizeMode === "Scale" ? "true" : "false",
+                className: scaleButtonClasses,
+                type: "button",
+                onClick: param => setResizeMode(param => "Scale")
+              }),
+              JsxRuntime.jsx("button", {
+                children: "Crop",
+                "aria-pressed": resizeMode === "Crop" ? "true" : "false",
+                className: cropButtonClasses,
+                type: "button",
+                onClick: param => setResizeMode(param => "Crop")
+              })
+            ],
+            className: "flex flex-row gap-2"
+          }),
           JsxRuntime.jsxs("div", {
             children: [
               JsxRuntime.jsx("input", {
@@ -818,6 +852,8 @@ function App$ControlsPanel(props) {
             setResizeRowsInput: props.setResizeRowsInput,
             resizeColsInput: props.resizeColsInput,
             setResizeColsInput: props.setResizeColsInput,
+            resizeMode: props.resizeMode,
+            setResizeMode: props.setResizeMode,
             canSubmitResize: props.canSubmitResize,
             onSubmitResize: props.onSubmitResize
           }),
@@ -878,18 +914,20 @@ function App(props) {
   let exportScaleInput = match$15[0];
   let match$16 = React.useState(() => true);
   let includeExportBackground = match$16[0];
+  let match$17 = React.useState(() => "Scale");
+  let resizeMode = match$17[0];
   let zoomRef = React.useRef(1);
   let panRef = React.useRef([
     0,
     0
   ]);
   let canvasContainerRef = React.useRef(null);
-  let match$17 = React.useState(() => [
+  let match$18 = React.useState(() => [
     192,
     192
   ]);
-  let setViewportCenter = match$17[1];
-  let viewportCenter = match$17[0];
+  let setViewportCenter = match$18[1];
+  let viewportCenter = match$18[0];
   let viewportCenterRef = React.useRef(viewportCenter);
   viewportCenterRef.current = viewportCenter;
   let updateViewportCenter = () => {
@@ -1050,16 +1088,16 @@ function App(props) {
     let factor = 1 / 1.1;
     updateZoom(prev => prev * factor);
   };
-  let match$18 = dims2D(board);
-  let boardDimJ = match$18[1];
-  let boardDimI = match$18[0];
+  let match$19 = dims2D(board);
+  let boardDimJ = match$19[1];
+  let boardDimI = match$19[0];
   let lastAutoCenteredDimsRef = React.useRef(undefined);
-  let match$19 = dims2D(brush);
-  let brushCenterDimI = match$19[0] / 2 | 0;
-  let brushCenterDimJ = match$19[1] / 2 | 0;
-  let match$20 = dims2D(tileMask);
-  let tileMaskDimJ = match$20[1];
-  let tileMaskDimI = match$20[0];
+  let match$20 = dims2D(brush);
+  let brushCenterDimI = match$20[0] / 2 | 0;
+  let brushCenterDimJ = match$20[1] / 2 | 0;
+  let match$21 = dims2D(tileMask);
+  let tileMaskDimJ = match$21[1];
+  let tileMaskDimI = match$21[0];
   let computeCenteredPan = (dimI, dimJ, zoomValue) => {
     let boardWidth = dimI * 16;
     let boardHeight = dimJ * 16;
@@ -1110,12 +1148,12 @@ function App(props) {
       }
     });
   };
-  let match$21 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$21[1];
-  let resizeRowsInput = match$21[0];
-  let match$22 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$22[1];
-  let resizeColsInput = match$22[0];
+  let match$22 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$22[1];
+  let resizeRowsInput = match$22[0];
+  let match$23 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$23[1];
+  let resizeColsInput = match$23[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -1171,20 +1209,56 @@ function App(props) {
     }
     
   };
-  let match$23 = parsePositiveInt(resizeRowsInput);
-  let match$24 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$23 !== undefined && match$24 !== undefined ? match$23 !== boardDimI || match$24 !== boardDimJ : false;
+  let mapIndex = (srcSize, dstSize, index) => {
+    if (srcSize <= 1 || dstSize <= 1) {
+      return 0;
+    }
+    let numerator = (index * (srcSize - 1 | 0) | 0) + ((dstSize - 1 | 0) / 2 | 0) | 0;
+    let denominator = dstSize - 1 | 0;
+    let mapped = Primitive_int.div(numerator, denominator);
+    let maxIndex = srcSize - 1 | 0;
+    if (mapped < 0) {
+      return 0;
+    } else if (mapped > maxIndex) {
+      return maxIndex;
+    } else {
+      return mapped;
+    }
+  };
+  let match$24 = parsePositiveInt(resizeRowsInput);
+  let match$25 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$24 !== undefined && match$25 !== undefined ? match$24 !== boardDimI || match$25 !== boardDimJ : false;
   let exportScaleValue = parsePositiveFloat(exportScaleInput);
   let canExport = Stdlib_Option.isSome(exportScaleValue);
   let handleResizeSubmit = () => {
     let match = parsePositiveInt(resizeRowsInput);
     let match$1 = parsePositiveInt(resizeColsInput);
-    if (match !== undefined && match$1 !== undefined) {
-      setBoard(prev => make2D(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => Stdlib_Option.getOr(check2D(prev, rowI, colJ), null))));
-      setHoveredCell(param => {});
-      return setCursorOverlayOff(param => true);
+    if (match === undefined) {
+      return;
     }
-    
+    if (match$1 === undefined) {
+      return;
+    }
+    if (resizeMode === "Scale") {
+      setBoard(prev => {
+        let match$2 = dims2D(prev);
+        let prevCols = match$2[1];
+        let prevRows = match$2[0];
+        if (prevRows === 0 || prevCols === 0) {
+          return make2D(match, match$1, () => null);
+        } else {
+          return make2D(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => {
+            let srcRow = mapIndex(prevRows, match, rowI);
+            let srcCol = mapIndex(prevCols, match$1, colJ);
+            return Stdlib_Option.getOr(check2D(prev, srcRow, srcCol), null);
+          }));
+        }
+      });
+    } else {
+      setBoard(prev => make2D(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => Stdlib_Option.getOr(check2D(prev, rowI, colJ), null))));
+    }
+    setHoveredCell(param => {});
+    setCursorOverlayOff(param => true);
   };
   let handleExportPng = () => {
     if (exportScaleValue !== undefined) {
@@ -1430,6 +1504,8 @@ function App(props) {
         setIsSilhouette: match$12[1],
         showCursorOverlay: showCursorOverlay,
         setShowCursorOverlay: match$8[1],
+        resizeMode: resizeMode,
+        setResizeMode: match$17[1],
         resizeRowsInput: resizeRowsInput,
         setResizeRowsInput: setResizeRowsInput,
         resizeColsInput: resizeColsInput,
