@@ -476,16 +476,15 @@ function App$CanvasViewport(props) {
       return;
     }
     let col = Math.floor(boardX / 16) | 0;
-    let rawRow = Math.floor(boardY / 16) | 0;
-    if (col < 0 || col >= boardDimJ || rawRow < 0 || rawRow >= boardDimI) {
+    let row = Math.floor(boardY / 16) | 0;
+    if (col < 0 || col >= boardDimJ || row < 0 || row >= boardDimI) {
       return;
+    } else {
+      return [
+        row,
+        col
+      ];
     }
-    let row = (boardDimI - 1 | 0) - rawRow | 0;
-    return [
-      row,
-      rawRow,
-      col
-    ];
   };
   let handleMouseMove = event => {
     setCursorOverlayOff(param => false);
@@ -493,13 +492,14 @@ function App$CanvasViewport(props) {
     if (match === undefined) {
       return updateHover(undefined);
     }
-    let col = match[2];
+    let col = match[1];
+    let row = match[0];
     updateHover([
-      match[1],
+      row,
       col
     ]);
     if (isMouseDown) {
-      return applyBrush(match[0], col);
+      return applyBrush(row, col);
     }
     
   };
@@ -508,12 +508,13 @@ function App$CanvasViewport(props) {
     if (match === undefined) {
       return;
     }
-    let col = match[2];
+    let col = match[1];
+    let row = match[0];
     updateHover([
-      match[1],
+      row,
       col
     ]);
-    applyBrush(match[0], col);
+    applyBrush(row, col);
     setCursorOverlayOff(param => true);
   };
   let handleMouseLeave = param => updateHover(undefined);
