@@ -22,12 +22,3 @@
   --text-3xs: 0.6rem;
   --text-3xs--line-height: 0.75rem;
 }
-
-.cell-overlay {
-  opacity: 0;
-  transition: opacity 0.1s linear;
-}
-
-.cell-overlay[data-active="true"] {
-  opacity: 0.2;
-}

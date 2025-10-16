@@ -6,7 +6,6 @@ import * as Belt_Array from "rescript/lib/es6/Belt_Array.js";
 import * as Belt_Float from "rescript/lib/es6/Belt_Float.js";
 import * as Stdlib_Int from "rescript/lib/es6/Stdlib_Int.js";
 import SwitchJsx from "./Switch.jsx";
-import * as Color from "@texel/color";
 import * as Stdlib_Array from "rescript/lib/es6/Stdlib_Array.js";
 import * as Primitive_int from "rescript/lib/es6/Primitive_int.js";
 import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
@@ -15,6 +14,7 @@ import * as Stdlib_Nullable from "rescript/lib/es6/Stdlib_Nullable.js";
 import * as ExportBoardJs from "./exportBoard.js";
 import * as Primitive_option from "rescript/lib/es6/Primitive_option.js";
 import * as JsxRuntime from "react/jsx-runtime";
+import * as CanvasRendererJs from "./CanvasRenderer.js";
 import UseLocalStorageJs from "./useLocalStorage.js";
 
 let make = SwitchJsx;
@@ -39,6 +39,22 @@ function check2D(a, i, j) {
 let canvasBackgroundColor = "#ffffff";
 
 let viewportBackgroundColor = "#e5e7eb";
+
+function setRendererSize(prim0, prim1, prim2, prim3) {
+  CanvasRendererJs.setRendererSize(prim0, prim1, prim2, prim3);
+}
+
+function updateRendererBoard(prim0, prim1, prim2, prim3) {
+  CanvasRendererJs.updateBoard(prim0, prim1, prim2, prim3);
+}
+
+function updateRendererBrush(prim0, prim1, prim2, prim3) {
+  CanvasRendererJs.updateBrush(prim0, prim1, prim2, prim3);
+}
+
+function setRendererOverlayOptions(prim0, prim1, prim2) {
+  CanvasRendererJs.setOverlayOptions(prim0, prim1, prim2);
+}
 
 function generateCanvasId() {
   let timestamp = Date.now().toString();
@@ -69,11 +85,6 @@ function useIsMouseDown() {
     };
   }, []);
   return match[0];
-}
-
-function isLight(color) {
-  let match = Color.convert(Color.hexToRGB(color), Color.sRGB, Color.OKHSL);
-  return match[2] > 0.5;
 }
 
 let defaultTileMasks = [
@@ -327,219 +338,205 @@ function App$SavedTileMasksPanel(props) {
   });
 }
 
+function hoverToNullable(cell) {
+  if (cell !== undefined) {
+    return [
+      cell[0],
+      cell[1]
+    ];
+  } else {
+    return null;
+  }
+}
+
 function App$CanvasViewport(props) {
-  let tileMaskDimJ = props.tileMaskDimJ;
-  let tileMaskDimI = props.tileMaskDimI;
   let tileMask = props.tileMask;
   let brushCenterDimJ = props.brushCenterDimJ;
   let brushCenterDimI = props.brushCenterDimI;
-  let brushDimJ = props.brushDimJ;
-  let brushDimI = props.brushDimI;
   let brush = props.brush;
   let clearHoverRef = props.clearHoverRef;
   let isSilhouette = props.isSilhouette;
+  let canvasBackgroundColor = props.canvasBackgroundColor;
   let showCursorOverlay = props.showCursorOverlay;
   let applyBrush = props.applyBrush;
   let isMouseDown = props.isMouseDown;
   let setCursorOverlayOff = props.setCursorOverlayOff;
   let cursorOverlayOff = props.cursorOverlayOff;
+  let pan = props.pan;
+  let zoom = props.zoom;
   let boardDimJ = props.boardDimJ;
   let boardDimI = props.boardDimI;
   let board = props.board;
-  let gridRef = React.useRef(null);
-  let hoveredAnchorRef = React.useRef(undefined);
-  let activeCellsRef = React.useRef([]);
-  let gridTemplateColumnsValue = "repeat(" + boardDimJ.toString() + ", 1rem)";
-  let gridTemplateRowsValue = "repeat(" + boardDimI.toString() + ", 1rem)";
-  let computeOverlayCells = (hoverI, hoverJ) => {
-    let startI = hoverI - brushCenterDimI | 0;
-    let startJ = hoverJ - brushCenterDimJ | 0;
-    let loopRows = (_brushI, _acc) => {
-      while (true) {
-        let acc = _acc;
-        let brushI = _brushI;
-        if (brushI >= brushDimI) {
-          return acc;
-        }
-        let loopCols = (_brushJ, _innerAcc) => {
-          while (true) {
-            let innerAcc = _innerAcc;
-            let brushJ = _brushJ;
-            if (brushJ >= brushDimJ) {
-              return innerAcc;
-            }
-            let match = check2D(brush, brushI, brushJ);
-            let nextAcc;
-            if (match !== undefined && match) {
-              let boardI = startI + brushI | 0;
-              let boardJ = startJ + brushJ | 0;
-              if (boardI >= 0 && boardI < boardDimI && boardJ >= 0 && boardJ < boardDimJ) {
-                let maskAllows = tileMaskDimI <= 0 || tileMaskDimJ <= 0 ? false : Stdlib_Option.getOr(check2D(tileMask, Primitive_int.mod_(boardI, tileMaskDimI), Primitive_int.mod_(boardJ, tileMaskDimJ)), false);
-                nextAcc = maskAllows ? Belt_Array.concatMany([
-                    [[
-                        boardI,
-                        boardJ
-                      ]],
-                    innerAcc
-                  ]) : innerAcc;
-              } else {
-                nextAcc = innerAcc;
-              }
-            } else {
-              nextAcc = innerAcc;
-            }
-            _innerAcc = nextAcc;
-            _brushJ = brushJ + 1 | 0;
-            continue;
-          };
-        };
-        _acc = loopCols(0, acc);
-        _brushI = brushI + 1 | 0;
-        continue;
-      };
-    };
-    return loopRows(0, []).toReversed();
-  };
-  let findOverlayElement = (gridElement, cellI, cellJ) => {
-    if (boardDimJ === 0) {
-      return;
-    }
-    let index = (cellI * boardDimJ | 0) + cellJ | 0;
-    let cellElement = gridElement.children.item(index);
-    if (!(cellElement == null)) {
-      return Primitive_option.fromNullable(cellElement.querySelector(".cell-overlay"));
+  let canvasContainerRef = props.canvasContainerRef;
+  let canvasRef = React.useRef(null);
+  let rendererRef = React.useRef(undefined);
+  let hoveredCellRef = React.useRef(undefined);
+  let panY = pan[1];
+  let panX = pan[0];
+  let withRenderer = callback => {
+    let renderer = rendererRef.current;
+    if (renderer !== undefined) {
+      return callback(Primitive_option.valFromOption(renderer));
     }
     
   };
-  let setCellsActive = (cells, isActive) => {
-    let gridElement = gridRef.current;
-    if (gridElement == null) {
+  React.useEffect(() => {
+    let canvasElement = canvasRef.current;
+    if (canvasElement == null) {
       return;
     }
-    let value = isActive ? "true" : "false";
-    cells.forEach(param => {
-      let overlayElement = findOverlayElement(gridElement, param[0], param[1]);
-      if (overlayElement !== undefined) {
-        Primitive_option.valFromOption(overlayElement).setAttribute("data-active", value);
-        return;
-      }
-      
-    });
-  };
-  let applyOverlayCells = cells => {
-    setCellsActive(activeCellsRef.current, false);
-    setCellsActive(cells, true);
-    activeCellsRef.current = cells;
-  };
-  let updateOverlay = anchor => {
-    hoveredAnchorRef.current = anchor;
-    if (anchor !== undefined) {
-      if (cursorOverlayOff || !showCursorOverlay) {
-        return applyOverlayCells([]);
-      } else {
-        return applyOverlayCells(computeOverlayCells(anchor[0], anchor[1]));
-      }
+    let maybeRenderer = CanvasRendererJs.createCanvasRenderer(canvasElement);
+    if (maybeRenderer == null) {
+      console.log("Unable to initialize WebGL2 renderer");
+      return;
     } else {
-      return applyOverlayCells([]);
+      rendererRef.current = Primitive_option.some(maybeRenderer);
+      return () => {
+        rendererRef.current = undefined;
+        CanvasRendererJs.disposeCanvasRenderer(maybeRenderer);
+      };
     }
-  };
-  React.useEffect(() => {
-    clearHoverRef.current = () => updateOverlay(undefined);
-    return () => {
-      clearHoverRef.current = () => {};
-      setCellsActive(activeCellsRef.current, false);
-      activeCellsRef.current = [];
-    };
   }, []);
   React.useEffect(() => {
-    updateOverlay(hoveredAnchorRef.current);
+    withRenderer(renderer => {
+      setRendererSize(renderer, boardDimJ, boardDimI, 16);
+      updateRendererBoard(renderer, board, canvasBackgroundColor, isSilhouette);
+      CanvasRendererJs.render(renderer);
+      let prim1 = hoverToNullable(hoveredCellRef.current);
+      CanvasRendererJs.setHover(renderer, prim1);
+    });
   }, [
-    cursorOverlayOff,
-    showCursorOverlay
-  ]);
-  React.useEffect(() => {
-    updateOverlay(hoveredAnchorRef.current);
-  }, brush);
-  React.useEffect(() => {
-    updateOverlay(hoveredAnchorRef.current);
-  }, tileMask);
-  React.useEffect(() => {
-    updateOverlay(hoveredAnchorRef.current);
-  }, [
+    board,
     boardDimI,
-    boardDimJ
+    boardDimJ,
+    canvasBackgroundColor,
+    isSilhouette
   ]);
-  let getOverlayColor = (cellI, cellJ) => {
-    if (isSilhouette) {
-      return "white";
+  React.useEffect(() => {
+    withRenderer(renderer => {
+      updateRendererBrush(renderer, brush, brushCenterDimI, brushCenterDimJ);
+      let prim1 = hoverToNullable(hoveredCellRef.current);
+      CanvasRendererJs.setHover(renderer, prim1);
+    });
+  }, [
+    brush,
+    props.brushDimI,
+    props.brushDimJ,
+    brushCenterDimI,
+    brushCenterDimJ
+  ]);
+  React.useEffect(() => {
+    withRenderer(renderer => {
+      CanvasRendererJs.updateTileMask(renderer, tileMask);
+      let prim1 = hoverToNullable(hoveredCellRef.current);
+      CanvasRendererJs.setHover(renderer, prim1);
+    });
+  }, [
+    tileMask,
+    props.tileMaskDimI,
+    props.tileMaskDimJ
+  ]);
+  React.useEffect(() => {
+    withRenderer(renderer => {
+      let overlayEnabled = showCursorOverlay && !cursorOverlayOff;
+      setRendererOverlayOptions(renderer, overlayEnabled, isSilhouette);
+      CanvasRendererJs.render(renderer);
+    });
+  }, [
+    showCursorOverlay,
+    cursorOverlayOff,
+    isSilhouette
+  ]);
+  let updateHover = hover => {
+    hoveredCellRef.current = hover;
+    withRenderer(renderer => {
+      let prim1 = hoverToNullable(hover);
+      CanvasRendererJs.setHover(renderer, prim1);
+    });
+  };
+  React.useEffect(() => {
+    clearHoverRef.current = () => updateHover(undefined);
+    return () => {
+      clearHoverRef.current = () => {};
+    };
+  }, []);
+  let getCellFromEvent = event => {
+    let containerElement = canvasContainerRef.current;
+    if (containerElement == null) {
+      return;
     }
-    let cell = check2D(board, cellI, cellJ);
-    if (cell !== undefined) {
-      return Stdlib_Nullable.mapOr(Primitive_option.valFromOption(cell), "black", value => {
-        if (isLight(value)) {
-          return "black";
-        } else {
-          return "white";
-        }
-      });
+    let rect = containerElement.getBoundingClientRect();
+    let clientX = event.clientX;
+    let clientY = event.clientY;
+    let relativeX = clientX - rect.left;
+    let relativeY = clientY - rect.top;
+    let boardX = (relativeX - panX) / zoom;
+    let boardY = (relativeY - panY) / zoom;
+    if (boardX < 0 || boardY < 0) {
+      return;
+    }
+    let col = Math.floor(boardX / 16) | 0;
+    let row = Math.floor(boardY / 16) | 0;
+    if (col < 0 || col >= boardDimJ || row < 0 || row >= boardDimI) {
+      return;
     } else {
-      return "black";
+      return [
+        row,
+        col
+      ];
     }
   };
+  let handleMouseMove = event => {
+    setCursorOverlayOff(param => false);
+    let cell = getCellFromEvent(event);
+    if (cell !== undefined) {
+      updateHover(cell);
+      if (isMouseDown) {
+        return applyBrush(cell[0], cell[1]);
+      } else {
+        return;
+      }
+    } else {
+      return updateHover(undefined);
+    }
+  };
+  let handleMouseDown = event => {
+    let cell = getCellFromEvent(event);
+    if (cell !== undefined) {
+      updateHover(cell);
+      applyBrush(cell[0], cell[1]);
+      return setCursorOverlayOff(param => true);
+    }
+    
+  };
+  let handleMouseLeave = param => updateHover(undefined);
+  let canvasWidth = (boardDimJ << 4);
+  let canvasHeight = (boardDimI << 4);
+  let widthString = canvasWidth.toString() + "px";
+  let heightString = canvasHeight.toString() + "px";
   return JsxRuntime.jsx("div", {
     children: JsxRuntime.jsx("div", {
-      children: JsxRuntime.jsx("div", {
-        children: board.map((line, i) => line.map((cell, j) => {
-          let cellColor = isSilhouette ? Stdlib_Nullable.mapOr(cell, "transparent", param => "#000000") : Stdlib_Nullable.getOr(cell, "transparent");
-          return JsxRuntime.jsxs("div", {
-            children: [
-              JsxRuntime.jsx("div", {
-                className: "w-full h-full absolute",
-                style: {
-                  backgroundColor: cellColor
-                }
-              }),
-              JsxRuntime.jsx("div", {
-                className: "w-full h-full absolute inset-0 pointer-events-none cell-overlay",
-                style: {
-                  backgroundColor: getOverlayColor(i, j)
-                }
-              })
-            ],
-            className: "w-full h-full group relative",
-            onMouseDown: param => {
-              applyBrush(i, j);
-              setCursorOverlayOff(param => true);
-            },
-            onMouseEnter: param => {
-              updateOverlay([
-                i,
-                j
-              ]);
-              if (isMouseDown) {
-                return applyBrush(i, j);
-              }
-              
-            },
-            onMouseLeave: param => updateOverlay(undefined)
-          }, i.toString() + j.toString());
-        })),
-        ref: Primitive_option.some(gridRef),
-        className: "relative",
+      children: JsxRuntime.jsx("canvas", {
+        ref: Primitive_option.some(canvasRef),
+        className: "absolute top-0 left-0 block",
         style: {
-          display: "grid",
-          gridTemplateColumns: gridTemplateColumnsValue,
-          gridTemplateRows: gridTemplateRowsValue
-        }
+          height: heightString,
+          imageRendering: "pixelated",
+          width: widthString
+        },
+        onMouseDown: handleMouseDown,
+        onMouseEnter: handleMouseMove,
+        onMouseLeave: handleMouseLeave,
+        onMouseMove: handleMouseMove
       }),
       className: "absolute top-0 left-0",
       style: {
-        backgroundColor: props.canvasBackgroundColor,
+        backgroundColor: canvasBackgroundColor,
         transform: props.transformValue,
         transformOrigin: "top left"
       }
     }),
-    ref: Primitive_option.some(props.canvasContainerRef),
+    ref: Primitive_option.some(canvasContainerRef),
     className: "relative border border-gray-300 overflow-hidden w-full h-full",
     style: {
       backgroundColor: props.viewportBackgroundColor
@@ -1612,6 +1609,8 @@ function App(props) {
               boardDimI: boardDimI,
               boardDimJ: boardDimJ,
               transformValue: transformValue,
+              zoom: zoom,
+              pan: pan,
               cursorOverlayOff: match$13[0],
               setCursorOverlayOff: setCursorOverlayOff,
               isMouseDown: isMouseDown,
