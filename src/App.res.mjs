@@ -476,38 +476,45 @@ function App$CanvasViewport(props) {
       return;
     }
     let col = Math.floor(boardX / 16) | 0;
-    let row = Math.floor(boardY / 16) | 0;
-    if (col < 0 || col >= boardDimJ || row < 0 || row >= boardDimI) {
+    let rawRow = Math.floor(boardY / 16) | 0;
+    if (col < 0 || col >= boardDimJ || rawRow < 0 || rawRow >= boardDimI) {
       return;
-    } else {
-      return [
-        row,
-        col
-      ];
     }
+    let row = (boardDimI - 1 | 0) - rawRow | 0;
+    return [
+      row,
+      rawRow,
+      col
+    ];
   };
   let handleMouseMove = event => {
     setCursorOverlayOff(param => false);
-    let cell = getCellFromEvent(event);
-    if (cell !== undefined) {
-      updateHover(cell);
-      if (isMouseDown) {
-        return applyBrush(cell[0], cell[1]);
-      } else {
-        return;
-      }
-    } else {
+    let match = getCellFromEvent(event);
+    if (match === undefined) {
       return updateHover(undefined);
     }
-  };
-  let handleMouseDown = event => {
-    let cell = getCellFromEvent(event);
-    if (cell !== undefined) {
-      updateHover(cell);
-      applyBrush(cell[0], cell[1]);
-      return setCursorOverlayOff(param => true);
+    let col = match[2];
+    updateHover([
+      match[1],
+      col
+    ]);
+    if (isMouseDown) {
+      return applyBrush(match[0], col);
     }
     
+  };
+  let handleMouseDown = event => {
+    let match = getCellFromEvent(event);
+    if (match === undefined) {
+      return;
+    }
+    let col = match[2];
+    updateHover([
+      match[1],
+      col
+    ]);
+    applyBrush(match[0], col);
+    setCursorOverlayOff(param => true);
   };
   let handleMouseLeave = param => updateHover(undefined);
   let canvasWidth = (boardDimJ << 4);

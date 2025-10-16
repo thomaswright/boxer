@@ -481,12 +481,13 @@ module CanvasViewport = {
           None
         } else {
           let col = (boardX /. cellSizeFloat)->Js.Math.floor_float->Float.toInt
-          let row = (boardY /. cellSizeFloat)->Js.Math.floor_float->Float.toInt
+          let rawRow = (boardY /. cellSizeFloat)->Js.Math.floor_float->Float.toInt
 
-          if col < 0 || col >= boardDimJ || row < 0 || row >= boardDimI {
+          if col < 0 || col >= boardDimJ || rawRow < 0 || rawRow >= boardDimI {
             None
           } else {
-            Some((row, col))
+            let row = boardDimI - 1 - rawRow
+            Some((row, rawRow, col))
           }
         }
       | None => None
@@ -495,8 +496,8 @@ module CanvasViewport = {
     let handleMouseMove = event => {
       setCursorOverlayOff(_ => false)
       switch getCellFromEvent(event) {
-      | Some((row, col) as cell) =>
-        updateHover(Some(cell))
+      | Some((row, rawRow, col)) =>
+        updateHover(Some((rawRow, col)))
         if isMouseDown {
           applyBrush(row, col)
         }
@@ -506,8 +507,8 @@ module CanvasViewport = {
 
     let handleMouseDown = event =>
       switch getCellFromEvent(event) {
-      | Some((row, col) as cell) =>
-        updateHover(Some(cell))
+      | Some((row, rawRow, col)) =>
+        updateHover(Some((rawRow, col)))
         applyBrush(row, col)
         setCursorOverlayOff(_ => true)
       | None => ()
