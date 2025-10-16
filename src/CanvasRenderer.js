@@ -208,7 +208,8 @@ class CanvasRenderer {
     for (let row = 0; row < rows; row += 1) {
       const line = board[row] || [];
       for (let col = 0; col < cols; col += 1) {
-        const idx = (row * cols + col) * 4;
+        const flippedRow = rows - 1 - row;
+        const idx = (flippedRow * cols + col) * 4;
         const cell = line[col];
         if (cell != null) {
           const color = this.isSilhouette ? [0, 0, 0] : parseHexColor(cell, bg);
@@ -250,7 +251,8 @@ class CanvasRenderer {
     for (let row = 0; row < rows; row += 1) {
       const line = brush[row] || [];
       for (let col = 0; col < cols; col += 1) {
-        const idx = (row * cols + col) * 4;
+        const flippedRow = rows - 1 - row;
+        const idx = (flippedRow * cols + col) * 4;
         const value = line[col] ? 255 : 0;
         data[idx] = value;
         data[idx + 1] = value;
@@ -282,7 +284,8 @@ class CanvasRenderer {
     for (let row = 0; row < rows; row += 1) {
       const line = tileMask[row] || [];
       for (let col = 0; col < cols; col += 1) {
-        const idx = (row * cols + col) * 4;
+        const flippedRow = rows - 1 - row;
+        const idx = (flippedRow * cols + col) * 4;
         const value = line[col] ? 255 : 0;
         data[idx] = value;
         data[idx + 1] = value;
