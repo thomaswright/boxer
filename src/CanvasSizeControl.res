@@ -51,7 +51,7 @@ let make = (
           {"Crop"->React.string}
         </button>
       </div>
-      <div className="flex flex-row w-full gap-2 justify-between">
+      <div className="flex flex-row w-full gap-2 justify-between items-center">
         <input
           className="border rounded px-2 py-1 text-sm flex-none w-16 "
           value={resizeRowsInput}
@@ -60,7 +60,7 @@ let make = (
             setResizeRowsInput(_ => value)
           }}
         />
-        <span className={"flex-none px-1"}> {"x"->React.string} </span>
+        <Icons.X />
         <input
           className="border rounded px-2 py-1 text-sm flex-none w-16 "
           value={resizeColsInput}

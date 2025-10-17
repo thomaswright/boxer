@@ -220,15 +220,14 @@ let make = () => {
   panRef.current = pan
 
   let handlePickColor = (row, col) => {
-    let pickedColor =
-      switch board->Array.get(row) {
-      | Some(rowData) =>
-        switch rowData->Array.get(col) {
-        | Some(cell) => cell->Nullable.toOption
-        | None => None
-        }
+    let pickedColor = switch board->Array.get(row) {
+    | Some(rowData) =>
+      switch rowData->Array.get(col) {
+      | Some(cell) => cell->Nullable.toOption
       | None => None
       }
+    | None => None
+    }
     switch pickedColor {
     | Some(color) =>
       setMyColor(_ => color)
@@ -330,7 +329,11 @@ let make = () => {
       } else {
         let zoomByWidth = viewportWidth /. boardWidth
         let zoomByHeight = viewportHeight /. boardHeight
-        let zoomToFit = if zoomByWidth < zoomByHeight {zoomByWidth} else {zoomByHeight}
+        let zoomToFit = if zoomByWidth < zoomByHeight {
+          zoomByWidth
+        } else {
+          zoomByHeight
+        }
         let nextZoom = clampZoom(zoomToFit)
         updateCanvasById(currentCanvasIdRef.current, canvas => {
           let (nextPanX, nextPanY) = computeCenteredPan(boardDimI, boardDimJ, nextZoom)
@@ -675,24 +678,12 @@ let make = () => {
 
   <div className=" flex flex-row h-dvh overflow-x-hidden">
     <div className="flex flex-row gap-2 h-full flex-none p-2">
-      <SavedBrushesPanel
-        board={board}
-        brush={brush}
-        setBrush={setBrush}
-        savedBrushes={savedBrushes}
-        setSavedBrushes={setSavedBrushes}
-        canDeleteSelectedBrush={canDeleteSelectedBrush}
-        handleDeleteSelectedBrush={handleDeleteSelectedBrush}
-      />
+      <SavedBrushesPanel brush={brush} setBrush={setBrush} savedBrushes={savedBrushes} />
       <SavedTileMasksPanel
-        board={board}
         setTileMask={setTileMask}
         savedTileMasks={savedTileMasks}
-        setSavedTileMasks={setSavedTileMasks}
         selectedTileMaskIndex={selectedTileMaskIndex}
         setSelectedTileMaskIndex={setSelectedTileMaskIndex}
-        canDeleteSelectedTileMask={canDeleteSelectedTileMask}
-        handleDeleteSelectedTileMask={handleDeleteSelectedTileMask}
       />
     </div>
     <div className="flex flex-col flex-1 overflow-x-hidden">
@@ -736,41 +727,59 @@ let make = () => {
         onSelectCanvas={handleSelectCanvas}
       />
     </div>
-    <ControlsPanel
-      brushMode={brushMode}
-      setBrushMode={setBrushMode}
-      myColor={myColor}
-      setMyColor={setMyColor}
-      isPickingColor={isPickingColor}
-      onStartColorPick={toggleColorPick}
-      canvasBackgroundColor={canvasBackgroundColor}
-      setCanvasBackgroundColor={setCanvasBackgroundColor}
-      viewportBackgroundColor={viewportBackgroundColor}
-      setViewportBackgroundColor={setViewportBackgroundColor}
-      isSilhouette={isSilhouette}
-      setIsSilhouette={setIsSilhouette}
-      showCursorOverlay={showCursorOverlay}
-      setShowCursorOverlay={setShowCursorOverlay}
-      resizeMode={resizeMode}
-      setResizeMode={setResizeMode}
-      resizeRowsInput={resizeRowsInput}
-      setResizeRowsInput={setResizeRowsInput}
-      resizeColsInput={resizeColsInput}
-      setResizeColsInput={setResizeColsInput}
-      canSubmitResize={canSubmitResize}
-      onSubmitResize={handleResizeSubmit}
-      zoom
-      onZoomIn={zoomIn}
-      onZoomOut={zoomOut}
-      onZoomReset={resetZoom}
-      onCenterCanvas={centerCanvas}
-      onFitCanvas={fitCanvasToViewport}
-      exportScaleInput={exportScaleInput}
-      setExportScaleInput={setExportScaleInput}
-      includeExportBackground={includeExportBackground}
-      setIncludeExportBackground={setIncludeExportBackground}
-      canExport={canExport}
-      onExport={handleExportPng}
-    />
+    <div className=" h-full overflow-x-visible flex flex-col w-48 py-2">
+      <ColorControl
+        brushMode setBrushMode myColor setMyColor isPickingColor onStartColorPick={toggleColorPick}
+      />
+      <div className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"}>
+        <CanvasColorsControl
+          myColor
+          canvasBackgroundColor
+          setCanvasBackgroundColor
+          viewportBackgroundColor
+          setViewportBackgroundColor
+        />
+        <ZoomControl
+          onZoomOut={zoomOut}
+          onZoomReset={resetZoom}
+          onZoomIn={zoomIn}
+          onCenterCanvas={centerCanvas}
+          onFitCanvas={fitCanvasToViewport}
+          zoom
+        />
+        <SilhouetteControl isSilhouette setIsSilhouette />
+        <ExportControl
+          exportScaleInput
+          setExportScaleInput
+          includeBackground={includeExportBackground}
+          setIncludeBackground={setIncludeExportBackground}
+          canExport
+          onExport={handleExportPng}
+        />
+        <CanvasSizeControl
+          resizeRowsInput
+          setResizeRowsInput
+          resizeColsInput
+          setResizeColsInput
+          resizeMode
+          setResizeMode
+          canSubmitResize
+          onSubmitResize={handleResizeSubmit}
+        />
+        <BrushOverlayControl showCursorOverlay setShowCursorOverlay />
+        <BrushAndTileMaskSaveControl
+          board
+          setBrush
+          setSavedBrushes
+          canDeleteSelectedBrush
+          handleDeleteSelectedBrush
+          setTileMask
+          setSavedTileMasks
+          setSelectedTileMaskIndex
+          canDeleteSelectedTileMask
+          handleDeleteSelectedTileMask
+        />
+      </div>
+    </div>
   </div>
 }

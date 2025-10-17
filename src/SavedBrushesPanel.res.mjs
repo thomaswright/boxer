@@ -5,75 +5,47 @@ import * as BoolGridPreview from "./BoolGridPreview.res.mjs";
 import * as JsxRuntime from "react/jsx-runtime";
 
 function SavedBrushesPanel(props) {
-  let handleDeleteSelectedBrush = props.handleDeleteSelectedBrush;
-  let canDeleteSelectedBrush = props.canDeleteSelectedBrush;
-  let setSavedBrushes = props.setSavedBrushes;
   let setBrush = props.setBrush;
   let brush = props.brush;
-  let board = props.board;
-  return JsxRuntime.jsxs("div", {
-    children: [
-      JsxRuntime.jsxs("div", {
+  return JsxRuntime.jsx("div", {
+    children: props.savedBrushes.map((savedBrush, savedBrushIndex) => {
+      let match = Array2D.dims(savedBrush);
+      let selected = Array2D.isEqual(brush, savedBrush);
+      let match$1 = selected ? [
+          "#f97316",
+          "#fed7aa"
+        ] : [
+          "#9ca3af",
+          "#e5e7eb"
+        ];
+      return JsxRuntime.jsxs("button", {
         children: [
-          JsxRuntime.jsx("button", {
-            children: "x",
+          JsxRuntime.jsx("div", {
+            children: match[0].toString() + ":" + match[1].toString(),
             className: [
-              "w-4 h-4 leading-none",
-              canDeleteSelectedBrush ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+              " text-3xs font-bold w-4 text-center bg-white",
+              selected ? "text-orange-700" : "text-black"
             ].join(" "),
-            disabled: !canDeleteSelectedBrush,
-            onClick: param => handleDeleteSelectedBrush()
-          }),
-          JsxRuntime.jsx("button", {
-            children: "+",
-            className: "bg-gray-200 w-4 h-4 leading-none",
-            onClick: param => {
-              let newBrush = board.map(row => row.map(cell => !(cell == null)));
-              setSavedBrushes(v => v.concat([newBrush]));
-              setBrush(param => newBrush);
+            style: {
+              writingMode: "sideways-lr"
             }
-          })
-        ]
-      }),
-      props.savedBrushes.map((savedBrush, savedBrushIndex) => {
-        let match = Array2D.dims(savedBrush);
-        let selected = Array2D.isEqual(brush, savedBrush);
-        let match$1 = selected ? [
-            "#f97316",
-            "#fed7aa"
-          ] : [
-            "#9ca3af",
-            "#e5e7eb"
-          ];
-        return JsxRuntime.jsxs("button", {
-          children: [
-            JsxRuntime.jsx("div", {
-              children: match[0].toString() + ":" + match[1].toString(),
-              className: [
-                " text-3xs font-bold w-4 text-center bg-white",
-                selected ? "text-orange-700" : "text-black"
-              ].join(" "),
-              style: {
-                writingMode: "sideways-lr"
-              }
+          }),
+          JsxRuntime.jsx("div", {
+            children: JsxRuntime.jsx(BoolGridPreview.make, {
+              grid: savedBrush,
+              filledColor: match$1[0],
+              emptyColor: match$1[1]
             }),
-            JsxRuntime.jsx("div", {
-              children: JsxRuntime.jsx(BoolGridPreview.make, {
-                grid: savedBrush,
-                filledColor: match$1[0],
-                emptyColor: match$1[1]
-              }),
-              className: [
-                selected ? "bg-orange-500" : "bg-gray-400",
-                "h-8 w-8 rounded-xs overflow-hidden"
-              ].join(" ")
-            })
-          ],
-          className: ["flex flex-row"].join(" "),
-          onClick: param => setBrush(param => savedBrush)
-        }, savedBrushIndex.toString());
-      })
-    ],
+            className: [
+              selected ? "bg-orange-500" : "bg-gray-400",
+              "h-8 w-8 rounded-xs overflow-hidden"
+            ].join(" ")
+          })
+        ],
+        className: ["flex flex-row"].join(" "),
+        onClick: param => setBrush(param => savedBrush)
+      }, savedBrushIndex.toString());
+    }),
     className: "flex flex-col gap-1 h-full overflow-y-scroll"
   });
 }

@@ -1,48 +1,15 @@
 @react.component
-let make = (
-  ~board,
-  ~brush,
-  ~setBrush,
-  ~savedBrushes,
-  ~setSavedBrushes,
-  ~canDeleteSelectedBrush,
-  ~handleDeleteSelectedBrush,
-) => {
+let make = (~brush, ~setBrush, ~savedBrushes) => {
   <div className={"flex flex-col gap-1 h-full overflow-y-scroll"}>
-    <div>
-      <button
-        className={[
-          "w-4 h-4 leading-none",
-          canDeleteSelectedBrush
-            ? "bg-red-500 text-white"
-            : "bg-gray-200 text-gray-500 cursor-not-allowed",
-        ]->Array.join(" ")}
-        disabled={!canDeleteSelectedBrush}
-        onClick={_ => handleDeleteSelectedBrush()}>
-        {"x"->React.string}
-      </button>
-      <button
-        className={"bg-gray-200 w-4 h-4 leading-none"}
-        onClick={_ => {
-          let newBrush =
-            board->Array.map(row => row->Array.map(cell => !(cell->Nullable.isNullable)))
-          setSavedBrushes(v => v->Array.concat([newBrush]))
-          setBrush(_ => newBrush)
-        }}>
-        {"+"->React.string}
-      </button>
-    </div>
-
     {savedBrushes
     ->Array.mapWithIndex((savedBrush, savedBrushIndex) => {
       let (dimI, dimJ) = savedBrush->Array2D.dims
       let selected = Array2D.isEqual(brush, savedBrush)
-      let (filledColor, emptyColor) =
-        if selected {
-          ("#f97316", "#fed7aa")
-        } else {
-          ("#9ca3af", "#e5e7eb")
-        }
+      let (filledColor, emptyColor) = if selected {
+        ("#f97316", "#fed7aa")
+      } else {
+        ("#9ca3af", "#e5e7eb")
+      }
       <button
         key={savedBrushIndex->Int.toString}
         onClick={_ => setBrush(_ => savedBrush)}
@@ -61,9 +28,7 @@ let make = (
             "h-8 w-8 rounded-xs overflow-hidden",
           ]->Array.join(" ")}>
           <BoolGridPreview
-            grid={savedBrush}
-            filledColor={Some(filledColor)}
-            emptyColor={Some(emptyColor)}
+            grid={savedBrush} filledColor={Some(filledColor)} emptyColor={Some(emptyColor)}
           />
         </div>
       </button>

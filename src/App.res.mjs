@@ -6,17 +6,24 @@ import * as Initials from "./Initials.res.mjs";
 import * as Belt_Array from "rescript/lib/es6/Belt_Array.js";
 import * as Belt_Float from "rescript/lib/es6/Belt_Float.js";
 import * as Stdlib_Int from "rescript/lib/es6/Stdlib_Int.js";
-import * as ControlsPanel from "./ControlsPanel.res.mjs";
+import * as ZoomControl from "./ZoomControl.res.mjs";
+import * as ColorControl from "./ColorControl.res.mjs";
+import * as ExportControl from "./ExportControl.res.mjs";
 import * as Primitive_int from "rescript/lib/es6/Primitive_int.js";
 import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
 import * as CanvasViewport from "./CanvasViewport.res.mjs";
 import * as ExportBoardJs from "./exportBoard.js";
 import * as CanvasThumbnails from "./CanvasThumbnails.res.mjs";
 import * as Primitive_option from "rescript/lib/es6/Primitive_option.js";
+import * as CanvasSizeControl from "./CanvasSizeControl.res.mjs";
 import * as SavedBrushesPanel from "./SavedBrushesPanel.res.mjs";
+import * as SilhouetteControl from "./SilhouetteControl.res.mjs";
 import * as JsxRuntime from "react/jsx-runtime";
+import * as BrushOverlayControl from "./BrushOverlayControl.res.mjs";
+import * as CanvasColorsControl from "./CanvasColorsControl.res.mjs";
 import * as SavedTileMasksPanel from "./SavedTileMasksPanel.res.mjs";
 import UseLocalStorageJs from "./useLocalStorage.js";
+import * as BrushAndTileMaskSaveControl from "./BrushAndTileMaskSaveControl.res.mjs";
 
 function generateCanvasId() {
   let timestamp = Date.now().toString();
@@ -164,6 +171,7 @@ function App(props) {
   let setSelectedCanvasId = match$2[1];
   let selectedCanvasId = match$2[0];
   let match$3 = UseLocalStorageJs("brush", Array2D.make(3, 3, () => true));
+  let setBrush = match$3[1];
   let brush = match$3[0];
   let match$4 = UseLocalStorageJs("saved-brushes", defaultBrushes);
   let setSavedBrushes = match$4[1];
@@ -788,23 +796,15 @@ function App(props) {
       JsxRuntime.jsxs("div", {
         children: [
           JsxRuntime.jsx(SavedBrushesPanel.make, {
-            board: board,
             brush: brush,
-            setBrush: match$3[1],
-            savedBrushes: savedBrushes,
-            setSavedBrushes: setSavedBrushes,
-            canDeleteSelectedBrush: canDeleteSelectedBrush,
-            handleDeleteSelectedBrush: handleDeleteSelectedBrush
+            setBrush: setBrush,
+            savedBrushes: savedBrushes
           }),
           JsxRuntime.jsx(SavedTileMasksPanel.make, {
-            board: board,
             setTileMask: setTileMask,
             savedTileMasks: savedTileMasks,
-            setSavedTileMasks: setSavedTileMasks,
             selectedTileMaskIndex: selectedTileMaskIndex,
-            setSelectedTileMaskIndex: setSelectedTileMaskIndex,
-            canDeleteSelectedTileMask: canDeleteSelectedTileMask,
-            handleDeleteSelectedTileMask: handleDeleteSelectedTileMask
+            setSelectedTileMaskIndex: setSelectedTileMaskIndex
           })
         ],
         className: "flex flex-row gap-2 h-full flex-none p-2"
@@ -853,41 +853,76 @@ function App(props) {
         ],
         className: "flex flex-col flex-1 overflow-x-hidden"
       }),
-      JsxRuntime.jsx(ControlsPanel.make, {
-        brushMode: brushMode,
-        setBrushMode: setBrushMode,
-        myColor: myColor,
-        setMyColor: setMyColor,
-        isPickingColor: isPickingColor,
-        onStartColorPick: toggleColorPick,
-        canvasBackgroundColor: canvasBackgroundColor,
-        setCanvasBackgroundColor: match$10[1],
-        viewportBackgroundColor: viewportBackgroundColor,
-        setViewportBackgroundColor: match$11[1],
-        isSilhouette: isSilhouette,
-        setIsSilhouette: match$12[1],
-        showCursorOverlay: showCursorOverlay,
-        setShowCursorOverlay: match$8[1],
-        resizeMode: resizeMode,
-        setResizeMode: match$16[1],
-        resizeRowsInput: resizeRowsInput,
-        setResizeRowsInput: setResizeRowsInput,
-        resizeColsInput: resizeColsInput,
-        setResizeColsInput: setResizeColsInput,
-        canSubmitResize: canSubmitResize,
-        onSubmitResize: handleResizeSubmit,
-        zoom: zoom,
-        onZoomIn: zoomIn,
-        onZoomOut: zoomOut,
-        onZoomReset: resetZoom,
-        onCenterCanvas: centerCanvas,
-        onFitCanvas: fitCanvasToViewport,
-        exportScaleInput: exportScaleInput,
-        setExportScaleInput: match$14[1],
-        includeExportBackground: includeExportBackground,
-        setIncludeExportBackground: match$15[1],
-        canExport: canExport,
-        onExport: handleExportPng
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsx(ColorControl.make, {
+            brushMode: brushMode,
+            setBrushMode: setBrushMode,
+            myColor: myColor,
+            setMyColor: setMyColor,
+            isPickingColor: isPickingColor,
+            onStartColorPick: toggleColorPick
+          }),
+          JsxRuntime.jsxs("div", {
+            children: [
+              JsxRuntime.jsx(CanvasColorsControl.make, {
+                myColor: myColor,
+                canvasBackgroundColor: canvasBackgroundColor,
+                setCanvasBackgroundColor: match$10[1],
+                viewportBackgroundColor: viewportBackgroundColor,
+                setViewportBackgroundColor: match$11[1]
+              }),
+              JsxRuntime.jsx(ZoomControl.make, {
+                onZoomOut: zoomOut,
+                onZoomReset: resetZoom,
+                onZoomIn: zoomIn,
+                onCenterCanvas: centerCanvas,
+                onFitCanvas: fitCanvasToViewport,
+                zoom: zoom
+              }),
+              JsxRuntime.jsx(SilhouetteControl.make, {
+                isSilhouette: isSilhouette,
+                setIsSilhouette: match$12[1]
+              }),
+              JsxRuntime.jsx(ExportControl.make, {
+                exportScaleInput: exportScaleInput,
+                setExportScaleInput: match$14[1],
+                includeBackground: includeExportBackground,
+                setIncludeBackground: match$15[1],
+                canExport: canExport,
+                onExport: handleExportPng
+              }),
+              JsxRuntime.jsx(CanvasSizeControl.make, {
+                resizeRowsInput: resizeRowsInput,
+                setResizeRowsInput: setResizeRowsInput,
+                resizeColsInput: resizeColsInput,
+                setResizeColsInput: setResizeColsInput,
+                resizeMode: resizeMode,
+                setResizeMode: match$16[1],
+                canSubmitResize: canSubmitResize,
+                onSubmitResize: handleResizeSubmit
+              }),
+              JsxRuntime.jsx(BrushOverlayControl.make, {
+                showCursorOverlay: showCursorOverlay,
+                setShowCursorOverlay: match$8[1]
+              }),
+              JsxRuntime.jsx(BrushAndTileMaskSaveControl.make, {
+                board: board,
+                setBrush: setBrush,
+                setSavedBrushes: setSavedBrushes,
+                canDeleteSelectedBrush: canDeleteSelectedBrush,
+                handleDeleteSelectedBrush: handleDeleteSelectedBrush,
+                setTileMask: setTileMask,
+                setSavedTileMasks: setSavedTileMasks,
+                setSelectedTileMaskIndex: setSelectedTileMaskIndex,
+                canDeleteSelectedTileMask: canDeleteSelectedTileMask,
+                handleDeleteSelectedTileMask: handleDeleteSelectedTileMask
+              })
+            ],
+            className: "overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"
+          })
+        ],
+        className: " h-full overflow-x-visible flex flex-col w-48 py-2"
       })
     ],
     className: " flex flex-row h-dvh overflow-x-hidden"

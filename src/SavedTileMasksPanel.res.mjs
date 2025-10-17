@@ -4,69 +4,37 @@ import * as BoolGridPreview from "./BoolGridPreview.res.mjs";
 import * as JsxRuntime from "react/jsx-runtime";
 
 function SavedTileMasksPanel(props) {
-  let handleDeleteSelectedTileMask = props.handleDeleteSelectedTileMask;
-  let canDeleteSelectedTileMask = props.canDeleteSelectedTileMask;
   let setSelectedTileMaskIndex = props.setSelectedTileMaskIndex;
   let selectedTileMaskIndex = props.selectedTileMaskIndex;
-  let setSavedTileMasks = props.setSavedTileMasks;
   let setTileMask = props.setTileMask;
-  let board = props.board;
-  return JsxRuntime.jsxs("div", {
-    children: [
-      JsxRuntime.jsxs("div", {
-        children: [
-          JsxRuntime.jsx("button", {
-            children: "x",
-            className: [
-              "w-4 h-4 leading-none",
-              canDeleteSelectedTileMask ? "bg-red-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
-            ].join(" "),
-            disabled: !canDeleteSelectedTileMask,
-            onClick: param => handleDeleteSelectedTileMask()
+  return JsxRuntime.jsx("div", {
+    children: props.savedTileMasks.map((savedTileMask, savedTileMaskIndex) => {
+      let selected = savedTileMaskIndex === selectedTileMaskIndex;
+      let match = selected ? [
+          "#f97316",
+          "#fed7aa"
+        ] : [
+          "#9ca3af",
+          "#e5e7eb"
+        ];
+      return JsxRuntime.jsx("button", {
+        children: JsxRuntime.jsx("div", {
+          children: JsxRuntime.jsx(BoolGridPreview.make, {
+            grid: savedTileMask,
+            filledColor: match[0],
+            emptyColor: match[1]
           }),
-          JsxRuntime.jsx("button", {
-            children: "+",
-            className: "bg-gray-200 w-4 h-4 leading-none",
-            onClick: param => {
-              let newTileMask = board.map(row => row.map(cell => !(cell == null)));
-              setSavedTileMasks(prev => {
-                let next = prev.concat([newTileMask]);
-                setSelectedTileMaskIndex(param => next.length - 1 | 0);
-                return next;
-              });
-              setTileMask(param => newTileMask);
-            }
-          })
-        ]
-      }),
-      props.savedTileMasks.map((savedTileMask, savedTileMaskIndex) => {
-        let selected = savedTileMaskIndex === selectedTileMaskIndex;
-        let match = selected ? [
-            "#f97316",
-            "#fed7aa"
-          ] : [
-            "#9ca3af",
-            "#e5e7eb"
-          ];
-        return JsxRuntime.jsx("button", {
-          children: JsxRuntime.jsx("div", {
-            children: JsxRuntime.jsx(BoolGridPreview.make, {
-              grid: savedTileMask,
-              filledColor: match[0],
-              emptyColor: match[1]
-            }),
-            className: [
-              "h-8 w-8 rounded-xs overflow-hidden",
-              selected ? "bg-orange-500 " : "bg-gray-400"
-            ].join(" ")
-          }),
-          onClick: param => {
-            setSelectedTileMaskIndex(param => savedTileMaskIndex);
-            setTileMask(param => savedTileMask);
-          }
-        }, savedTileMaskIndex.toString());
-      })
-    ],
+          className: [
+            "h-8 w-8 rounded-xs overflow-hidden",
+            selected ? "bg-orange-500 " : "bg-gray-400"
+          ].join(" ")
+        }),
+        onClick: param => {
+          setSelectedTileMaskIndex(param => savedTileMaskIndex);
+          setTileMask(param => savedTileMask);
+        }
+      }, savedTileMaskIndex.toString());
+    }),
     className: "flex flex-col gap-1 h-full overflow-y-scroll"
   });
 }

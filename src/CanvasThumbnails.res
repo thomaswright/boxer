@@ -30,9 +30,9 @@ let make = (
         {isSelectedCanvas
           ? <button
               className={[
-                " w-4 h-4 leading-none text-sm font-medium absolute right-0 bottom-0",
+                " w-4 h-4 leading-none text-sm font-medium absolute right-0 bottom-0 flex items-center justify-center",
                 canDeleteCanvas
-                  ? "bg-red-500 text-white"
+                  ? "bg-gray-700 text-white"
                   : "bg-gray-200 text-gray-500 cursor-not-allowed",
               ]->Array.join(" ")}
               disabled={!canDeleteCanvas}
@@ -40,7 +40,7 @@ let make = (
                 e->JsxEvent.Mouse.stopPropagation
                 handleDeleteCanvas()
               }}>
-              {"x"->React.string}
+              <Icons.Trash />
             </button>
           : React.null}
       </div>
@@ -49,7 +49,7 @@ let make = (
     <button
       onClick={_ => handleAddCanvas()}
       className="flex-shrink-0 h-16 w-16 border-2 border-dashed border-gray-300 flex items-center justify-center text-3xl text-gray-400">
-      {"+"->React.string}
+      <Icons.Plus />
     </button>
   </div>
 }
