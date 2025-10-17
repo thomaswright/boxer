@@ -3,6 +3,7 @@
 import * as JsxRuntime from "react/jsx-runtime";
 
 function ZoomControl(props) {
+  let onFitCanvas = props.onFitCanvas;
   let onCenterCanvas = props.onCenterCanvas;
   let onZoomIn = props.onZoomIn;
   let onZoomReset = props.onZoomReset;
@@ -43,10 +44,20 @@ function ZoomControl(props) {
         ],
         className: "flex flex-row gap-2"
       }),
-      JsxRuntime.jsx("button", {
-        children: "Center",
-        className: "rounded px-2 py-1 text-sm font-medium bg-gray-200",
-        onClick: param => onCenterCanvas()
+      JsxRuntime.jsxs("div", {
+        children: [
+          JsxRuntime.jsx("button", {
+            children: "Center",
+            className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
+            onClick: param => onCenterCanvas()
+          }),
+          JsxRuntime.jsx("button", {
+            children: "Fit",
+            className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
+            onClick: param => onFitCanvas()
+          })
+        ],
+        className: "flex flex-row gap-2"
       })
     ],
     className: "p-2 flex flex-col gap-2 w-full"

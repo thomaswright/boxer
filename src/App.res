@@ -286,6 +286,32 @@ let make = () => {
       }
     )
   }
+  let fitCanvasToViewport = () => {
+    switch canvasContainerRef.current->Js.Nullable.toOption {
+    | Some(containerElement) =>
+      let rect = containerElement->Element.getBoundingClientRect
+      let viewportWidth = rect->DomRect.width
+      let viewportHeight = rect->DomRect.height
+      let cellSize = 16.
+      let boardWidth = Float.fromInt(boardDimJ) *. cellSize
+      let boardHeight = Float.fromInt(boardDimI) *. cellSize
+      if viewportWidth <= 0. || viewportHeight <= 0. || boardWidth <= 0. || boardHeight <= 0. {
+        centerCanvas()
+      } else {
+        let zoomByWidth = viewportWidth /. boardWidth
+        let zoomByHeight = viewportHeight /. boardHeight
+        let zoomToFit = if zoomByWidth < zoomByHeight {zoomByWidth} else {zoomByHeight}
+        let nextZoom = clampZoom(zoomToFit)
+        updateCanvasById(currentCanvasIdRef.current, canvas => {
+          let (nextPanX, nextPanY) = computeCenteredPan(boardDimI, boardDimJ, nextZoom)
+          zoomRef.current = nextZoom
+          panRef.current = (nextPanX, nextPanY)
+          {...canvas, zoom: nextZoom, pan: (nextPanX, nextPanY)}
+        })
+      }
+    | None => centerCanvas()
+    }
+  }
   let centerCanvasForDimensions = (dimI, dimJ) => {
     let (nextPanX, nextPanY) = computeCenteredPan(dimI, dimJ, zoomRef.current)
     updatePan(((prevX, prevY)) =>
@@ -704,6 +730,7 @@ let make = () => {
       onZoomOut={zoomOut}
       onZoomReset={resetZoom}
       onCenterCanvas={centerCanvas}
+      onFitCanvas={fitCanvasToViewport}
       exportScaleInput={exportScaleInput}
       setExportScaleInput={setExportScaleInput}
       includeExportBackground={includeExportBackground}

@@ -33,6 +33,7 @@ function ControlsPanel(props) {
             onZoomReset: props.onZoomReset,
             onZoomIn: props.onZoomIn,
             onCenterCanvas: props.onCenterCanvas,
+            onFitCanvas: props.onFitCanvas,
             zoom: props.zoom
           }),
           JsxRuntime.jsx(SilhouetteControl.make, {

@@ -408,6 +408,43 @@ function App(props) {
       }
     });
   };
+  let fitCanvasToViewport = () => {
+    let containerElement = canvasContainerRef.current;
+    if (containerElement == null) {
+      return centerCanvas();
+    }
+    let rect = containerElement.getBoundingClientRect();
+    let viewportWidth = rect.width;
+    let viewportHeight = rect.height;
+    let boardWidth = boardDimJ * 16;
+    let boardHeight = boardDimI * 16;
+    if (viewportWidth <= 0 || viewportHeight <= 0 || boardWidth <= 0 || boardHeight <= 0) {
+      return centerCanvas();
+    }
+    let zoomByWidth = viewportWidth / boardWidth;
+    let zoomByHeight = viewportHeight / boardHeight;
+    let zoomToFit = zoomByWidth < zoomByHeight ? zoomByWidth : zoomByHeight;
+    let nextZoom = clampZoom(zoomToFit);
+    updateCanvasById(currentCanvasIdRef.current, canvas => {
+      let match = computeCenteredPan(boardDimI, boardDimJ, nextZoom);
+      let nextPanY = match[1];
+      let nextPanX = match[0];
+      zoomRef.current = nextZoom;
+      panRef.current = [
+        nextPanX,
+        nextPanY
+      ];
+      return {
+        id: canvas.id,
+        board: canvas.board,
+        zoom: nextZoom,
+        pan: [
+          nextPanX,
+          nextPanY
+        ]
+      };
+    });
+  };
   let centerCanvasForDimensions = (dimI, dimJ) => {
     let match = computeCenteredPan(dimI, dimJ, zoomRef.current);
     let nextPanY = match[1];
@@ -811,6 +848,7 @@ function App(props) {
         onZoomOut: zoomOut,
         onZoomReset: resetZoom,
         onCenterCanvas: centerCanvas,
+        onFitCanvas: fitCanvasToViewport,
         exportScaleInput: exportScaleInput,
         setExportScaleInput: match$14[1],
         includeExportBackground: includeExportBackground,

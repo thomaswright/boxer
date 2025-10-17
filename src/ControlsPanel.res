@@ -25,6 +25,7 @@ let make = (
   ~onZoomOut,
   ~onZoomReset,
   ~onCenterCanvas,
+  ~onFitCanvas,
   ~exportScaleInput,
   ~setExportScaleInput,
   ~includeExportBackground,
@@ -42,7 +43,7 @@ let make = (
         viewportBackgroundColor
         setViewportBackgroundColor
       />
-      <ZoomControl onZoomOut onZoomReset onZoomIn onCenterCanvas zoom />
+      <ZoomControl onZoomOut onZoomReset onZoomIn onCenterCanvas onFitCanvas zoom />
       <SilhouetteControl isSilhouette setIsSilhouette />
       <ExportControl
         exportScaleInput

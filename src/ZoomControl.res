@@ -1,5 +1,5 @@
 @react.component
-let make = (~onZoomOut, ~onZoomReset, ~onZoomIn, ~onCenterCanvas, ~zoom) => {
+let make = (~onZoomOut, ~onZoomReset, ~onZoomIn, ~onCenterCanvas, ~onFitCanvas, ~zoom) => {
   let zoomPercentString = (zoom *. 100.)->Float.toFixed(~digits=0)
 
   <div className="p-2 flex flex-col gap-2 w-full">
@@ -24,9 +24,17 @@ let make = (~onZoomOut, ~onZoomReset, ~onZoomIn, ~onCenterCanvas, ~zoom) => {
         {"+"->React.string}
       </button>
     </div>
-    <button
-      className="rounded px-2 py-1 text-sm font-medium bg-gray-200" onClick={_ => onCenterCanvas()}>
-      {"Center"->React.string}
-    </button>
+    <div className="flex flex-row gap-2">
+      <button
+        className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
+        onClick={_ => onCenterCanvas()}>
+        {"Center"->React.string}
+      </button>
+      <button
+        className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
+        onClick={_ => onFitCanvas()}>
+        {"Fit"->React.string}
+      </button>
+    </div>
   </div>
 }
