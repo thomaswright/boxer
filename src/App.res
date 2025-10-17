@@ -127,7 +127,7 @@ let useIsMouseDown = () => {
   isMouseDown
 }
 
-let isLight = color => {
+let _isLight = color => {
   let (_, _, l) = Texel.convert(color->Texel.hexToRgb, Texel.srgb, Texel.okhsl)
   l > 0.5
 }

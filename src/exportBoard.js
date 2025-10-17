@@ -9,32 +9,33 @@ function ensurePositiveScale(scale) {
 
 function drawBoardToCanvas(ctx, board, cellSize, backgroundColor) {
   for (let x = 0; x < board.length; x += 1) {
-    const column = board[x];
-    if (!Array.isArray(column)) continue;
-    for (let y = 0; y < column.length; y += 1) {
-      const color = column[y];
+    const row = board[x];
+    if (!Array.isArray(row)) continue;
+    for (let y = 0; y < row.length; y += 1) {
+      const color = row[y];
       const fill = color ?? backgroundColor;
       if (fill) {
         ctx.fillStyle = fill;
-        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+        ctx.fillRect(y * cellSize, x * cellSize, cellSize, cellSize);
       }
     }
   }
 }
 
 export function exportBoardAsPng(board, scale, options = {}) {
+  console.log(board);
   if (!Array.isArray(board) || board.length === 0) {
     return;
   }
-  const columnLength = board[0]?.length ?? 0;
-  if (columnLength === 0) {
+  const rowLength = board[0]?.length ?? 0;
+  if (rowLength === 0) {
     return;
   }
 
   const safeScale = ensurePositiveScale(scale);
   const cellSize = CELL_BASE_SIZE * safeScale;
-  const width = Math.ceil(board.length * cellSize);
-  const height = Math.ceil(columnLength * cellSize);
+  const height = Math.ceil(board.length * cellSize);
+  const width = Math.ceil(rowLength * cellSize);
 
   const canvas = document.createElement("canvas");
   canvas.width = width;
