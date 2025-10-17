@@ -57,16 +57,7 @@ function useIsMouseDown() {
 }
 
 let defaultTileMasks = [
-  [
-    [
-      true,
-      true
-    ],
-    [
-      true,
-      true
-    ]
-  ],
+  [[true]],
   [
     [
       true,
@@ -87,26 +78,14 @@ let defaultTileMasks = [
       false
     ]
   ],
-  [
-    [
+  [[
       false,
       true
-    ],
-    [
-      false,
-      true
-    ]
-  ],
-  [
-    [
+    ]],
+  [[
       true,
       false
-    ],
-    [
-      true,
-      false
-    ]
-  ],
+    ]],
   [
     [
       false,

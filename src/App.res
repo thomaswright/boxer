@@ -50,11 +50,11 @@ let _isLight = color => {
 }
 
 let defaultTileMasks = [
-  [[true, true], [true, true]],
+  [[true]],
   [[true, false], [false, true]],
   [[false, true], [true, false]],
-  [[false, true], [false, true]],
-  [[true, false], [true, false]],
+  [[false, true]],
+  [[true, false]],
   [[false, false], [true, true]],
   [[true, true], [false, false]],
   [[true, false, false], [false, true, false], [false, false, true]],
