@@ -561,7 +561,7 @@ module CanvasThumbnails = {
     ~handleAddCanvas,
     ~onSelectCanvas,
   ) => {
-    <div className="flex flex-row items-start gap-3 overflow-x-scroll">
+    <div className="flex flex-row items-start gap-3 overflow-x-scroll p-2 pl-0">
       {canvases
       ->Array.map(canvas => {
         let canvasBoard = canvas.board
@@ -949,7 +949,7 @@ module ControlsPanel = {
     ~canExport,
     ~onExport,
   ) => {
-    <div className=" h-full overflow-x-visible flex flex-col w-48">
+    <div className=" h-full overflow-x-visible flex flex-col w-48 py-2">
       <ColorControl brushMode setBrushMode myColor setMyColor />
       <div className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"}>
         <CanvasColorsControl
@@ -1527,8 +1527,8 @@ let make = () => {
     zoomString ++ ")"
   }
 
-  <div className=" flex flex-row gap-5 p-3 h-dvh overflow-x-hidden">
-    <div className="flex flex-row gap-2 h-full flex-none">
+  <div className=" flex flex-row h-dvh overflow-x-hidden">
+    <div className="flex flex-row gap-2 h-full flex-none p-2">
       <SavedBrushesPanel
         board={board}
         brush={brush}
@@ -1549,8 +1549,8 @@ let make = () => {
         handleDeleteSelectedTileMask={handleDeleteSelectedTileMask}
       />
     </div>
-    <div className="flex flex-col gap-2 flex-1 overflow-x-hidden">
-      <div className={"flex-1"}>
+    <div className="flex flex-col flex-1 overflow-x-hidden">
+      <div className={"flex-1 pt-2"}>
         <CanvasViewport
           canvasContainerRef
           board
@@ -1579,16 +1579,14 @@ let make = () => {
         />
       </div>
 
-      <div className="flex-none flex flex-col gap-2 w-full overflow-x-hidden">
-        <CanvasThumbnails
-          canvases
-          currentCanvasId
-          canDeleteCanvas
-          handleDeleteCanvas
-          handleAddCanvas
-          onSelectCanvas={handleSelectCanvas}
-        />
-      </div>
+      <CanvasThumbnails
+        canvases
+        currentCanvasId
+        canDeleteCanvas
+        handleDeleteCanvas
+        handleAddCanvas
+        onSelectCanvas={handleSelectCanvas}
+      />
     </div>
     <ControlsPanel
       brushMode={brushMode}

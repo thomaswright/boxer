@@ -608,7 +608,7 @@ function App$CanvasThumbnails(props) {
         onClick: param => handleAddCanvas()
       })
     ],
-    className: "flex flex-row items-start gap-3 overflow-x-scroll"
+    className: "flex flex-row items-start gap-3 overflow-x-scroll p-2 pl-0"
   });
 }
 
@@ -1018,7 +1018,7 @@ function App$ControlsPanel(props) {
         className: "overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"
       })
     ],
-    className: " h-full overflow-x-visible flex flex-col w-48"
+    className: " h-full overflow-x-visible flex flex-col w-48 py-2"
   });
 }
 
@@ -1606,7 +1606,7 @@ function App(props) {
             handleDeleteSelectedTileMask: handleDeleteSelectedTileMask
           })
         ],
-        className: "flex flex-row gap-2 h-full flex-none"
+        className: "flex flex-row gap-2 h-full flex-none p-2"
       }),
       JsxRuntime.jsxs("div", {
         children: [
@@ -1637,21 +1637,18 @@ function App(props) {
               tileMaskDimI: tileMaskDimI,
               tileMaskDimJ: tileMaskDimJ
             }),
-            className: "flex-1"
+            className: "flex-1 pt-2"
           }),
-          JsxRuntime.jsx("div", {
-            children: JsxRuntime.jsx(App$CanvasThumbnails, {
-              canvases: canvases,
-              currentCanvasId: currentCanvasId,
-              canDeleteCanvas: canDeleteCanvas,
-              handleDeleteCanvas: handleDeleteCanvas,
-              handleAddCanvas: handleAddCanvas,
-              onSelectCanvas: handleSelectCanvas
-            }),
-            className: "flex-none flex flex-col gap-2 w-full overflow-x-hidden"
+          JsxRuntime.jsx(App$CanvasThumbnails, {
+            canvases: canvases,
+            currentCanvasId: currentCanvasId,
+            canDeleteCanvas: canDeleteCanvas,
+            handleDeleteCanvas: handleDeleteCanvas,
+            handleAddCanvas: handleAddCanvas,
+            onSelectCanvas: handleSelectCanvas
           })
         ],
-        className: "flex flex-col gap-2 flex-1 overflow-x-hidden"
+        className: "flex flex-col flex-1 overflow-x-hidden"
       }),
       JsxRuntime.jsx(App$ControlsPanel, {
         brushMode: brushMode,
@@ -1687,7 +1684,7 @@ function App(props) {
         onExport: handleExportPng
       })
     ],
-    className: " flex flex-row gap-5 p-3 h-dvh overflow-x-hidden"
+    className: " flex flex-row h-dvh overflow-x-hidden"
   });
 }
 
