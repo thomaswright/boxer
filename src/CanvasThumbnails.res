@@ -13,7 +13,6 @@ let make = (
     {canvases
     ->Array.map(canvas => {
       let canvasBoard = canvas.board
-      let (thumbDimI, thumbDimJ) = canvasBoard->Array2D.dims
       let isSelectedCanvas = canvas.id == currentCanvasId
       <div
         key={canvas.id}
@@ -24,29 +23,8 @@ let make = (
         <button
           onClick={_ => onSelectCanvas(canvas.id)}
           className={[" w-fit h-fit block"]->Array.join(" ")}>
-          <div
-            className="h-16 w-16 grid"
-            style={{
-              gridTemplateColumns: `repeat(${thumbDimJ->Int.toString}, minmax(0, 1fr))`,
-              gridTemplateRows: `repeat(${thumbDimI->Int.toString}, minmax(0, 1fr))`,
-            }}>
-            {canvasBoard
-            ->Array.mapWithIndex((line, i) => {
-              line
-              ->Array.mapWithIndex(
-                (cell, j) => {
-                  <div
-                    key={i->Int.toString ++ j->Int.toString}
-                    className="w-full h-full"
-                    style={{
-                      backgroundColor: cell->Nullable.getOr("transparent"),
-                    }}>
-                  </div>
-                },
-              )
-              ->React.array
-            })
-            ->React.array}
+          <div className="h-16 w-16 rounded-xs overflow-hidden">
+            <BoardPreview board={canvasBoard} emptyColor={None} />
           </div>
         </button>
         {isSelectedCanvas

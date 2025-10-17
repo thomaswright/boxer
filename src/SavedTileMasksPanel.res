@@ -40,8 +40,12 @@ let make = (
 
     {savedTileMasks
     ->Array.mapWithIndex((savedTileMask, savedTileMaskIndex) => {
-      let (dimI, dimJ) = savedTileMask->Array2D.dims
       let selected = savedTileMaskIndex == selectedTileMaskIndex
+      let (filledColor, emptyColor) = if selected {
+        ("#f97316", "#fed7aa")
+      } else {
+        ("#9ca3af", "#e5e7eb")
+      }
       <button
         key={savedTileMaskIndex->Int.toString}
         onClick={_ => {
@@ -49,40 +53,13 @@ let make = (
           setTileMask(_ => savedTileMask)
         }}>
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${dimJ->Int.toString}, auto)`,
-            gridTemplateRows: `repeat(${dimI->Int.toString}, auto)`,
-          }}
           className={[
             "h-8 w-8 rounded-xs overflow-hidden",
             selected ? "bg-orange-500 " : "bg-gray-400",
           ]->Array.join(" ")}>
-          {savedTileMask
-          ->Array.mapWithIndex((line, i) => {
-            line
-            ->Array.mapWithIndex(
-              (cell, j) => {
-                <div
-                  className={[
-                    "w-full h-full ",
-                    selected
-                      ? cell ? "bg-orange-500" : "bg-orange-200"
-                      : cell
-                      ? "bg-gray-400"
-                      : "bg-gray-200",
-                  ]->Array.join(" ")}
-                  key={i->Int.toString ++ j->Int.toString}
-                  // style={{
-                  //   backgroundColor: cell ? "inherit" : "#ddd",
-                  // }}
-                >
-                </div>
-              },
-            )
-            ->React.array
-          })
-          ->React.array}
+          <BoolGridPreview
+            grid={savedTileMask} filledColor={Some(filledColor)} emptyColor={Some(emptyColor)}
+          />
         </div>
       </button>
     })

@@ -37,6 +37,12 @@ let make = (
     ->Array.mapWithIndex((savedBrush, savedBrushIndex) => {
       let (dimI, dimJ) = savedBrush->Array2D.dims
       let selected = Array2D.isEqual(brush, savedBrush)
+      let (filledColor, emptyColor) =
+        if selected {
+          ("#f97316", "#fed7aa")
+        } else {
+          ("#9ca3af", "#e5e7eb")
+        }
       <button
         key={savedBrushIndex->Int.toString}
         onClick={_ => setBrush(_ => savedBrush)}
@@ -49,38 +55,16 @@ let make = (
           style={{writingMode: "sideways-lr"}}>
           {`${dimI->Int.toString}:${dimJ->Int.toString}`->React.string}
         </div>
-
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${dimJ->Int.toString}, auto)`,
-            gridTemplateRows: `repeat(${dimI->Int.toString}, auto)`,
-          }}
           className={[
             selected ? "bg-orange-500" : "bg-gray-400",
-            "flex flex-row h-8 w-8 rounded-xs overflow-hidden",
+            "h-8 w-8 rounded-xs overflow-hidden",
           ]->Array.join(" ")}>
-          {savedBrush
-          ->Array.mapWithIndex((line, i) => {
-            line
-            ->Array.mapWithIndex(
-              (cell, j) => {
-                <div
-                  className={[
-                    "w-full h-full ",
-                    selected
-                      ? cell ? "bg-orange-500" : "bg-orange-200"
-                      : cell
-                      ? "bg-gray-400"
-                      : "bg-gray-200",
-                  ]->Array.join(" ")}
-                  key={i->Int.toString ++ j->Int.toString}>
-                </div>
-              },
-            )
-            ->React.array
-          })
-          ->React.array}
+          <BoolGridPreview
+            grid={savedBrush}
+            filledColor={Some(filledColor)}
+            emptyColor={Some(emptyColor)}
+          />
         </div>
       </button>
     })
