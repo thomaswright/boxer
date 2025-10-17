@@ -4,6 +4,8 @@ let make = (
   ~setBrushMode,
   ~myColor,
   ~setMyColor,
+  ~isPickingColor,
+  ~onStartColorPick,
   ~canvasBackgroundColor,
   ~setCanvasBackgroundColor,
   ~viewportBackgroundColor,
@@ -34,7 +36,14 @@ let make = (
   ~onExport,
 ) => {
   <div className=" h-full overflow-x-visible flex flex-col w-48 py-2">
-    <ColorControl brushMode setBrushMode myColor setMyColor />
+    <ColorControl
+      brushMode
+      setBrushMode
+      myColor
+      setMyColor
+      isPickingColor
+      onStartColorPick
+    />
     <div className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"}>
       <CanvasColorsControl
         myColor

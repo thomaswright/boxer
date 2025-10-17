@@ -17,7 +17,9 @@ function ControlsPanel(props) {
         brushMode: props.brushMode,
         setBrushMode: props.setBrushMode,
         myColor: myColor,
-        setMyColor: props.setMyColor
+        setMyColor: props.setMyColor,
+        isPickingColor: props.isPickingColor,
+        onStartColorPick: props.onStartColorPick
       }),
       JsxRuntime.jsxs("div", {
         children: [

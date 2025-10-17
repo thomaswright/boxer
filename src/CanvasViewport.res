@@ -25,6 +25,8 @@ let make = (
   ~setCursorOverlayOff,
   ~isMouseDown,
   ~applyBrush,
+  ~handlePickColor,
+  ~isPickingColor,
   ~showCursorOverlay,
   ~canvasBackgroundColor,
   ~viewportBackgroundColor,
@@ -146,7 +148,7 @@ let make = (
     switch getCellFromEvent(event) {
     | Some((row, col)) =>
       updateHover(Some((row, col)))
-      if isMouseDown {
+      if isMouseDown && !isPickingColor {
         applyBrush(row, col)
       }
     | None => updateHover(None)
@@ -157,8 +159,12 @@ let make = (
     switch getCellFromEvent(event) {
     | Some((row, col)) =>
       updateHover(Some((row, col)))
-      applyBrush(row, col)
-      setCursorOverlayOff(_ => true)
+      if isPickingColor {
+        handlePickColor(row, col)
+      } else {
+        applyBrush(row, col)
+        setCursorOverlayOff(_ => true)
+      }
     | None => ()
     }
 

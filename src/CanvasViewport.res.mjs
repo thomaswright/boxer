@@ -25,6 +25,8 @@ function CanvasViewport(props) {
   let isSilhouette = props.isSilhouette;
   let canvasBackgroundColor = props.canvasBackgroundColor;
   let showCursorOverlay = props.showCursorOverlay;
+  let isPickingColor = props.isPickingColor;
+  let handlePickColor = props.handlePickColor;
   let applyBrush = props.applyBrush;
   let isMouseDown = props.isMouseDown;
   let setCursorOverlayOff = props.setCursorOverlayOff;
@@ -159,7 +161,7 @@ function CanvasViewport(props) {
       row,
       col
     ]);
-    if (isMouseDown) {
+    if (isMouseDown && !isPickingColor) {
       return applyBrush(row, col);
     }
     
@@ -175,8 +177,12 @@ function CanvasViewport(props) {
       row,
       col
     ]);
-    applyBrush(row, col);
-    setCursorOverlayOff(param => true);
+    if (isPickingColor) {
+      return handlePickColor(row, col);
+    } else {
+      applyBrush(row, col);
+      return setCursorOverlayOff(param => true);
+    }
   };
   let handleMouseLeave = param => updateHover(undefined);
   let canvasWidth = (boardDimJ << 4);

@@ -4,6 +4,7 @@ import * as ReactColorful from "react-colorful";
 import * as JsxRuntime from "react/jsx-runtime";
 
 function ColorControl(props) {
+  let onStartColorPick = props.onStartColorPick;
   let setMyColor = props.setMyColor;
   let setBrushMode = props.setBrushMode;
   let brushMode = props.brushMode;
@@ -26,6 +27,14 @@ function ColorControl(props) {
               "px-2 font-medium rounded"
             ].join(" "),
             onClick: param => setBrushMode(param => "Erase")
+          }),
+          JsxRuntime.jsx("button", {
+            children: "Pick",
+            className: [
+              props.isPickingColor ? " bg-blue-500 text-white" : "bg-gray-200",
+              "px-2 font-medium rounded"
+            ].join(" "),
+            onClick: param => onStartColorPick()
           })
         ],
         className: "flex flex-row gap-2 justify-center"

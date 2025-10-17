@@ -12,6 +12,7 @@ import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
 import * as CanvasViewport from "./CanvasViewport.res.mjs";
 import * as ExportBoardJs from "./exportBoard.js";
 import * as CanvasThumbnails from "./CanvasThumbnails.res.mjs";
+import * as Primitive_option from "rescript/lib/es6/Primitive_option.js";
 import * as SavedBrushesPanel from "./SavedBrushesPanel.res.mjs";
 import * as JsxRuntime from "react/jsx-runtime";
 import * as SavedTileMasksPanel from "./SavedTileMasksPanel.res.mjs";
@@ -150,6 +151,7 @@ let defaultBrushes = [
 
 function App(props) {
   let match = UseLocalStorageJs("brush-mode", "Color");
+  let setBrushMode = match[1];
   let brushMode = match[0];
   let makeDefaultCanvas = () => makeCanvas(Array2D.make(12, 12, () => null), 1, [
     0,
@@ -178,6 +180,7 @@ function App(props) {
   let match$8 = UseLocalStorageJs("show-cursor-overlay", true);
   let showCursorOverlay = match$8[0];
   let match$9 = UseLocalStorageJs("my-color", Initials.myColor);
+  let setMyColor = match$9[1];
   let myColor = match$9[0];
   let match$10 = UseLocalStorageJs("canvas-background-color", Initials.canvasBackgroundColor);
   let canvasBackgroundColor = match$10[0];
@@ -193,6 +196,9 @@ function App(props) {
   let includeExportBackground = match$15[0];
   let match$16 = React.useState(() => "Scale");
   let resizeMode = match$16[0];
+  let match$17 = React.useState(() => false);
+  let setIsPickingColor = match$17[1];
+  let isPickingColor = match$17[0];
   let clearHoverRef = React.useRef(() => {});
   let zoomRef = React.useRef(1);
   let panRef = React.useRef([
@@ -200,12 +206,12 @@ function App(props) {
     0
   ]);
   let canvasContainerRef = React.useRef(null);
-  let match$17 = React.useState(() => [
+  let match$18 = React.useState(() => [
     192,
     192
   ]);
-  let setViewportCenter = match$17[1];
-  let viewportCenter = match$17[0];
+  let setViewportCenter = match$18[1];
+  let viewportCenter = match$18[0];
   let viewportCenterRef = React.useRef(viewportCenter);
   viewportCenterRef.current = viewportCenter;
   let updateViewportCenter = () => {
@@ -236,6 +242,14 @@ function App(props) {
     }
   };
   let isMouseDown = useIsMouseDown();
+  let toggleColorPick = () => setIsPickingColor(prev => {
+    let next = !prev;
+    if (next) {
+      clearHoverRef.current();
+      setCursorOverlayOff(param => false);
+    }
+    return next;
+  });
   let canvasCount = canvases.length;
   React.useEffect(() => {
     if (canvasCount === 0) {
@@ -299,6 +313,21 @@ function App(props) {
   let pan = currentCanvas.pan;
   zoomRef.current = zoom;
   panRef.current = pan;
+  let handlePickColor = (row, col) => {
+    let rowData = board[row];
+    let pickedColor;
+    if (rowData !== undefined) {
+      let cell = rowData[col];
+      pickedColor = cell !== undefined ? Primitive_option.fromNullable(Primitive_option.valFromOption(cell)) : undefined;
+    } else {
+      pickedColor = undefined;
+    }
+    if (pickedColor !== undefined) {
+      setMyColor(param => pickedColor);
+      setBrushMode(param => "Color");
+    }
+    setIsPickingColor(param => false);
+  };
   let updateCanvasById = (targetId, updater) => setCanvases(prev => {
     if (prev.length === 0) {
       return [updater(makeDefaultCanvas())];
@@ -366,18 +395,18 @@ function App(props) {
     let factor = 1 / Initials.zoom_factor;
     updateZoom(prev => prev * factor);
   };
-  let match$18 = Array2D.dims(board);
-  let boardDimJ = match$18[1];
-  let boardDimI = match$18[0];
+  let match$19 = Array2D.dims(board);
+  let boardDimJ = match$19[1];
+  let boardDimI = match$19[0];
   let lastAutoCenteredDimsRef = React.useRef(undefined);
-  let match$19 = Array2D.dims(brush);
-  let brushDimJ = match$19[1];
-  let brushDimI = match$19[0];
+  let match$20 = Array2D.dims(brush);
+  let brushDimJ = match$20[1];
+  let brushDimI = match$20[0];
   let brushCenterDimI = brushDimI / 2 | 0;
   let brushCenterDimJ = brushDimJ / 2 | 0;
-  let match$20 = Array2D.dims(tileMask);
-  let tileMaskDimJ = match$20[1];
-  let tileMaskDimI = match$20[0];
+  let match$21 = Array2D.dims(tileMask);
+  let tileMaskDimJ = match$21[1];
+  let tileMaskDimI = match$21[0];
   let computeCenteredPan = (dimI, dimJ, zoomValue) => {
     let boardWidth = dimI * 16;
     let boardHeight = dimJ * 16;
@@ -465,12 +494,12 @@ function App(props) {
       }
     });
   };
-  let match$21 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$21[1];
-  let resizeRowsInput = match$21[0];
-  let match$22 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$22[1];
-  let resizeColsInput = match$22[0];
+  let match$22 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$22[1];
+  let resizeRowsInput = match$22[0];
+  let match$23 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$23[1];
+  let resizeColsInput = match$23[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -552,9 +581,9 @@ function App(props) {
       return mapped;
     }
   };
-  let match$23 = parsePositiveInt(resizeRowsInput);
-  let match$24 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$23 !== undefined && match$24 !== undefined ? match$23 !== boardDimI || match$24 !== boardDimJ : false;
+  let match$24 = parsePositiveInt(resizeRowsInput);
+  let match$25 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$24 !== undefined && match$25 !== undefined ? match$24 !== boardDimI || match$25 !== boardDimJ : false;
   let exportScaleValue = parsePositiveFloat(exportScaleInput);
   let canExport = Stdlib_Option.isSome(exportScaleValue);
   let handleResizeSubmit = () => {
@@ -795,6 +824,8 @@ function App(props) {
               setCursorOverlayOff: setCursorOverlayOff,
               isMouseDown: isMouseDown,
               applyBrush: applyBrush,
+              handlePickColor: handlePickColor,
+              isPickingColor: isPickingColor,
               showCursorOverlay: showCursorOverlay,
               canvasBackgroundColor: canvasBackgroundColor,
               viewportBackgroundColor: viewportBackgroundColor,
@@ -824,9 +855,11 @@ function App(props) {
       }),
       JsxRuntime.jsx(ControlsPanel.make, {
         brushMode: brushMode,
-        setBrushMode: match[1],
+        setBrushMode: setBrushMode,
         myColor: myColor,
-        setMyColor: match$9[1],
+        setMyColor: setMyColor,
+        isPickingColor: isPickingColor,
+        onStartColorPick: toggleColorPick,
         canvasBackgroundColor: canvasBackgroundColor,
         setCanvasBackgroundColor: match$10[1],
         viewportBackgroundColor: viewportBackgroundColor,

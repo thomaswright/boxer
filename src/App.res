@@ -102,6 +102,7 @@ let make = () => {
   let (exportScaleInput, setExportScaleInput) = React.useState(() => "1")
   let (includeExportBackground, setIncludeExportBackground) = React.useState(() => true)
   let (resizeMode, setResizeMode) = React.useState(() => Scale)
+  let (isPickingColor, setIsPickingColor) = React.useState(() => false)
   let clearHoverRef = React.useRef(() => ())
   // Camera positioning
   let zoomRef = React.useRef(1.)
@@ -142,6 +143,16 @@ let make = () => {
   }
 
   let isMouseDown = useIsMouseDown()
+
+  let toggleColorPick = () =>
+    setIsPickingColor(prev => {
+      let next = !prev
+      if next {
+        clearHoverRef.current()
+        setCursorOverlayOff(_ => false)
+      }
+      next
+    })
 
   // Canvas selection & derived state
   let canvasCount = canvases->Array.length
@@ -207,6 +218,25 @@ let make = () => {
 
   zoomRef.current = zoom
   panRef.current = pan
+
+  let handlePickColor = (row, col) => {
+    let pickedColor =
+      switch board->Array.get(row) {
+      | Some(rowData) =>
+        switch rowData->Array.get(col) {
+        | Some(cell) => cell->Nullable.toOption
+        | None => None
+        }
+      | None => None
+      }
+    switch pickedColor {
+    | Some(color) =>
+      setMyColor(_ => color)
+      setBrushMode(_ => Color)
+    | None => ()
+    }
+    setIsPickingColor(_ => false)
+  }
 
   let updateCanvasById = (targetId, updater) =>
     setCanvases(prev =>
@@ -679,6 +709,8 @@ let make = () => {
           setCursorOverlayOff
           isMouseDown
           applyBrush
+          handlePickColor={handlePickColor}
+          isPickingColor
           showCursorOverlay
           canvasBackgroundColor
           viewportBackgroundColor
@@ -709,6 +741,8 @@ let make = () => {
       setBrushMode={setBrushMode}
       myColor={myColor}
       setMyColor={setMyColor}
+      isPickingColor={isPickingColor}
+      onStartColorPick={toggleColorPick}
       canvasBackgroundColor={canvasBackgroundColor}
       setCanvasBackgroundColor={setCanvasBackgroundColor}
       viewportBackgroundColor={viewportBackgroundColor}
