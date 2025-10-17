@@ -5,14 +5,14 @@ const FRAGMENT_SHADER_SOURCE = `#version 300 es\nprecision highp float;\nin vec2
 function compileShader(gl, type, source) {
   const shader = gl.createShader(type);
   if (!shader) {
-    throw new Error('Failed to create shader');
+    throw new Error("Failed to create shader");
   }
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
     const info = gl.getShaderInfoLog(shader);
     gl.deleteShader(shader);
-    throw new Error(`Shader compile error: ${info || 'unknown error'}`);
+    throw new Error(`Shader compile error: ${info || "unknown error"}`);
   }
   return shader;
 }
@@ -22,7 +22,7 @@ function createProgram(gl, vertexSource, fragmentSource) {
   const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
   const program = gl.createProgram();
   if (!program) {
-    throw new Error('Failed to create program');
+    throw new Error("Failed to create program");
   }
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
@@ -32,7 +32,7 @@ function createProgram(gl, vertexSource, fragmentSource) {
     gl.deleteProgram(program);
     gl.deleteShader(vertexShader);
     gl.deleteShader(fragmentShader);
-    throw new Error(`Program link error: ${info || 'unknown error'}`);
+    throw new Error(`Program link error: ${info || "unknown error"}`);
   }
   gl.detachShader(program, vertexShader);
   gl.detachShader(program, fragmentShader);
@@ -42,11 +42,11 @@ function createProgram(gl, vertexSource, fragmentSource) {
 }
 
 function parseHexColor(color, fallback) {
-  if (typeof color !== 'string') {
+  if (typeof color !== "string") {
     return fallback;
   }
   let hex = color.trim();
-  if (hex.startsWith('#')) {
+  if (hex.startsWith("#")) {
     hex = hex.slice(1);
   }
   if (hex.length === 3) {
@@ -70,12 +70,19 @@ function parseHexColor(color, fallback) {
 class CanvasRenderer {
   constructor(canvas) {
     this.canvas = canvas;
-    const gl = canvas.getContext('webgl2', {antialias: false, premultipliedAlpha: false});
+    const gl = canvas.getContext("webgl2", {
+      antialias: false,
+      premultipliedAlpha: false,
+    });
     if (!gl) {
-      throw new Error('WebGL2 not available');
+      throw new Error("WebGL2 not available");
     }
     this.gl = gl;
-    this.program = createProgram(gl, VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE);
+    this.program = createProgram(
+      gl,
+      VERTEX_SHADER_SOURCE,
+      FRAGMENT_SHADER_SOURCE
+    );
     this.uniforms = {};
     this.boardTexture = null;
     this.brushTexture = null;
@@ -90,42 +97,35 @@ class CanvasRenderer {
   }
 
   _initGL() {
-    const {gl, program} = this;
+    const { gl, program } = this;
     gl.useProgram(program);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 
-    const positionLocation = gl.getAttribLocation(program, 'aPosition');
+    const positionLocation = gl.getAttribLocation(program, "aPosition");
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(
       gl.ARRAY_BUFFER,
-      new Float32Array([
-        -1, -1,
-         1, -1,
-        -1,  1,
-         1, -1,
-         1,  1,
-        -1,  1,
-      ]),
-      gl.STATIC_DRAW,
+      new Float32Array([-1, -1, 1, -1, -1, 1, 1, -1, 1, 1, -1, 1]),
+      gl.STATIC_DRAW
     );
     gl.enableVertexAttribArray(positionLocation);
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
     this.uniforms = {
-      boardTex: gl.getUniformLocation(program, 'uBoardTex'),
-      brushTex: gl.getUniformLocation(program, 'uBrushTex'),
-      tileTex: gl.getUniformLocation(program, 'uTileTex'),
-      gridSize: gl.getUniformLocation(program, 'uGridSize'),
-      brushSize: gl.getUniformLocation(program, 'uBrushSize'),
-      brushCenter: gl.getUniformLocation(program, 'uBrushCenter'),
-      tileSize: gl.getUniformLocation(program, 'uTileSize'),
-      backgroundColor: gl.getUniformLocation(program, 'uBackgroundColor'),
-      hasHover: gl.getUniformLocation(program, 'uHasHover'),
-      hoverCell: gl.getUniformLocation(program, 'uHoverCell'),
-      useTileMask: gl.getUniformLocation(program, 'uUseTileMask'),
-      showOverlay: gl.getUniformLocation(program, 'uShowOverlay'),
-      isSilhouette: gl.getUniformLocation(program, 'uIsSilhouette'),
+      boardTex: gl.getUniformLocation(program, "uBoardTex"),
+      brushTex: gl.getUniformLocation(program, "uBrushTex"),
+      tileTex: gl.getUniformLocation(program, "uTileTex"),
+      gridSize: gl.getUniformLocation(program, "uGridSize"),
+      brushSize: gl.getUniformLocation(program, "uBrushSize"),
+      brushCenter: gl.getUniformLocation(program, "uBrushCenter"),
+      tileSize: gl.getUniformLocation(program, "uTileSize"),
+      backgroundColor: gl.getUniformLocation(program, "uBackgroundColor"),
+      hasHover: gl.getUniformLocation(program, "uHasHover"),
+      hoverCell: gl.getUniformLocation(program, "uHoverCell"),
+      useTileMask: gl.getUniformLocation(program, "uUseTileMask"),
+      showOverlay: gl.getUniformLocation(program, "uShowOverlay"),
+      isSilhouette: gl.getUniformLocation(program, "uIsSilhouette"),
     };
 
     gl.uniform1i(this.uniforms.boardTex, 0);
@@ -149,7 +149,17 @@ class CanvasRenderer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      1,
+      1,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      new Uint8Array([0, 0, 0, 0])
+    );
 
     this.brushTexture = gl.createTexture();
     gl.activeTexture(gl.TEXTURE1);
@@ -158,7 +168,17 @@ class CanvasRenderer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      1,
+      1,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      new Uint8Array([0, 0, 0, 0])
+    );
 
     this.tileTexture = gl.createTexture();
     gl.activeTexture(gl.TEXTURE2);
@@ -167,13 +187,24 @@ class CanvasRenderer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      1,
+      1,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      new Uint8Array([255, 255, 255, 255])
+    );
   }
 
   setSize(cols, rows, cellSize) {
     const width = Math.max(1, cols * cellSize);
     const height = Math.max(1, rows * cellSize);
-    const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+    const dpr =
+      typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
     this.canvas.style.width = `${width}px`;
     this.canvas.style.height = `${height}px`;
     this.canvas.width = Math.max(1, Math.floor(width * dpr));
@@ -191,16 +222,32 @@ class CanvasRenderer {
     const bg = parseHexColor(backgroundColor, [255, 255, 255]);
     this.backgroundColor = [bg[0] / 255, bg[1] / 255, bg[2] / 255, 1];
 
-    const {gl} = this;
+    const { gl } = this;
     gl.useProgram(this.program);
-    gl.uniform4f(this.uniforms.backgroundColor, this.backgroundColor[0], this.backgroundColor[1], this.backgroundColor[2], 1);
+    gl.uniform4f(
+      this.uniforms.backgroundColor,
+      this.backgroundColor[0],
+      this.backgroundColor[1],
+      this.backgroundColor[2],
+      1
+    );
     gl.uniform1i(this.uniforms.isSilhouette, this.isSilhouette ? 1 : 0);
     gl.uniform2i(this.uniforms.gridSize, cols, rows);
 
     if (cols === 0 || rows === 0) {
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.boardTexture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        1,
+        1,
+        0,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        new Uint8Array([0, 0, 0, 0])
+      );
       return;
     }
 
@@ -228,13 +275,23 @@ class CanvasRenderer {
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.boardTexture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, cols, rows, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      cols,
+      rows,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      data
+    );
   }
 
   updateBrush(brush, centerRow, centerCol) {
     const rows = Array.isArray(brush) ? brush.length : 0;
     const cols = rows > 0 && Array.isArray(brush[0]) ? brush[0].length : 0;
-    const {gl} = this;
+    const { gl } = this;
     gl.useProgram(this.program);
     gl.uniform2i(this.uniforms.brushSize, cols, rows);
     gl.uniform2i(this.uniforms.brushCenter, centerCol | 0, centerRow | 0);
@@ -243,7 +300,17 @@ class CanvasRenderer {
     gl.bindTexture(gl.TEXTURE_2D, this.brushTexture);
 
     if (cols === 0 || rows === 0) {
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        1,
+        1,
+        0,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        new Uint8Array([0, 0, 0, 0])
+      );
       return;
     }
 
@@ -261,13 +328,24 @@ class CanvasRenderer {
       }
     }
 
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, cols, rows, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      cols,
+      rows,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      data
+    );
   }
 
   updateTileMask(tileMask) {
     const rows = Array.isArray(tileMask) ? tileMask.length : 0;
-    const cols = rows > 0 && Array.isArray(tileMask[0]) ? tileMask[0].length : 0;
-    const {gl} = this;
+    const cols =
+      rows > 0 && Array.isArray(tileMask[0]) ? tileMask[0].length : 0;
+    const { gl } = this;
     gl.useProgram(this.program);
     gl.uniform2i(this.uniforms.tileSize, cols, rows);
     gl.uniform1i(this.uniforms.useTileMask, cols > 0 && rows > 0 ? 1 : 0);
@@ -276,7 +354,17 @@ class CanvasRenderer {
     gl.bindTexture(gl.TEXTURE_2D, this.tileTexture);
 
     if (cols === 0 || rows === 0) {
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        1,
+        1,
+        0,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        new Uint8Array([255, 255, 255, 255])
+      );
       return;
     }
 
@@ -294,11 +382,21 @@ class CanvasRenderer {
       }
     }
 
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, cols, rows, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      cols,
+      rows,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      data
+    );
   }
 
   setOverlayOptions(showOverlay, isSilhouette) {
-    const {gl} = this;
+    const { gl } = this;
     this.overlayEnabled = Boolean(showOverlay);
     this.isSilhouette = Boolean(isSilhouette);
     gl.useProgram(this.program);
@@ -307,12 +405,12 @@ class CanvasRenderer {
   }
 
   setHover(hover) {
-    const {gl} = this;
+    const { gl } = this;
     gl.useProgram(this.program);
     if (Array.isArray(hover)) {
       const row = hover[0] | 0;
       const col = hover[1] | 0;
-      this.currentHover = {row, col};
+      this.currentHover = { row, col };
       gl.uniform1i(this.uniforms.hasHover, 1);
       gl.uniform2i(this.uniforms.hoverCell, col, row);
     } else {
@@ -323,13 +421,13 @@ class CanvasRenderer {
   }
 
   render() {
-    const {gl} = this;
+    const { gl } = this;
     gl.useProgram(this.program);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
   }
 
   dispose() {
-    const {gl} = this;
+    const { gl } = this;
     if (this.boardTexture) {
       gl.deleteTexture(this.boardTexture);
       this.boardTexture = null;
@@ -348,24 +446,24 @@ class CanvasRenderer {
   }
 }
 
-export function createCanvasRenderer(canvas) {
+export function create(canvas) {
   try {
     return new CanvasRenderer(canvas);
   } catch (error) {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       console.warn(error);
     }
     return null;
   }
 }
 
-export function disposeCanvasRenderer(renderer) {
+export function dispose(renderer) {
   if (renderer instanceof CanvasRenderer) {
     renderer.dispose();
   }
 }
 
-export function setRendererSize(renderer, cols, rows, cellSize) {
+export function setSize(renderer, cols, rows, cellSize) {
   if (renderer instanceof CanvasRenderer) {
     renderer.setSize(cols, rows, cellSize);
   }
