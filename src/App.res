@@ -1225,13 +1225,18 @@ let make = () => {
   }, (boardDimI, boardDimJ))
 
   React.useEffect3(() => {
-    let shouldCenter = switch lastAutoCenteredDimsRef.current {
-    | Some((prevI, prevJ)) => prevI != boardDimI || prevJ != boardDimJ
-    | None => true
-    }
     let (panX, panY) = panRef.current
-    if shouldCenter || (panX == 0. && panY == 0.) {
-      centerCanvasForDimensions(boardDimI, boardDimJ)
+    let hasCustomPan = panX != 0. || panY != 0.
+    switch lastAutoCenteredDimsRef.current {
+    | Some((prevI, prevJ)) =>
+      if prevI != boardDimI || prevJ != boardDimJ {
+        centerCanvasForDimensions(boardDimI, boardDimJ)
+        lastAutoCenteredDimsRef.current = Some((boardDimI, boardDimJ))
+      }
+    | None =>
+      if !hasCustomPan {
+        centerCanvasForDimensions(boardDimI, boardDimJ)
+      }
       lastAutoCenteredDimsRef.current = Some((boardDimI, boardDimJ))
     }
     None

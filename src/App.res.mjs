@@ -1316,17 +1316,27 @@ function App(props) {
     boardDimJ
   ]);
   React.useEffect(() => {
-    let match = lastAutoCenteredDimsRef.current;
-    let shouldCenter = match !== undefined ? match[0] !== boardDimI || match[1] !== boardDimJ : true;
-    let match$1 = panRef.current;
-    if (shouldCenter || match$1[0] === 0 && match$1[1] === 0) {
-      centerCanvasForDimensions(boardDimI, boardDimJ);
+    let match = panRef.current;
+    let hasCustomPan = match[0] !== 0 || match[1] !== 0;
+    let match$1 = lastAutoCenteredDimsRef.current;
+    if (match$1 !== undefined) {
+      if (match$1[0] !== boardDimI || match$1[1] !== boardDimJ) {
+        centerCanvasForDimensions(boardDimI, boardDimJ);
+        lastAutoCenteredDimsRef.current = [
+          boardDimI,
+          boardDimJ
+        ];
+      }
+      
+    } else {
+      if (!hasCustomPan) {
+        centerCanvasForDimensions(boardDimI, boardDimJ);
+      }
       lastAutoCenteredDimsRef.current = [
         boardDimI,
         boardDimJ
       ];
     }
-    
   }, [
     boardDimI,
     boardDimJ,
