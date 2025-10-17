@@ -12,7 +12,7 @@ let make = (~board: Types.board, ~emptyColor: option<string>) => {
 
   <canvas
     ref={ReactDOM.Ref.domRef(canvasRef)}
-    className="w-full h-full block"
+    className="block object-contain w-full h-full"
     style={{imageRendering: "pixelated"}}
   />
 }

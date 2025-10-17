@@ -26,7 +26,7 @@ function SavedTileMasksPanel(props) {
           }),
           className: [
             "h-8 w-8 rounded-xs overflow-hidden",
-            selected ? "bg-orange-500 " : "bg-gray-400"
+            selected ? "bg-orange-100 " : "bg-gray-100"
           ].join(" ")
         }),
         onClick: param => {

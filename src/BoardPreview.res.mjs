@@ -21,7 +21,7 @@ function BoardPreview(props) {
   ]);
   return JsxRuntime.jsx("canvas", {
     ref: Primitive_option.some(canvasRef),
-    className: "w-full h-full block",
+    className: "block object-contain w-full h-full",
     style: {
       imageRendering: "pixelated"
     }

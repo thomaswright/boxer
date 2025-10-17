@@ -23,7 +23,7 @@ function BoolGridPreview(props) {
   ]);
   return JsxRuntime.jsx("canvas", {
     ref: Primitive_option.some(canvasRef),
-    className: "w-full h-full block",
+    className: "w-full h-full block object-contain ",
     style: {
       imageRendering: "pixelated"
     }

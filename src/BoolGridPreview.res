@@ -22,7 +22,7 @@ let make = (
 
   <canvas
     ref={ReactDOM.Ref.domRef(canvasRef)}
-    className="w-full h-full block"
+    className="w-full h-full block object-contain "
     style={{imageRendering: "pixelated"}}
   />
 }

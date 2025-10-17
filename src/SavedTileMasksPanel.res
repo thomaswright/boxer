@@ -18,7 +18,7 @@ let make = (~setTileMask, ~savedTileMasks, ~selectedTileMaskIndex, ~setSelectedT
         <div
           className={[
             "h-8 w-8 rounded-xs overflow-hidden",
-            selected ? "bg-orange-500 " : "bg-gray-400",
+            selected ? "bg-orange-100 " : "bg-gray-100",
           ]->Array.join(" ")}>
           <BoolGridPreview
             grid={savedTileMask} filledColor={Some(filledColor)} emptyColor={Some(emptyColor)}
