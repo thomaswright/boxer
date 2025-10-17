@@ -865,13 +865,6 @@ function App(props) {
           }),
           JsxRuntime.jsxs("div", {
             children: [
-              JsxRuntime.jsx(CanvasColorsControl.make, {
-                myColor: myColor,
-                canvasBackgroundColor: canvasBackgroundColor,
-                setCanvasBackgroundColor: match$10[1],
-                viewportBackgroundColor: viewportBackgroundColor,
-                setViewportBackgroundColor: match$11[1]
-              }),
               JsxRuntime.jsx(ZoomControl.make, {
                 onZoomOut: zoomOut,
                 onZoomReset: resetZoom,
@@ -892,20 +885,6 @@ function App(props) {
                 canExport: canExport,
                 onExport: handleExportPng
               }),
-              JsxRuntime.jsx(CanvasSizeControl.make, {
-                resizeRowsInput: resizeRowsInput,
-                setResizeRowsInput: setResizeRowsInput,
-                resizeColsInput: resizeColsInput,
-                setResizeColsInput: setResizeColsInput,
-                resizeMode: resizeMode,
-                setResizeMode: match$16[1],
-                canSubmitResize: canSubmitResize,
-                onSubmitResize: handleResizeSubmit
-              }),
-              JsxRuntime.jsx(BrushOverlayControl.make, {
-                showCursorOverlay: showCursorOverlay,
-                setShowCursorOverlay: match$8[1]
-              }),
               JsxRuntime.jsx(BrushAndTileMaskSaveControl.make, {
                 board: board,
                 setBrush: setBrush,
@@ -917,6 +896,27 @@ function App(props) {
                 setSelectedTileMaskIndex: setSelectedTileMaskIndex,
                 canDeleteSelectedTileMask: canDeleteSelectedTileMask,
                 handleDeleteSelectedTileMask: handleDeleteSelectedTileMask
+              }),
+              JsxRuntime.jsx(BrushOverlayControl.make, {
+                showCursorOverlay: showCursorOverlay,
+                setShowCursorOverlay: match$8[1]
+              }),
+              JsxRuntime.jsx(CanvasColorsControl.make, {
+                myColor: myColor,
+                canvasBackgroundColor: canvasBackgroundColor,
+                setCanvasBackgroundColor: match$10[1],
+                viewportBackgroundColor: viewportBackgroundColor,
+                setViewportBackgroundColor: match$11[1]
+              }),
+              JsxRuntime.jsx(CanvasSizeControl.make, {
+                resizeRowsInput: resizeRowsInput,
+                setResizeRowsInput: setResizeRowsInput,
+                resizeColsInput: resizeColsInput,
+                setResizeColsInput: setResizeColsInput,
+                resizeMode: resizeMode,
+                setResizeMode: match$16[1],
+                canSubmitResize: canSubmitResize,
+                onSubmitResize: handleResizeSubmit
               })
             ],
             className: "overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"

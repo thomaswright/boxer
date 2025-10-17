@@ -732,13 +732,6 @@ let make = () => {
         brushMode setBrushMode myColor setMyColor isPickingColor onStartColorPick={toggleColorPick}
       />
       <div className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"}>
-        <CanvasColorsControl
-          myColor
-          canvasBackgroundColor
-          setCanvasBackgroundColor
-          viewportBackgroundColor
-          setViewportBackgroundColor
-        />
         <ZoomControl
           onZoomOut={zoomOut}
           onZoomReset={resetZoom}
@@ -747,6 +740,7 @@ let make = () => {
           onFitCanvas={fitCanvasToViewport}
           zoom
         />
+
         <SilhouetteControl isSilhouette setIsSilhouette />
         <ExportControl
           exportScaleInput
@@ -756,17 +750,7 @@ let make = () => {
           canExport
           onExport={handleExportPng}
         />
-        <CanvasSizeControl
-          resizeRowsInput
-          setResizeRowsInput
-          resizeColsInput
-          setResizeColsInput
-          resizeMode
-          setResizeMode
-          canSubmitResize
-          onSubmitResize={handleResizeSubmit}
-        />
-        <BrushOverlayControl showCursorOverlay setShowCursorOverlay />
+
         <BrushAndTileMaskSaveControl
           board
           setBrush
@@ -778,6 +762,25 @@ let make = () => {
           setSelectedTileMaskIndex
           canDeleteSelectedTileMask
           handleDeleteSelectedTileMask
+        />
+        <BrushOverlayControl showCursorOverlay setShowCursorOverlay />
+
+        <CanvasColorsControl
+          myColor
+          canvasBackgroundColor
+          setCanvasBackgroundColor
+          viewportBackgroundColor
+          setViewportBackgroundColor
+        />
+        <CanvasSizeControl
+          resizeRowsInput
+          setResizeRowsInput
+          resizeColsInput
+          setResizeColsInput
+          resizeMode
+          setResizeMode
+          canSubmitResize
+          onSubmitResize={handleResizeSubmit}
         />
       </div>
     </div>
