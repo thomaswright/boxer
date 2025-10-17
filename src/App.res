@@ -6,9 +6,9 @@ open Types
 @module("./useLocalStorage.js")
 external useLocalStorage: (string, 'a) => ('a, ('a => 'a) => unit, unit => 'a) = "default"
 
-let makeBoard = (i, j) => Array2D.make2D(i, j, () => Nullable.null)
-let makeBrush = (i, j) => Array2D.make2D(i, j, () => true)
-let makeTileMask = (i, j) => Array2D.make2D(i, j, () => true)
+let makeBoard = (i, j) => Array2D.make(i, j, () => Nullable.null)
+let makeBrush = (i, j) => Array2D.make(i, j, () => true)
+let makeTileMask = (i, j) => Array2D.make(i, j, () => true)
 
 let generateCanvasId = () => {
   let timestamp = Js.Date.now()->Float.toString
@@ -260,12 +260,12 @@ let make = () => {
   let zoomIn = () => adjustZoomByFactor(Initials.zoom_factor)
   let zoomOut = () => adjustZoomByFactor(1. /. Initials.zoom_factor)
 
-  let (boardDimI, boardDimJ) = board->Array2D.dims2D
+  let (boardDimI, boardDimJ) = board->Array2D.dims
   let lastAutoCenteredDimsRef = React.useRef(None)
-  let (brushDimI, brushDimJ) = brush->Array2D.dims2D
+  let (brushDimI, brushDimJ) = brush->Array2D.dims
   let brushCenterDimI = brushDimI / 2
   let brushCenterDimJ = brushDimJ / 2
-  let (tileMaskDimI, tileMaskDimJ) = tileMask->Array2D.dims2D
+  let (tileMaskDimI, tileMaskDimJ) = tileMask->Array2D.dims
   let computeCenteredPan = (dimI, dimJ, zoomValue) => {
     let (centerX, centerY) = viewportCenter
     let cellSize = 16.
@@ -328,7 +328,7 @@ let make = () => {
   React.useEffect2(() => {
     switch savedTileMasks->Array.get(selectedTileMaskIndex) {
     | Some(mask) =>
-      if !Array2D.isEqual2D(mask, tileMask) {
+      if !Array2D.isEqual(mask, tileMask) {
         setTileMask(_ => mask)
       }
       None
@@ -374,24 +374,24 @@ let make = () => {
     }
 
   let resizeBoardScale = (prev, nextRows, nextCols) => {
-    let (prevRows, prevCols) = prev->Array2D.dims2D
+    let (prevRows, prevCols) = prev->Array2D.dims
     if prevRows == 0 || prevCols == 0 {
       makeBoard(nextRows, nextCols)
     } else {
-      Array2D.make2D(nextRows, nextCols, () => Nullable.null)->Array.mapWithIndex((row, rowI) =>
+      Array2D.make(nextRows, nextCols, () => Nullable.null)->Array.mapWithIndex((row, rowI) =>
         row->Array.mapWithIndex((_, colJ) => {
           let srcRow = mapIndex(~srcSize=prevRows, ~dstSize=nextRows, rowI)
           let srcCol = mapIndex(~srcSize=prevCols, ~dstSize=nextCols, colJ)
-          prev->Array2D.check2D(srcRow, srcCol)->Option.getOr(Nullable.null)
+          prev->Array2D.check(srcRow, srcCol)->Option.getOr(Nullable.null)
         })
       )
     }
   }
 
   let resizeBoardCrop = (prev, nextRows, nextCols) =>
-    Array2D.make2D(nextRows, nextCols, () => Nullable.null)->Array.mapWithIndex((row, rowI) =>
+    Array2D.make(nextRows, nextCols, () => Nullable.null)->Array.mapWithIndex((row, rowI) =>
       row->Array.mapWithIndex((_, colJ) =>
-        prev->Array2D.check2D(rowI, colJ)->Option.getOr(Nullable.null)
+        prev->Array2D.check(rowI, colJ)->Option.getOr(Nullable.null)
       )
     )
 
@@ -430,7 +430,7 @@ let make = () => {
 
   // Saved asset helpers
   let selectedSavedBrushIndex =
-    savedBrushes->Belt.Array.getIndexBy(savedBrush => Array2D.isEqual2D(savedBrush, brush))
+    savedBrushes->Belt.Array.getIndexBy(savedBrush => Array2D.isEqual(savedBrush, brush))
 
   let canDeleteSelectedBrush = selectedSavedBrushIndex->Option.isSome
   let canDeleteSelectedTileMask = savedTileMasks->Array.length > 1
@@ -529,10 +529,10 @@ let make = () => {
     let brushPosI = boardI - clickI + brushCenterDimI
     let brushPosJ = boardJ - clickJ + brushCenterDimJ
 
-    let brushAllows = Array2D.check2D(brush, brushPosI, brushPosJ)->Option.getOr(false)
+    let brushAllows = Array2D.check(brush, brushPosI, brushPosJ)->Option.getOr(false)
 
     let maskAllows =
-      Array2D.check2D(tileMask, mod(boardI, tileMaskDimI), mod(boardJ, tileMaskDimJ))->Option.getOr(
+      Array2D.check(tileMask, mod(boardI, tileMaskDimI), mod(boardJ, tileMaskDimJ))->Option.getOr(
         false,
       )
 

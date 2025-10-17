@@ -40,7 +40,7 @@ let make = (
 
     {savedTileMasks
     ->Array.mapWithIndex((savedTileMask, savedTileMaskIndex) => {
-      let (dimI, dimJ) = savedTileMask->Array2D.dims2D
+      let (dimI, dimJ) = savedTileMask->Array2D.dims
       let selected = savedTileMaskIndex == selectedTileMaskIndex
       <button
         key={savedTileMaskIndex->Int.toString}

@@ -13,7 +13,7 @@ let make = (
     {canvases
     ->Array.map(canvas => {
       let canvasBoard = canvas.board
-      let (thumbDimI, thumbDimJ) = canvasBoard->Array2D.dims2D
+      let (thumbDimI, thumbDimJ) = canvasBoard->Array2D.dims
       let isSelectedCanvas = canvas.id == currentCanvasId
       <div
         key={canvas.id}

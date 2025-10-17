@@ -139,19 +139,19 @@ let defaultTileMasks = [
 ];
 
 let defaultBrushes = [
-  Array2D.make2D(1, 1, () => true),
-  Array2D.make2D(2, 2, () => true),
-  Array2D.make2D(3, 3, () => true),
-  Array2D.make2D(4, 4, () => true),
-  Array2D.make2D(8, 8, () => true),
-  Array2D.make2D(12, 12, () => true),
-  Array2D.make2D(16, 16, () => true)
+  Array2D.make(1, 1, () => true),
+  Array2D.make(2, 2, () => true),
+  Array2D.make(3, 3, () => true),
+  Array2D.make(4, 4, () => true),
+  Array2D.make(8, 8, () => true),
+  Array2D.make(12, 12, () => true),
+  Array2D.make(16, 16, () => true)
 ];
 
 function App(props) {
   let match = UseLocalStorageJs("brush-mode", "Color");
   let brushMode = match[0];
-  let makeDefaultCanvas = () => makeCanvas(Array2D.make2D(12, 12, () => null), 1, [
+  let makeDefaultCanvas = () => makeCanvas(Array2D.make(12, 12, () => null), 1, [
     0,
     0
   ]);
@@ -161,7 +161,7 @@ function App(props) {
   let match$2 = UseLocalStorageJs("selected-canvas-id", "");
   let setSelectedCanvasId = match$2[1];
   let selectedCanvasId = match$2[0];
-  let match$3 = UseLocalStorageJs("brush", Array2D.make2D(3, 3, () => true));
+  let match$3 = UseLocalStorageJs("brush", Array2D.make(3, 3, () => true));
   let brush = match$3[0];
   let match$4 = UseLocalStorageJs("saved-brushes", defaultBrushes);
   let setSavedBrushes = match$4[1];
@@ -172,7 +172,7 @@ function App(props) {
   let match$6 = UseLocalStorageJs("selected-tile-mask-index", 0);
   let setSelectedTileMaskIndex = match$6[1];
   let selectedTileMaskIndex = match$6[0];
-  let match$7 = UseLocalStorageJs("tile-mask", Array2D.make2D(4, 4, () => true));
+  let match$7 = UseLocalStorageJs("tile-mask", Array2D.make(4, 4, () => true));
   let setTileMask = match$7[1];
   let tileMask = match$7[0];
   let match$8 = UseLocalStorageJs("show-cursor-overlay", true);
@@ -366,16 +366,16 @@ function App(props) {
     let factor = 1 / Initials.zoom_factor;
     updateZoom(prev => prev * factor);
   };
-  let match$18 = Array2D.dims2D(board);
+  let match$18 = Array2D.dims(board);
   let boardDimJ = match$18[1];
   let boardDimI = match$18[0];
   let lastAutoCenteredDimsRef = React.useRef(undefined);
-  let match$19 = Array2D.dims2D(brush);
+  let match$19 = Array2D.dims(brush);
   let brushDimJ = match$19[1];
   let brushDimI = match$19[0];
   let brushCenterDimI = brushDimI / 2 | 0;
   let brushCenterDimJ = brushDimJ / 2 | 0;
-  let match$20 = Array2D.dims2D(tileMask);
+  let match$20 = Array2D.dims(tileMask);
   let tileMaskDimJ = match$20[1];
   let tileMaskDimI = match$20[0];
   let computeCenteredPan = (dimI, dimJ, zoomValue) => {
@@ -471,7 +471,7 @@ function App(props) {
   React.useEffect(() => {
     let mask = savedTileMasks[selectedTileMaskIndex];
     if (mask !== undefined) {
-      if (!Array2D.isEqual2D(mask, tileMask)) {
+      if (!Array2D.isEqual(mask, tileMask)) {
         setTileMask(param => mask);
       }
       return;
@@ -531,21 +531,21 @@ function App(props) {
     }
     if (resizeMode === "Scale") {
       setBoard(prev => {
-        let match$2 = Array2D.dims2D(prev);
+        let match$2 = Array2D.dims(prev);
         let prevCols = match$2[1];
         let prevRows = match$2[0];
         if (prevRows === 0 || prevCols === 0) {
-          return Array2D.make2D(match, match$1, () => null);
+          return Array2D.make(match, match$1, () => null);
         } else {
-          return Array2D.make2D(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => {
+          return Array2D.make(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => {
             let srcRow = mapIndex(prevRows, match, rowI);
             let srcCol = mapIndex(prevCols, match$1, colJ);
-            return Stdlib_Option.getOr(Array2D.check2D(prev, srcRow, srcCol), null);
+            return Stdlib_Option.getOr(Array2D.check(prev, srcRow, srcCol), null);
           }));
         }
       });
     } else {
-      setBoard(prev => Array2D.make2D(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => Stdlib_Option.getOr(Array2D.check2D(prev, rowI, colJ), null))));
+      setBoard(prev => Array2D.make(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => Stdlib_Option.getOr(Array2D.check(prev, rowI, colJ), null))));
     }
     clearHoverRef.current();
     setCursorOverlayOff(param => true);
@@ -561,7 +561,7 @@ function App(props) {
     }
     
   };
-  let selectedSavedBrushIndex = Belt_Array.getIndexBy(savedBrushes, savedBrush => Array2D.isEqual2D(savedBrush, brush));
+  let selectedSavedBrushIndex = Belt_Array.getIndexBy(savedBrushes, savedBrush => Array2D.isEqual(savedBrush, brush));
   let canDeleteSelectedBrush = Stdlib_Option.isSome(selectedSavedBrushIndex);
   let canDeleteSelectedTileMask = savedTileMasks.length > 1;
   let handleDeleteSelectedBrush = () => {
@@ -590,7 +590,7 @@ function App(props) {
   };
   let canDeleteCanvas = canvasCount > 1;
   let handleAddCanvas = () => {
-    let newBoard = Array2D.make2D(boardDimI, boardDimJ, () => null);
+    let newBoard = Array2D.make(boardDimI, boardDimJ, () => null);
     let newPan = computeCenteredPan(boardDimI, boardDimJ, 1);
     let newCanvas = makeCanvas(newBoard, 1, newPan);
     setCanvases(prev => prev.concat([newCanvas]));
@@ -645,8 +645,8 @@ function App(props) {
   let canApply = (boardI, boardJ, clickI, clickJ) => {
     let brushPosI = (boardI - clickI | 0) + brushCenterDimI | 0;
     let brushPosJ = (boardJ - clickJ | 0) + brushCenterDimJ | 0;
-    let brushAllows = Stdlib_Option.getOr(Array2D.check2D(brush, brushPosI, brushPosJ), false);
-    let maskAllows = Stdlib_Option.getOr(Array2D.check2D(tileMask, Primitive_int.mod_(boardI, tileMaskDimI), Primitive_int.mod_(boardJ, tileMaskDimJ)), false);
+    let brushAllows = Stdlib_Option.getOr(Array2D.check(brush, brushPosI, brushPosJ), false);
+    let maskAllows = Stdlib_Option.getOr(Array2D.check(tileMask, Primitive_int.mod_(boardI, tileMaskDimI), Primitive_int.mod_(boardJ, tileMaskDimJ)), false);
     if (brushAllows) {
       return maskAllows;
     } else {

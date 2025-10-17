@@ -35,8 +35,8 @@ let make = (
 
     {savedBrushes
     ->Array.mapWithIndex((savedBrush, savedBrushIndex) => {
-      let (dimI, dimJ) = savedBrush->Array2D.dims2D
-      let selected = Array2D.isEqual2D(brush, savedBrush)
+      let (dimI, dimJ) = savedBrush->Array2D.dims
+      let selected = Array2D.isEqual(brush, savedBrush)
       <button
         key={savedBrushIndex->Int.toString}
         onClick={_ => setBrush(_ => savedBrush)}

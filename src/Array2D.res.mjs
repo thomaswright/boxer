@@ -4,11 +4,11 @@ import * as OtherJs from "./other.js";
 import * as Stdlib_Array from "rescript/lib/es6/Stdlib_Array.js";
 import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
 
-function make2D(rows, cols, f) {
+function make(rows, cols, f) {
   return Stdlib_Array.make(rows, undefined).map(() => Stdlib_Array.make(cols, f()));
 }
 
-function dims2D(a) {
+function dims(a) {
   let boardDimI = a.length;
   let boardDimJ = Stdlib_Option.mapOr(a[0], 0, line => line.length);
   return [
@@ -17,18 +17,18 @@ function dims2D(a) {
   ];
 }
 
-function check2D(a, i, j) {
+function check(a, i, j) {
   return Stdlib_Option.flatMap(a[i], row => row[j]);
 }
 
-function isEqual2D(prim0, prim1) {
+function isEqual(prim0, prim1) {
   return OtherJs.isEqual2D(prim0, prim1);
 }
 
 export {
-  make2D,
-  dims2D,
-  check2D,
-  isEqual2D,
+  make,
+  dims,
+  check,
+  isEqual,
 }
 /* ./other.js Not a pure module */

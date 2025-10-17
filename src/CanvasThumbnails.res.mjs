@@ -14,7 +14,7 @@ function CanvasThumbnails(props) {
     children: [
       props.canvases.map(canvas => {
         let canvasBoard = canvas.board;
-        let match = Array2D.dims2D(canvasBoard);
+        let match = Array2D.dims(canvasBoard);
         let isSelectedCanvas = canvas.id === currentCanvasId;
         return JsxRuntime.jsxs("div", {
           children: [

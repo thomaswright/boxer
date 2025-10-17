@@ -35,10 +35,10 @@ function SavedBrushesPanel(props) {
         ]
       }),
       props.savedBrushes.map((savedBrush, savedBrushIndex) => {
-        let match = Array2D.dims2D(savedBrush);
+        let match = Array2D.dims(savedBrush);
         let dimJ = match[1];
         let dimI = match[0];
-        let selected = Array2D.isEqual2D(brush, savedBrush);
+        let selected = Array2D.isEqual(brush, savedBrush);
         return JsxRuntime.jsxs("button", {
           children: [
             JsxRuntime.jsx("div", {

@@ -40,7 +40,7 @@ function SavedTileMasksPanel(props) {
         ]
       }),
       props.savedTileMasks.map((savedTileMask, savedTileMaskIndex) => {
-        let match = Array2D.dims2D(savedTileMask);
+        let match = Array2D.dims(savedTileMask);
         let selected = savedTileMaskIndex === selectedTileMaskIndex;
         return JsxRuntime.jsx("button", {
           children: JsxRuntime.jsx("div", {
