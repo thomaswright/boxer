@@ -608,7 +608,7 @@ function App$CanvasThumbnails(props) {
         onClick: param => handleAddCanvas()
       })
     ],
-    className: "flex flex-row items-start gap-3 overflow-x-auto"
+    className: "flex flex-row items-start gap-3 overflow-x-scroll"
   });
 }
 
@@ -1648,10 +1648,10 @@ function App(props) {
               handleAddCanvas: handleAddCanvas,
               onSelectCanvas: handleSelectCanvas
             }),
-            className: "flex-none flex flex-col gap-2 w-full"
+            className: "flex-none flex flex-col gap-2 w-full overflow-x-hidden"
           })
         ],
-        className: "flex flex-col gap-2 flex-1"
+        className: "flex flex-col gap-2 flex-1 overflow-x-hidden"
       }),
       JsxRuntime.jsx(App$ControlsPanel, {
         brushMode: brushMode,

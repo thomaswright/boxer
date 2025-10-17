@@ -561,7 +561,7 @@ module CanvasThumbnails = {
     ~handleAddCanvas,
     ~onSelectCanvas,
   ) => {
-    <div className="flex flex-row items-start gap-3 overflow-x-auto">
+    <div className="flex flex-row items-start gap-3 overflow-x-scroll">
       {canvases
       ->Array.map(canvas => {
         let canvasBoard = canvas.board
@@ -1549,7 +1549,7 @@ let make = () => {
         handleDeleteSelectedTileMask={handleDeleteSelectedTileMask}
       />
     </div>
-    <div className="flex flex-col gap-2 flex-1">
+    <div className="flex flex-col gap-2 flex-1 overflow-x-hidden">
       <div className={"flex-1"}>
         <CanvasViewport
           canvasContainerRef
@@ -1579,7 +1579,7 @@ let make = () => {
         />
       </div>
 
-      <div className="flex-none flex flex-col gap-2 w-full">
+      <div className="flex-none flex flex-col gap-2 w-full overflow-x-hidden">
         <CanvasThumbnails
           canvases
           currentCanvasId
