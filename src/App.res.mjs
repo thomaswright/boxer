@@ -1102,9 +1102,9 @@ function App(props) {
     };
   }, []);
   let clampZoom = value => {
-    let cappedMax = value > 4 ? 4 : value;
-    if (cappedMax < 0.25) {
-      return 0.25;
+    let cappedMax = value > 100 ? 100 : value;
+    if (cappedMax < 0.01) {
+      return 0.01;
     } else {
       return cappedMax;
     }
@@ -1553,21 +1553,20 @@ function App(props) {
             return;
         }
       } else {
-        let step = 16 / zoomRef.current;
         let match$1 = event.key;
         switch (match$1) {
           case "ArrowDown" :
             event.preventDefault();
-            return adjustPan(0, step);
+            return adjustPan(0, 20);
           case "ArrowLeft" :
             event.preventDefault();
-            return adjustPan(- step, 0);
+            return adjustPan(- 20, 0);
           case "ArrowRight" :
             event.preventDefault();
-            return adjustPan(step, 0);
+            return adjustPan(20, 0);
           case "ArrowUp" :
             event.preventDefault();
-            return adjustPan(0, - step);
+            return adjustPan(0, - 20);
           default:
             return;
         }

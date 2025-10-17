@@ -42,6 +42,8 @@ module Initials = {
   let viewportBackgroundColor = "#e5e7eb"
   let myColor = "blue"
   let zoom_factor = 1.1
+  let maxZoomIn = 100.
+  let maxZoomOut = 0.01
   let silhouette = false
 }
 
@@ -1044,13 +1046,13 @@ let make = () => {
   })
 
   let clampZoom = value => {
-    let cappedMax = if value > 4. {
-      4.
+    let cappedMax = if value > Initials.maxZoomIn {
+      Initials.maxZoomIn
     } else {
       value
     }
-    if cappedMax < 0.25 {
-      0.25
+    if cappedMax < Initials.maxZoomOut {
+      Initials.maxZoomOut
     } else {
       cappedMax
     }
@@ -1489,7 +1491,7 @@ let make = () => {
         | _ => ()
         }
       } else {
-        let step = 16. /. zoomRef.current
+        let step = 20.
         switch event->KeyboardEvent.key {
         | "ArrowDown" =>
           event->KeyboardEvent.preventDefault
