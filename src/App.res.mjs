@@ -858,7 +858,11 @@ function App(props) {
           JsxRuntime.jsxs("div", {
             children: [
               JsxRuntime.jsx(ColorsUsed.make, {
-                board: board
+                board: board,
+                onSelectColor: color => {
+                  setMyColor(param => color);
+                  setBrushMode(param => "Color");
+                }
               }),
               JsxRuntime.jsx(ZoomControl.make, {
                 onZoomOut: zoomOut,

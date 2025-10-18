@@ -6,6 +6,7 @@ import * as Primitive_string from "rescript/lib/es6/Primitive_string.js";
 import * as JsxRuntime from "react/jsx-runtime";
 
 function ColorsUsed(props) {
+  let onSelectColor = props.onSelectColor;
   let colorCounts = {};
   let totalColored = {
     contents: 0
@@ -59,7 +60,7 @@ function ColorsUsed(props) {
           children: usages.map(param => {
             let color = param.color;
             let percentLabel = param.percent.toFixed(1);
-            return JsxRuntime.jsxs("div", {
+            return JsxRuntime.jsxs("button", {
               children: [
                 JsxRuntime.jsx("div", {
                   className: "w-4 h-4 rounded border border-gray-300",
@@ -80,10 +81,13 @@ function ColorsUsed(props) {
                   className: "text-xs text-gray-400 w-8 text-right tabular-nums"
                 })
               ],
-              className: "flex flex-row items-center gap-2 text-xs"
+              className: "flex flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-gray-100 text-left",
+              title: color,
+              type: "button",
+              onClick: param => onSelectColor(color)
             }, color);
           }),
-          className: "flex flex-col gap-1"
+          className: "flex flex-col"
         }) : JsxRuntime.jsx("div", {
           children: "Start drawing to see colors",
           className: "text-xs text-gray-500"

@@ -5,7 +5,7 @@ type colorUsage = {
 }
 
 @react.component
-let make = (~board: Types.board) => {
+let make = (~board: Types.board, ~onSelectColor: string => unit) => {
   let colorCounts = Js.Dict.empty()
   let totalColored = ref(0)
 
@@ -61,11 +61,16 @@ let make = (~board: Types.board) => {
     | 0 =>
       <div className="text-xs text-gray-500"> {"Start drawing to see colors"->React.string} </div>
     | _ =>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col">
         {usages
         ->Array.map(({color, count, percent}) => {
           let percentLabel = percent->Float.toFixed(~digits=1)
-          <div key={color} className="flex flex-row items-center gap-2 text-xs">
+          <button
+            key={color}
+            type_="button"
+            className="flex flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-gray-100 text-left"
+            title={color}
+            onClick={_ => onSelectColor(color)}>
             <div
               className="w-4 h-4 rounded border border-gray-300" style={{backgroundColor: color}}
             />
@@ -76,7 +81,7 @@ let make = (~board: Types.board) => {
             <div className="text-xs text-gray-400 w-8 text-right tabular-nums">
               {count->Int.toString->React.string}
             </div>
-          </div>
+          </button>
         })
         ->React.array}
       </div>
