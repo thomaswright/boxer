@@ -178,3 +178,8 @@ module Moon = {
   @react.component @module("react-icons/tb")
   external make: (~className: string=?, ~style: JsxDOM.style=?) => React.element = "TbMoon"
 }
+
+module ColorPicker = {
+  @react.component @module("react-icons/tb")
+  external make: (~className: string=?, ~style: JsxDOM.style=?) => React.element = "TbColorPicker"
+}

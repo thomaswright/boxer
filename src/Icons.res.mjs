@@ -73,6 +73,8 @@ let Sun = {};
 
 let Moon = {};
 
+let ColorPicker = {};
+
 export {
   EyeClosed,
   Eye,
@@ -110,5 +112,6 @@ export {
   Hourglass,
   Sun,
   Moon,
+  ColorPicker,
 }
 /* No side effect */

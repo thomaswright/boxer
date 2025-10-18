@@ -676,6 +676,29 @@ let make = () => {
     zoomString ++ ")"
   }
 
+  let onSelectUsedColor = color => {
+    setMyColor(_ => color)
+    setBrushMode(_ => Color)
+  }
+
+  let onReplaceUsedColor = color =>
+    setBoard(prev =>
+      prev->Array.map(row =>
+        row->Array.map(
+          cell =>
+            switch cell->Nullable.toOption {
+            | Some(existing) =>
+              if existing == color {
+                Nullable.Value(myColor)
+              } else {
+                cell
+              }
+            | None => cell
+            },
+        )
+      )
+    )
+
   <div className=" flex flex-row h-dvh overflow-x-hidden">
     <div className="flex flex-row gap-2 h-full flex-none p-2">
       <SavedBrushesPanel brush={brush} setBrush={setBrush} savedBrushes={savedBrushes} />
@@ -732,13 +755,7 @@ let make = () => {
         brushMode setBrushMode myColor setMyColor isPickingColor onStartColorPick={toggleColorPick}
       />
       <div className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"}>
-        <ColorsUsed
-          board
-          onSelectColor={color => {
-            setMyColor(_ => color)
-            setBrushMode(_ => Color)
-          }}
-        />
+        <ColorsUsed board onSelectColor={onSelectUsedColor} onReplaceColor={onReplaceUsedColor} />
 
         <ZoomControl
           onZoomOut={zoomOut}

@@ -2,10 +2,12 @@
 
 import * as Js_dict from "rescript/lib/es6/Js_dict.js";
 import * as Primitive_int from "rescript/lib/es6/Primitive_int.js";
+import * as Tb from "react-icons/tb";
 import * as Primitive_string from "rescript/lib/es6/Primitive_string.js";
 import * as JsxRuntime from "react/jsx-runtime";
 
 function ColorsUsed(props) {
+  let onReplaceColor = props.onReplaceColor;
   let onSelectColor = props.onSelectColor;
   let colorCounts = {};
   let totalColored = {
@@ -60,29 +62,40 @@ function ColorsUsed(props) {
           children: usages.map(param => {
             let color = param.color;
             let percentLabel = param.percent.toFixed(0);
-            return JsxRuntime.jsxs("button", {
+            return JsxRuntime.jsxs("div", {
               children: [
-                JsxRuntime.jsx("div", {
-                  className: "w-4 h-4 rounded border border-gray-300",
-                  style: {
-                    backgroundColor: color
-                  }
+                JsxRuntime.jsxs("button", {
+                  children: [
+                    JsxRuntime.jsx("div", {
+                      className: "w-4 h-4 rounded border border-gray-300",
+                      style: {
+                        backgroundColor: color
+                      }
+                    }),
+                    JsxRuntime.jsx("div", {
+                      children: (
+                        percentLabel === "0" ? "<1" : percentLabel
+                      ) + "%",
+                      className: "text-xs text-gray-500 tabular-nums"
+                    }),
+                    JsxRuntime.jsx("div", {
+                      children: param.count.toString(),
+                      className: "text-xs text-gray-400 w-8 text-right tabular-nums"
+                    })
+                  ],
+                  className: "flex flex-1 flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-gray-100 text-left",
+                  title: color,
+                  type: "button",
+                  onClick: param => onSelectColor(color)
                 }),
-                JsxRuntime.jsx("div", {
-                  children: (
-                    percentLabel === "0" ? "<1" : percentLabel
-                  ) + "%",
-                  className: "text-xs text-gray-500 tabular-nums"
-                }),
-                JsxRuntime.jsx("div", {
-                  children: param.count.toString(),
-                  className: "text-xs text-gray-400 w-8 text-right tabular-nums"
+                JsxRuntime.jsx("button", {
+                  children: JsxRuntime.jsx(Tb.TbColorPicker, {}),
+                  className: "text-xs font-medium px-1 py-0.5 rounded bg-gray-200 hover:bg-gray-300",
+                  type: "button",
+                  onClick: param => onReplaceColor(color)
                 })
               ],
-              className: "flex flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-gray-100 text-left",
-              title: color,
-              type: "button",
-              onClick: param => onSelectColor(color)
+              className: "flex flex-row items-center gap-2"
             }, color);
           }),
           className: "flex flex-col"
@@ -100,4 +113,4 @@ let make = ColorsUsed;
 export {
   make,
 }
-/* react/jsx-runtime Not a pure module */
+/* react-icons/tb Not a pure module */

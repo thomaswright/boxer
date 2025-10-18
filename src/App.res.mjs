@@ -783,6 +783,17 @@ function App(props) {
   let offsetYString = pan[1].toString();
   let zoomString = zoom.toString();
   let transformValue = "translate3d(" + offsetXString + "px, " + offsetYString + "px, 0) scale(" + zoomString + ")";
+  let onSelectUsedColor = color => {
+    setMyColor(param => color);
+    setBrushMode(param => "Color");
+  };
+  let onReplaceUsedColor = color => setBoard(prev => prev.map(row => row.map(cell => {
+    if (!(cell == null) && cell === color) {
+      return myColor;
+    } else {
+      return cell;
+    }
+  })));
   return JsxRuntime.jsxs("div", {
     children: [
       JsxRuntime.jsxs("div", {
@@ -859,10 +870,8 @@ function App(props) {
             children: [
               JsxRuntime.jsx(ColorsUsed.make, {
                 board: board,
-                onSelectColor: color => {
-                  setMyColor(param => color);
-                  setBrushMode(param => "Color");
-                }
+                onSelectColor: onSelectUsedColor,
+                onReplaceColor: onReplaceUsedColor
               }),
               JsxRuntime.jsx(ZoomControl.make, {
                 onZoomOut: zoomOut,

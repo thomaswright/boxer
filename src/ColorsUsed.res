@@ -5,7 +5,11 @@ type colorUsage = {
 }
 
 @react.component
-let make = (~board: Types.board, ~onSelectColor: string => unit) => {
+let make = (
+  ~board: Types.board,
+  ~onSelectColor: string => unit,
+  ~onReplaceColor: string => unit,
+) => {
   let colorCounts = Js.Dict.empty()
   let totalColored = ref(0)
 
@@ -65,22 +69,29 @@ let make = (~board: Types.board, ~onSelectColor: string => unit) => {
         {usages
         ->Array.map(({color, count, percent}) => {
           let percentLabel = percent->Float.toFixed(~digits=0)
-          <button
-            key={color}
-            type_="button"
-            className="flex flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-gray-100 text-left"
-            title={color}
-            onClick={_ => onSelectColor(color)}>
-            <div
-              className="w-4 h-4 rounded border border-gray-300" style={{backgroundColor: color}}
-            />
-            <div className="text-xs text-gray-500 tabular-nums">
-              {`${percentLabel == "0" ? "<1" : percentLabel}%`->React.string}
-            </div>
-            <div className="text-xs text-gray-400 w-8 text-right tabular-nums">
-              {count->Int.toString->React.string}
-            </div>
-          </button>
+          <div key={color} className="flex flex-row items-center gap-2">
+            <button
+              type_="button"
+              className="flex flex-1 flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-gray-100 text-left"
+              title={color}
+              onClick={_ => onSelectColor(color)}>
+              <div
+                className="w-4 h-4 rounded border border-gray-300" style={{backgroundColor: color}}
+              />
+              <div className="text-xs text-gray-500 tabular-nums">
+                {`${percentLabel == "0" ? "<1" : percentLabel}%`->React.string}
+              </div>
+              <div className="text-xs text-gray-400 w-8 text-right tabular-nums">
+                {count->Int.toString->React.string}
+              </div>
+            </button>
+            <button
+              type_="button"
+              className="text-xs font-medium px-1 py-0.5 rounded bg-gray-200 hover:bg-gray-300"
+              onClick={_ => onReplaceColor(color)}>
+              <Icons.ColorPicker />
+            </button>
+          </div>
         })
         ->React.array}
       </div>
