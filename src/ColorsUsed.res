@@ -83,6 +83,7 @@ let make = (
           let percentLabel = percent->Float.toFixed(~digits=0)
           let isSelected = myColor == color
           <button
+            key={color}
             type_="button"
             className={[
               "flex flex-1 flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-gray-100 text-left",

@@ -108,7 +108,7 @@ function ColorsUsed(props) {
                   return onSelectUsedColor(color);
                 }
               }
-            });
+            }, color);
           }),
           className: "flex flex-col max-h-48 overflow-scroll"
         }) : JsxRuntime.jsx("div", {
