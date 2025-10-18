@@ -65,7 +65,7 @@ let make = (
     | 0 =>
       <div className="text-xs text-gray-500"> {"Start drawing to see colors"->React.string} </div>
     | _ =>
-      <div className="flex flex-col">
+      <div className="flex flex-col max-h-48 overflow-scroll">
         {usages
         ->Array.map(({color, count, percent}) => {
           let percentLabel = percent->Float.toFixed(~digits=0)

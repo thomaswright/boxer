@@ -98,7 +98,7 @@ function ColorsUsed(props) {
               className: "flex flex-row items-center gap-2"
             }, color);
           }),
-          className: "flex flex-col"
+          className: "flex flex-col max-h-48 overflow-scroll"
         }) : JsxRuntime.jsx("div", {
           children: "Start drawing to see colors",
           className: "text-xs text-gray-500"
