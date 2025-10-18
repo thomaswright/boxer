@@ -763,7 +763,7 @@ let make = () => {
         canvasBackgroundColor
       />
       <div className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"}>
-        <ColorsUsed board onSelectUsedColor onReplaceUsedColor />
+        <ColorsUsed myColor board onSelectUsedColor onReplaceUsedColor />
 
         <ZoomControl zoomOut resetZoom zoomIn centerCanvas fitCanvasToViewport zoom />
 

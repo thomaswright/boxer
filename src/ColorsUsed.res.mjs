@@ -7,6 +7,7 @@ import * as Primitive_string from "rescript/lib/es6/Primitive_string.js";
 import * as JsxRuntime from "react/jsx-runtime";
 
 function ColorsUsed(props) {
+  let myColor = props.myColor;
   let onReplaceUsedColor = props.onReplaceUsedColor;
   let onSelectUsedColor = props.onSelectUsedColor;
   let colorCounts = {};
@@ -62,6 +63,7 @@ function ColorsUsed(props) {
           children: usages.map(param => {
             let color = param.color;
             let percentLabel = param.percent.toFixed(0);
+            let isSelected = myColor === color;
             return JsxRuntime.jsxs("div", {
               children: [
                 JsxRuntime.jsxs("button", {
@@ -83,7 +85,10 @@ function ColorsUsed(props) {
                       className: "text-xs text-gray-400 w-8 text-right tabular-nums"
                     })
                   ],
-                  className: "flex flex-1 flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-gray-100 text-left",
+                  className: [
+                    "flex flex-1 flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-gray-100 text-left",
+                    isSelected ? "bg-gray-200" : ""
+                  ].join(" "),
                   title: color,
                   type: "button",
                   onClick: param => onSelectUsedColor(color)
@@ -95,7 +100,7 @@ function ColorsUsed(props) {
                   onClick: param => onReplaceUsedColor(color)
                 })
               ],
-              className: "flex flex-row items-center gap-2"
+              className: ["flex flex-row items-center gap-2"].join(" ")
             }, color);
           }),
           className: "flex flex-col max-h-48 overflow-scroll"

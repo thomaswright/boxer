@@ -878,7 +878,8 @@ function App(props) {
               JsxRuntime.jsx(ColorsUsed.make, {
                 board: board,
                 onSelectUsedColor: onSelectUsedColor,
-                onReplaceUsedColor: onReplaceUsedColor
+                onReplaceUsedColor: onReplaceUsedColor,
+                myColor: myColor
               }),
               JsxRuntime.jsx(ZoomControl.make, {
                 zoomOut: zoomOut,

@@ -9,6 +9,7 @@ let make = (
   ~board: Types.board,
   ~onSelectUsedColor: string => unit,
   ~onReplaceUsedColor: string => unit,
+  ~myColor,
 ) => {
   let colorCounts = Js.Dict.empty()
   let totalColored = ref(0)
@@ -69,10 +70,14 @@ let make = (
         {usages
         ->Array.map(({color, count, percent}) => {
           let percentLabel = percent->Float.toFixed(~digits=0)
-          <div key={color} className="flex flex-row items-center gap-2">
+          let isSelected = myColor == color
+          <div key={color} className={["flex flex-row items-center gap-2"]->Array.join(" ")}>
             <button
               type_="button"
-              className="flex flex-1 flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-gray-100 text-left"
+              className={[
+                "flex flex-1 flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-gray-100 text-left",
+                isSelected ? "bg-gray-200" : "",
+              ]->Array.join(" ")}
               title={color}
               onClick={_ => onSelectUsedColor(color)}>
               <div
