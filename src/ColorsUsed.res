@@ -64,7 +64,7 @@ let make = (~board: Types.board, ~onSelectColor: string => unit) => {
       <div className="flex flex-col">
         {usages
         ->Array.map(({color, count, percent}) => {
-          let percentLabel = percent->Float.toFixed(~digits=1)
+          let percentLabel = percent->Float.toFixed(~digits=0)
           <button
             key={color}
             type_="button"
@@ -74,9 +74,8 @@ let make = (~board: Types.board, ~onSelectColor: string => unit) => {
             <div
               className="w-4 h-4 rounded border border-gray-300" style={{backgroundColor: color}}
             />
-            <div className="flex-1 font-mono truncate"> {color->React.string} </div>
             <div className="text-xs text-gray-500 tabular-nums">
-              {`${percentLabel}%`->React.string}
+              {`${percentLabel == "0" ? "<1" : percentLabel}%`->React.string}
             </div>
             <div className="text-xs text-gray-400 w-8 text-right tabular-nums">
               {count->Int.toString->React.string}

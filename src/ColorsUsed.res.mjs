@@ -59,7 +59,7 @@ function ColorsUsed(props) {
       match !== 0 ? JsxRuntime.jsx("div", {
           children: usages.map(param => {
             let color = param.color;
-            let percentLabel = param.percent.toFixed(1);
+            let percentLabel = param.percent.toFixed(0);
             return JsxRuntime.jsxs("button", {
               children: [
                 JsxRuntime.jsx("div", {
@@ -69,11 +69,9 @@ function ColorsUsed(props) {
                   }
                 }),
                 JsxRuntime.jsx("div", {
-                  children: color,
-                  className: "flex-1 font-mono truncate"
-                }),
-                JsxRuntime.jsx("div", {
-                  children: percentLabel + "%",
+                  children: (
+                    percentLabel === "0" ? "<1" : percentLabel
+                  ) + "%",
                   className: "text-xs text-gray-500 tabular-nums"
                 }),
                 JsxRuntime.jsx("div", {
