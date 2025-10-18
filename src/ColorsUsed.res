@@ -11,6 +11,7 @@ let make = (
   ~onReplaceUsedColor: string => unit,
   ~myColor,
 ) => {
+  let (replaceMode, setReplaceMode) = React.useState(_ => false)
   let colorCounts = Js.Dict.empty()
   let totalColored = ref(0)
 
@@ -57,10 +58,20 @@ let make = (
 
   <div className="p-2 flex flex-col gap-2 w-full">
     <div className="flex flex-row items-center justify-between">
-      <span className="font-medium"> {"Colors Used"->React.string} </span>
-      <span className="text-xs text-gray-500">
+      <span className="font-medium flex-1"> {"Colors Used"->React.string} </span>
+
+      <span className="text-xs text-gray-500 px-2">
         {uniqueColorCount->Int.toString->React.string}
       </span>
+      <button
+        type_="button"
+        className={[
+          replaceMode ? " bg-blue-500 text-white" : "bg-gray-200",
+          "px-1 py-0.5 font-medium text-xs rounded",
+        ]->Array.join(" ")}
+        onClick={_ => setReplaceMode(v => !v)}>
+        {"Set"->React.string}
+      </button>
     </div>
     {switch usages->Array.length {
     | 0 =>
@@ -71,32 +82,24 @@ let make = (
         ->Array.map(({color, count, percent}) => {
           let percentLabel = percent->Float.toFixed(~digits=0)
           let isSelected = myColor == color
-          <div key={color} className={["flex flex-row items-center gap-2"]->Array.join(" ")}>
-            <button
-              type_="button"
-              className={[
-                "flex flex-1 flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-gray-100 text-left",
-                isSelected ? "bg-gray-200" : "",
-              ]->Array.join(" ")}
-              title={color}
-              onClick={_ => onSelectUsedColor(color)}>
-              <div
-                className="w-4 h-4 rounded border border-gray-300" style={{backgroundColor: color}}
-              />
-              <div className="text-xs text-gray-500 tabular-nums">
-                {`${percentLabel == "0" ? "<1" : percentLabel}%`->React.string}
-              </div>
-              <div className="text-xs text-gray-400 w-8 text-right tabular-nums">
-                {count->Int.toString->React.string}
-              </div>
-            </button>
-            <button
-              type_="button"
-              className="text-xs font-medium px-1 py-0.5 rounded bg-gray-200 hover:bg-gray-300"
-              onClick={_ => onReplaceUsedColor(color)}>
-              <Icons.ColorPicker />
-            </button>
-          </div>
+          <button
+            type_="button"
+            className={[
+              "flex flex-1 flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-gray-100 text-left",
+              isSelected ? "bg-gray-200" : "",
+            ]->Array.join(" ")}
+            title={color}
+            onClick={_ => replaceMode ? onReplaceUsedColor(color) : onSelectUsedColor(color)}>
+            <div
+              className="w-4 h-4 rounded border border-gray-300" style={{backgroundColor: color}}
+            />
+            <div className="text-xs text-gray-500 tabular-nums">
+              {`${percentLabel == "0" ? "<1" : percentLabel}%`->React.string}
+            </div>
+            <div className="text-xs text-gray-400 w-8 text-right tabular-nums">
+              {count->Int.toString->React.string}
+            </div>
+          </button>
         })
         ->React.array}
       </div>
