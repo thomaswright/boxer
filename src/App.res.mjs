@@ -199,6 +199,8 @@ function App(props) {
   let match$17 = React.useState(() => false);
   let setIsPickingColor = match$17[1];
   let isPickingColor = match$17[0];
+  let match$18 = React.useState(() => {});
+  let setHoveredPickColor = match$18[1];
   let clearHoverRef = React.useRef(() => {});
   let zoomRef = React.useRef(1);
   let panRef = React.useRef([
@@ -206,12 +208,12 @@ function App(props) {
     0
   ]);
   let canvasContainerRef = React.useRef(null);
-  let match$18 = React.useState(() => [
+  let match$19 = React.useState(() => [
     192,
     192
   ]);
-  let setViewportCenter = match$18[1];
-  let viewportCenter = match$18[0];
+  let setViewportCenter = match$19[1];
+  let viewportCenter = match$19[0];
   let viewportCenterRef = React.useRef(viewportCenter);
   viewportCenterRef.current = viewportCenter;
   let updateViewportCenter = () => {
@@ -242,8 +244,9 @@ function App(props) {
     }
   };
   let isMouseDown = useIsMouseDown();
-  let toggleColorPick = () => setIsPickingColor(prev => {
+  let onStartColorPick = () => setIsPickingColor(prev => {
     let next = !prev;
+    setHoveredPickColor(param => {});
     if (next) {
       clearHoverRef.current();
       setCursorOverlayOff(param => false);
@@ -327,6 +330,7 @@ function App(props) {
       setBrushMode(param => "Color");
     }
     setIsPickingColor(param => false);
+    setHoveredPickColor(param => {});
   };
   let updateCanvasById = (targetId, updater) => setCanvases(prev => {
     if (prev.length === 0) {
@@ -395,18 +399,18 @@ function App(props) {
     let factor = 1 / Initials.zoom_factor;
     updateZoom(prev => prev * factor);
   };
-  let match$19 = Array2D.dims(board);
-  let boardDimJ = match$19[1];
-  let boardDimI = match$19[0];
+  let match$20 = Array2D.dims(board);
+  let boardDimJ = match$20[1];
+  let boardDimI = match$20[0];
   let lastAutoCenteredDimsRef = React.useRef(undefined);
-  let match$20 = Array2D.dims(brush);
-  let brushDimJ = match$20[1];
-  let brushDimI = match$20[0];
+  let match$21 = Array2D.dims(brush);
+  let brushDimJ = match$21[1];
+  let brushDimI = match$21[0];
   let brushCenterDimI = brushDimI / 2 | 0;
   let brushCenterDimJ = brushDimJ / 2 | 0;
-  let match$21 = Array2D.dims(tileMask);
-  let tileMaskDimJ = match$21[1];
-  let tileMaskDimI = match$21[0];
+  let match$22 = Array2D.dims(tileMask);
+  let tileMaskDimJ = match$22[1];
+  let tileMaskDimI = match$22[0];
   let computeCenteredPan = (dimI, dimJ, zoomValue) => {
     let boardWidth = dimI * 16;
     let boardHeight = dimJ * 16;
@@ -494,12 +498,12 @@ function App(props) {
       }
     });
   };
-  let match$22 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$22[1];
-  let resizeRowsInput = match$22[0];
-  let match$23 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$23[1];
-  let resizeColsInput = match$23[0];
+  let match$23 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$23[1];
+  let resizeRowsInput = match$23[0];
+  let match$24 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$24[1];
+  let resizeColsInput = match$24[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -581,9 +585,9 @@ function App(props) {
       return mapped;
     }
   };
-  let match$24 = parsePositiveInt(resizeRowsInput);
-  let match$25 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$24 !== undefined && match$25 !== undefined ? match$24 !== boardDimI || match$25 !== boardDimJ : false;
+  let match$25 = parsePositiveInt(resizeRowsInput);
+  let match$26 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$25 !== undefined && match$26 !== undefined ? match$25 !== boardDimI || match$26 !== boardDimJ : false;
   let exportScaleValue = parsePositiveFloat(exportScaleInput);
   let canExport = Stdlib_Option.isSome(exportScaleValue);
   let handleResizeSubmit = () => {
@@ -828,6 +832,7 @@ function App(props) {
               isMouseDown: isMouseDown,
               applyBrush: applyBrush,
               handlePickColor: handlePickColor,
+              setHoveredPickColor: setHoveredPickColor,
               isPickingColor: isPickingColor,
               showCursorOverlay: showCursorOverlay,
               canvasBackgroundColor: canvasBackgroundColor,
@@ -851,7 +856,7 @@ function App(props) {
             canDeleteCanvas: canDeleteCanvas,
             handleDeleteCanvas: handleDeleteCanvas,
             handleAddCanvas: handleAddCanvas,
-            onSelectCanvas: handleSelectCanvas
+            handleSelectCanvas: handleSelectCanvas
           })
         ],
         className: "flex flex-col flex-1 overflow-x-hidden"
@@ -863,22 +868,24 @@ function App(props) {
             setBrushMode: setBrushMode,
             myColor: myColor,
             setMyColor: setMyColor,
+            hoveredPickColor: match$18[0],
             isPickingColor: isPickingColor,
-            onStartColorPick: toggleColorPick
+            onStartColorPick: onStartColorPick,
+            canvasBackgroundColor: canvasBackgroundColor
           }),
           JsxRuntime.jsxs("div", {
             children: [
               JsxRuntime.jsx(ColorsUsed.make, {
                 board: board,
-                onSelectColor: onSelectUsedColor,
-                onReplaceColor: onReplaceUsedColor
+                onSelectUsedColor: onSelectUsedColor,
+                onReplaceUsedColor: onReplaceUsedColor
               }),
               JsxRuntime.jsx(ZoomControl.make, {
-                onZoomOut: zoomOut,
-                onZoomReset: resetZoom,
-                onZoomIn: zoomIn,
-                onCenterCanvas: centerCanvas,
-                onFitCanvas: fitCanvasToViewport,
+                zoomOut: zoomOut,
+                resetZoom: resetZoom,
+                zoomIn: zoomIn,
+                centerCanvas: centerCanvas,
+                fitCanvasToViewport: fitCanvasToViewport,
                 zoom: zoom
               }),
               JsxRuntime.jsx(SilhouetteControl.make, {
@@ -888,8 +895,8 @@ function App(props) {
               JsxRuntime.jsx(ExportControl.make, {
                 exportScaleInput: exportScaleInput,
                 setExportScaleInput: match$14[1],
-                includeBackground: includeExportBackground,
-                setIncludeBackground: match$15[1],
+                includeExportBackground: includeExportBackground,
+                setIncludeExportBackground: match$15[1],
                 canExport: canExport,
                 onExport: handleExportPng
               }),
@@ -924,7 +931,7 @@ function App(props) {
                 resizeMode: resizeMode,
                 setResizeMode: match$16[1],
                 canSubmitResize: canSubmitResize,
-                onSubmitResize: handleResizeSubmit
+                handleResizeSubmit: handleResizeSubmit
               })
             ],
             className: "overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"

@@ -5,9 +5,12 @@ import * as JsxRuntime from "react/jsx-runtime";
 
 function ColorControl(props) {
   let onStartColorPick = props.onStartColorPick;
+  let isPickingColor = props.isPickingColor;
+  let hoveredPickColor = props.hoveredPickColor;
   let setMyColor = props.setMyColor;
   let setBrushMode = props.setBrushMode;
   let brushMode = props.brushMode;
+  let previewColor = hoveredPickColor !== undefined ? hoveredPickColor : props.canvasBackgroundColor;
   return JsxRuntime.jsxs("div", {
     children: [
       JsxRuntime.jsxs("div", {
@@ -31,7 +34,7 @@ function ColorControl(props) {
           JsxRuntime.jsx("button", {
             children: "Pick",
             className: [
-              props.isPickingColor ? " bg-blue-500 text-white" : "bg-gray-200",
+              isPickingColor ? " bg-blue-500 text-white" : "bg-gray-200",
               "px-2 font-medium rounded"
             ].join(" "),
             onClick: param => onStartColorPick()
@@ -39,13 +42,18 @@ function ColorControl(props) {
         ],
         className: "flex flex-row gap-2 justify-center"
       }),
-      JsxRuntime.jsx(ReactColorful.HexColorPicker, {
-        color: props.myColor,
-        onChange: newColor => setMyColor(param => newColor),
-        style: {
-          width: "96%"
-        }
-      })
+      isPickingColor ? JsxRuntime.jsx("div", {
+          className: "w-full h-[200px] border border-gray-300",
+          style: {
+            backgroundColor: previewColor
+          }
+        }) : JsxRuntime.jsx(ReactColorful.HexColorPicker, {
+          color: props.myColor,
+          onChange: newColor => setMyColor(param => newColor),
+          style: {
+            width: "96%"
+          }
+        })
     ],
     className: "relative flex flex-col gap-2 w-full overflow-x-visible items-center flex-none"
   });

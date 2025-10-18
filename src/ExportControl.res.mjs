@@ -5,7 +5,7 @@ import * as JsxRuntime from "react/jsx-runtime";
 function ExportControl(props) {
   let onExport = props.onExport;
   let canExport = props.canExport;
-  let setIncludeBackground = props.setIncludeBackground;
+  let setIncludeExportBackground = props.setIncludeExportBackground;
   let setExportScaleInput = props.setExportScaleInput;
   return JsxRuntime.jsxs("div", {
     children: [
@@ -50,11 +50,11 @@ function ExportControl(props) {
       JsxRuntime.jsxs("label", {
         children: [
           JsxRuntime.jsx("input", {
-            checked: props.includeBackground,
+            checked: props.includeExportBackground,
             type: "checkbox",
             onChange: event => {
               let checked = event.target.checked;
-              setIncludeBackground(param => checked);
+              setIncludeExportBackground(param => checked);
             }
           }),
           JsxRuntime.jsx("span", {

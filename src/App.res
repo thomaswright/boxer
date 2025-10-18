@@ -103,6 +103,7 @@ let make = () => {
   let (includeExportBackground, setIncludeExportBackground) = React.useState(() => true)
   let (resizeMode, setResizeMode) = React.useState(() => Scale)
   let (isPickingColor, setIsPickingColor) = React.useState(() => false)
+  let (hoveredPickColor, setHoveredPickColor) = React.useState(() => None)
   let clearHoverRef = React.useRef(() => ())
   // Camera positioning
   let zoomRef = React.useRef(1.)
@@ -144,9 +145,10 @@ let make = () => {
 
   let isMouseDown = useIsMouseDown()
 
-  let toggleColorPick = () =>
+  let onStartColorPick = () =>
     setIsPickingColor(prev => {
       let next = !prev
+      setHoveredPickColor(_ => None)
       if next {
         clearHoverRef.current()
         setCursorOverlayOff(_ => false)
@@ -235,6 +237,7 @@ let make = () => {
     | None => ()
     }
     setIsPickingColor(_ => false)
+    setHoveredPickColor(_ => None)
   }
 
   let updateCanvasById = (targetId, updater) =>
@@ -701,12 +704,9 @@ let make = () => {
 
   <div className=" flex flex-row h-dvh overflow-x-hidden">
     <div className="flex flex-row gap-2 h-full flex-none p-2">
-      <SavedBrushesPanel brush={brush} setBrush={setBrush} savedBrushes={savedBrushes} />
+      <SavedBrushesPanel brush setBrush savedBrushes />
       <SavedTileMasksPanel
-        setTileMask={setTileMask}
-        savedTileMasks={savedTileMasks}
-        selectedTileMaskIndex={selectedTileMaskIndex}
-        setSelectedTileMaskIndex={setSelectedTileMaskIndex}
+        setTileMask savedTileMasks selectedTileMaskIndex setSelectedTileMaskIndex
       />
     </div>
     <div className="flex flex-col flex-1 overflow-x-hidden">
@@ -723,7 +723,8 @@ let make = () => {
           setCursorOverlayOff
           isMouseDown
           applyBrush
-          handlePickColor={handlePickColor}
+          handlePickColor
+          setHoveredPickColor
           isPickingColor
           showCursorOverlay
           canvasBackgroundColor
@@ -747,31 +748,31 @@ let make = () => {
         canDeleteCanvas
         handleDeleteCanvas
         handleAddCanvas
-        onSelectCanvas={handleSelectCanvas}
+        handleSelectCanvas
       />
     </div>
     <div className=" h-full overflow-x-visible flex flex-col w-48 py-2">
       <ColorControl
-        brushMode setBrushMode myColor setMyColor isPickingColor onStartColorPick={toggleColorPick}
+        brushMode
+        setBrushMode
+        myColor
+        setMyColor
+        hoveredPickColor
+        isPickingColor
+        onStartColorPick
+        canvasBackgroundColor
       />
       <div className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"}>
-        <ColorsUsed board onSelectColor={onSelectUsedColor} onReplaceColor={onReplaceUsedColor} />
+        <ColorsUsed board onSelectUsedColor onReplaceUsedColor />
 
-        <ZoomControl
-          onZoomOut={zoomOut}
-          onZoomReset={resetZoom}
-          onZoomIn={zoomIn}
-          onCenterCanvas={centerCanvas}
-          onFitCanvas={fitCanvasToViewport}
-          zoom
-        />
+        <ZoomControl zoomOut resetZoom zoomIn centerCanvas fitCanvasToViewport zoom />
 
         <SilhouetteControl isSilhouette setIsSilhouette />
         <ExportControl
           exportScaleInput
           setExportScaleInput
-          includeBackground={includeExportBackground}
-          setIncludeBackground={setIncludeExportBackground}
+          includeExportBackground
+          setIncludeExportBackground
           canExport
           onExport={handleExportPng}
         />
@@ -805,7 +806,7 @@ let make = () => {
           resizeMode
           setResizeMode
           canSubmitResize
-          onSubmitResize={handleResizeSubmit}
+          handleResizeSubmit
         />
       </div>
     </div>

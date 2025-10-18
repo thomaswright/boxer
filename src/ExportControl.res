@@ -2,8 +2,8 @@
 let make = (
   ~exportScaleInput,
   ~setExportScaleInput,
-  ~includeBackground,
-  ~setIncludeBackground,
+  ~includeExportBackground,
+  ~setIncludeExportBackground,
   ~canExport,
   ~onExport,
 ) => {
@@ -39,10 +39,10 @@ let make = (
     <label className="flex flex-row items-center gap-2 text-sm">
       <input
         type_="checkbox"
-        checked={includeBackground}
+        checked={includeExportBackground}
         onChange={event => {
           let checked = ReactEvent.Form.target(event)["checked"]
-          setIncludeBackground(_ => checked)
+          setIncludeExportBackground(_ => checked)
         }}
       />
       <span> {"Include Background"->React.string} </span>

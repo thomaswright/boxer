@@ -26,6 +26,7 @@ let make = (
   ~isMouseDown,
   ~applyBrush,
   ~handlePickColor,
+  ~setHoveredPickColor,
   ~isPickingColor,
   ~showCursorOverlay,
   ~canvasBackgroundColor,
@@ -148,10 +149,25 @@ let make = (
     switch getCellFromEvent(event) {
     | Some((row, col)) =>
       updateHover(Some((row, col)))
+      if isPickingColor {
+        let hoveredColor = switch board->Array.get(row) {
+        | Some(rowData) =>
+          switch rowData->Array.get(col) {
+          | Some(cell) => cell->Nullable.toOption
+          | None => None
+          }
+        | None => None
+        }
+        setHoveredPickColor(_ => hoveredColor)
+      }
       if isMouseDown && !isPickingColor {
         applyBrush(row, col)
       }
-    | None => updateHover(None)
+    | None =>
+      updateHover(None)
+      if isPickingColor {
+        setHoveredPickColor(_ => None)
+      }
     }
   }
 
@@ -168,7 +184,12 @@ let make = (
     | None => ()
     }
 
-  let handleMouseLeave = _ => updateHover(None)
+  let handleMouseLeave = _ => {
+    updateHover(None)
+    if isPickingColor {
+      setHoveredPickColor(_ => None)
+    }
+  }
 
   let canvasWidth = boardDimJ * cellSize
   let canvasHeight = boardDimI * cellSize

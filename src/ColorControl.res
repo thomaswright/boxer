@@ -6,9 +6,16 @@ let make = (
   ~setBrushMode,
   ~myColor,
   ~setMyColor,
+  ~hoveredPickColor,
   ~isPickingColor,
   ~onStartColorPick,
+  ~canvasBackgroundColor,
 ) => {
+  let previewColor = switch hoveredPickColor {
+  | Some(color) => color
+  | None => canvasBackgroundColor
+  }
+
   <div className="relative flex flex-col gap-2 w-full overflow-x-visible items-center flex-none">
     <div className="flex flex-row gap-2 justify-center">
       <button
@@ -36,14 +43,21 @@ let make = (
         {"Pick"->React.string}
       </button>
     </div>
-    <HexColorPicker
-      color={myColor}
-      onChange={newColor => {
-        setMyColor(_ => newColor)
-      }}
-      style={{
-        width: "96%",
-      }}
-    />
+    {isPickingColor
+      ? <div
+          className="w-full h-[200px] border border-gray-300"
+          style={{
+            backgroundColor: previewColor,
+          }}
+        />
+      : <HexColorPicker
+          color={myColor}
+          onChange={newColor => {
+            setMyColor(_ => newColor)
+          }}
+          style={{
+            width: "96%",
+          }}
+        />}
   </div>
 }

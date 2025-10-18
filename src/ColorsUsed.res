@@ -7,8 +7,8 @@ type colorUsage = {
 @react.component
 let make = (
   ~board: Types.board,
-  ~onSelectColor: string => unit,
-  ~onReplaceColor: string => unit,
+  ~onSelectUsedColor: string => unit,
+  ~onReplaceUsedColor: string => unit,
 ) => {
   let colorCounts = Js.Dict.empty()
   let totalColored = ref(0)
@@ -74,7 +74,7 @@ let make = (
               type_="button"
               className="flex flex-1 flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-gray-100 text-left"
               title={color}
-              onClick={_ => onSelectColor(color)}>
+              onClick={_ => onSelectUsedColor(color)}>
               <div
                 className="w-4 h-4 rounded border border-gray-300" style={{backgroundColor: color}}
               />
@@ -88,7 +88,7 @@ let make = (
             <button
               type_="button"
               className="text-xs font-medium px-1 py-0.5 rounded bg-gray-200 hover:bg-gray-300"
-              onClick={_ => onReplaceColor(color)}>
+              onClick={_ => onReplaceUsedColor(color)}>
               <Icons.ColorPicker />
             </button>
           </div>

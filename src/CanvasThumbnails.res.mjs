@@ -5,7 +5,7 @@ import * as Tb from "react-icons/tb";
 import * as JsxRuntime from "react/jsx-runtime";
 
 function CanvasThumbnails(props) {
-  let onSelectCanvas = props.onSelectCanvas;
+  let handleSelectCanvas = props.handleSelectCanvas;
   let handleAddCanvas = props.handleAddCanvas;
   let handleDeleteCanvas = props.handleDeleteCanvas;
   let canDeleteCanvas = props.canDeleteCanvas;
@@ -26,7 +26,7 @@ function CanvasThumbnails(props) {
                 className: "h-16 w-16 rounded-xs overflow-hidden"
               }),
               className: [" w-fit h-fit block"].join(" "),
-              onClick: param => onSelectCanvas(canvas.id)
+              onClick: param => handleSelectCanvas(canvas.id)
             }),
             isSelectedCanvas ? JsxRuntime.jsx("button", {
                 children: JsxRuntime.jsx(Tb.TbTrash, {}),

@@ -7,8 +7,8 @@ import * as Primitive_string from "rescript/lib/es6/Primitive_string.js";
 import * as JsxRuntime from "react/jsx-runtime";
 
 function ColorsUsed(props) {
-  let onReplaceColor = props.onReplaceColor;
-  let onSelectColor = props.onSelectColor;
+  let onReplaceUsedColor = props.onReplaceUsedColor;
+  let onSelectUsedColor = props.onSelectUsedColor;
   let colorCounts = {};
   let totalColored = {
     contents: 0
@@ -86,13 +86,13 @@ function ColorsUsed(props) {
                   className: "flex flex-1 flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-gray-100 text-left",
                   title: color,
                   type: "button",
-                  onClick: param => onSelectColor(color)
+                  onClick: param => onSelectUsedColor(color)
                 }),
                 JsxRuntime.jsx("button", {
                   children: JsxRuntime.jsx(Tb.TbColorPicker, {}),
                   className: "text-xs font-medium px-1 py-0.5 rounded bg-gray-200 hover:bg-gray-300",
                   type: "button",
-                  onClick: param => onReplaceColor(color)
+                  onClick: param => onReplaceUsedColor(color)
                 })
               ],
               className: "flex flex-row items-center gap-2"

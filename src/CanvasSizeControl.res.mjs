@@ -4,7 +4,7 @@ import * as Tb from "react-icons/tb";
 import * as JsxRuntime from "react/jsx-runtime";
 
 function CanvasSizeControl(props) {
-  let onSubmitResize = props.onSubmitResize;
+  let handleResizeSubmit = props.handleResizeSubmit;
   let canSubmitResize = props.canSubmitResize;
   let setResizeMode = props.setResizeMode;
   let resizeMode = props.resizeMode;
@@ -82,7 +82,7 @@ function CanvasSizeControl(props) {
               canSubmitResize ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
             ].join(" "),
             disabled: !canSubmitResize,
-            onClick: param => onSubmitResize()
+            onClick: param => handleResizeSubmit()
           })
         ],
         className: "flex flex-col gap-2"

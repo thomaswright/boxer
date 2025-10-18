@@ -26,6 +26,7 @@ function CanvasViewport(props) {
   let canvasBackgroundColor = props.canvasBackgroundColor;
   let showCursorOverlay = props.showCursorOverlay;
   let isPickingColor = props.isPickingColor;
+  let setHoveredPickColor = props.setHoveredPickColor;
   let handlePickColor = props.handlePickColor;
   let applyBrush = props.applyBrush;
   let isMouseDown = props.isMouseDown;
@@ -152,17 +153,33 @@ function CanvasViewport(props) {
   let handleMouseMove = event => {
     setCursorOverlayOff(param => false);
     let match = getCellFromEvent(event);
-    if (match === undefined) {
-      return updateHover(undefined);
+    if (match !== undefined) {
+      let col = match[1];
+      let row = match[0];
+      updateHover([
+        row,
+        col
+      ]);
+      if (isPickingColor) {
+        let rowData = board[row];
+        let hoveredColor;
+        if (rowData !== undefined) {
+          let cell = rowData[col];
+          hoveredColor = cell !== undefined ? Primitive_option.fromNullable(Primitive_option.valFromOption(cell)) : undefined;
+        } else {
+          hoveredColor = undefined;
+        }
+        setHoveredPickColor(param => hoveredColor);
+      }
+      if (isMouseDown && !isPickingColor) {
+        return applyBrush(row, col);
+      } else {
+        return;
+      }
     }
-    let col = match[1];
-    let row = match[0];
-    updateHover([
-      row,
-      col
-    ]);
-    if (isMouseDown && !isPickingColor) {
-      return applyBrush(row, col);
+    updateHover(undefined);
+    if (isPickingColor) {
+      return setHoveredPickColor(param => {});
     }
     
   };
@@ -184,7 +201,13 @@ function CanvasViewport(props) {
       return setCursorOverlayOff(param => true);
     }
   };
-  let handleMouseLeave = param => updateHover(undefined);
+  let handleMouseLeave = param => {
+    updateHover(undefined);
+    if (isPickingColor) {
+      return setHoveredPickColor(param => {});
+    }
+    
+  };
   let canvasWidth = (boardDimJ << 4);
   let canvasHeight = (boardDimI << 4);
   let widthString = canvasWidth.toString() + "px";

@@ -9,7 +9,7 @@ let make = (
   ~resizeMode,
   ~setResizeMode,
   ~canSubmitResize,
-  ~onSubmitResize,
+  ~handleResizeSubmit,
 ) => {
   let baseButtonClasses = "flex-1 rounded px-2 py-1 text-xs font-medium border"
   let scaleButtonClasses = [
@@ -79,7 +79,7 @@ let make = (
             : "bg-gray-200 text-gray-500 cursor-not-allowed",
         ]->Array.join(" ")}
         disabled={!canSubmitResize}
-        onClick={_ => onSubmitResize()}>
+        onClick={_ => handleResizeSubmit()}>
         {"Save"->React.string}
       </button>
     </div>

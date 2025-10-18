@@ -1,5 +1,5 @@
 @react.component
-let make = (~onZoomOut, ~onZoomReset, ~onZoomIn, ~onCenterCanvas, ~onFitCanvas, ~zoom) => {
+let make = (~zoomOut, ~resetZoom, ~zoomIn, ~centerCanvas, ~fitCanvasToViewport, ~zoom) => {
   let zoomPercentString = (zoom *. 100.)->Float.toFixed(~digits=0)
 
   <div className="p-2 flex flex-col gap-2 w-full">
@@ -10,29 +10,29 @@ let make = (~onZoomOut, ~onZoomReset, ~onZoomIn, ~onCenterCanvas, ~onFitCanvas, 
     <div className="flex flex-row gap-2">
       <button
         className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
-        onClick={_ => onZoomOut()}>
+        onClick={_ => zoomOut()}>
         {"-"->React.string}
       </button>
       <button
         className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
-        onClick={_ => onZoomReset()}>
+        onClick={_ => resetZoom()}>
         {"100%"->React.string}
       </button>
       <button
         className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
-        onClick={_ => onZoomIn()}>
+        onClick={_ => zoomIn()}>
         {"+"->React.string}
       </button>
     </div>
     <div className="flex flex-row gap-2">
       <button
         className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
-        onClick={_ => onCenterCanvas()}>
+        onClick={_ => centerCanvas()}>
         {"Center"->React.string}
       </button>
       <button
         className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
-        onClick={_ => onFitCanvas()}>
+        onClick={_ => fitCanvasToViewport()}>
         {"Fit"->React.string}
       </button>
     </div>

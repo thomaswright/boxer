@@ -7,7 +7,7 @@ let make = (
   ~canDeleteCanvas,
   ~handleDeleteCanvas,
   ~handleAddCanvas,
-  ~onSelectCanvas,
+  ~handleSelectCanvas,
 ) => {
   <div className="flex flex-row items-start gap-3 overflow-x-scroll p-2 pl-0">
     {canvases
@@ -21,7 +21,7 @@ let make = (
           isSelectedCanvas ? "border-blue-500" : "border-gray-200",
         ]->Array.join(" ")}>
         <button
-          onClick={_ => onSelectCanvas(canvas.id)}
+          onClick={_ => handleSelectCanvas(canvas.id)}
           className={[" w-fit h-fit block"]->Array.join(" ")}>
           <div className="h-16 w-16 rounded-xs overflow-hidden">
             <BoardPreview board={canvasBoard} emptyColor={None} />

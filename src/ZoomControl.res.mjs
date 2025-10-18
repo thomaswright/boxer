@@ -3,11 +3,11 @@
 import * as JsxRuntime from "react/jsx-runtime";
 
 function ZoomControl(props) {
-  let onFitCanvas = props.onFitCanvas;
-  let onCenterCanvas = props.onCenterCanvas;
-  let onZoomIn = props.onZoomIn;
-  let onZoomReset = props.onZoomReset;
-  let onZoomOut = props.onZoomOut;
+  let fitCanvasToViewport = props.fitCanvasToViewport;
+  let centerCanvas = props.centerCanvas;
+  let zoomIn = props.zoomIn;
+  let resetZoom = props.resetZoom;
+  let zoomOut = props.zoomOut;
   let zoomPercentString = (props.zoom * 100).toFixed(0);
   return JsxRuntime.jsxs("div", {
     children: [
@@ -29,17 +29,17 @@ function ZoomControl(props) {
           JsxRuntime.jsx("button", {
             children: "-",
             className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
-            onClick: param => onZoomOut()
+            onClick: param => zoomOut()
           }),
           JsxRuntime.jsx("button", {
             children: "100%",
             className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
-            onClick: param => onZoomReset()
+            onClick: param => resetZoom()
           }),
           JsxRuntime.jsx("button", {
             children: "+",
             className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
-            onClick: param => onZoomIn()
+            onClick: param => zoomIn()
           })
         ],
         className: "flex flex-row gap-2"
@@ -49,12 +49,12 @@ function ZoomControl(props) {
           JsxRuntime.jsx("button", {
             children: "Center",
             className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
-            onClick: param => onCenterCanvas()
+            onClick: param => centerCanvas()
           }),
           JsxRuntime.jsx("button", {
             children: "Fit",
             className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
-            onClick: param => onFitCanvas()
+            onClick: param => fitCanvasToViewport()
           })
         ],
         className: "flex flex-row gap-2"
