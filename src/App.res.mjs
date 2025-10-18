@@ -5,6 +5,7 @@ import * as Array2D from "./Array2D.res.mjs";
 import * as Initials from "./Initials.res.mjs";
 import * as Belt_Array from "rescript/lib/es6/Belt_Array.js";
 import * as Belt_Float from "rescript/lib/es6/Belt_Float.js";
+import * as ColorsUsed from "./ColorsUsed.res.mjs";
 import * as Stdlib_Int from "rescript/lib/es6/Stdlib_Int.js";
 import * as ZoomControl from "./ZoomControl.res.mjs";
 import * as ColorControl from "./ColorControl.res.mjs";
@@ -856,6 +857,9 @@ function App(props) {
           }),
           JsxRuntime.jsxs("div", {
             children: [
+              JsxRuntime.jsx(ColorsUsed.make, {
+                board: board
+              }),
               JsxRuntime.jsx(ZoomControl.make, {
                 onZoomOut: zoomOut,
                 onZoomReset: resetZoom,

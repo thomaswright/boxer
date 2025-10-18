@@ -732,6 +732,8 @@ let make = () => {
         brushMode setBrushMode myColor setMyColor isPickingColor onStartColorPick={toggleColorPick}
       />
       <div className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"}>
+        <ColorsUsed board />
+
         <ZoomControl
           onZoomOut={zoomOut}
           onZoomReset={resetZoom}
