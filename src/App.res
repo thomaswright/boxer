@@ -322,8 +322,8 @@ let make = () => {
   let computeCenteredPan = (dimI, dimJ, zoomValue) => {
     let (centerX, centerY) = viewportCenter
     let cellSize = 16.
-    let boardWidth = Float.fromInt(dimI) *. cellSize
-    let boardHeight = Float.fromInt(dimJ) *. cellSize
+    let boardWidth = Float.fromInt(dimJ) *. cellSize
+    let boardHeight = Float.fromInt(dimI) *. cellSize
     let nextPanX = centerX -. boardWidth *. zoomValue /. 2.
     let nextPanY = centerY -. boardHeight *. zoomValue /. 2.
     (nextPanX, nextPanY)
@@ -341,7 +341,7 @@ let make = () => {
   }
 
   let centerCanvas = () => centerCanvasForDimensions(boardDimI, boardDimJ)
-  let fitCanvasToViewportForDimensions = (dimI, dimJ) =>
+  let fitCanvasToViewportForDimensions = (dimI, dimJ) => {
     switch canvasContainerRef.current->Js.Nullable.toOption {
     | Some(containerElement) =>
       let rect = containerElement->Element.getBoundingClientRect
@@ -370,6 +370,7 @@ let make = () => {
       }
     | None => centerCanvasForDimensions(dimI, dimJ)
     }
+  }
 
   let fitCanvasToViewport = () => fitCanvasToViewportForDimensions(boardDimI, boardDimJ)
 

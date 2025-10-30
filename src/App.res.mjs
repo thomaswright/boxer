@@ -434,8 +434,8 @@ function App(props) {
   let tileMaskDimJ = match$23[1];
   let tileMaskDimI = match$23[0];
   let computeCenteredPan = (dimI, dimJ, zoomValue) => {
-    let boardWidth = dimI * 16;
-    let boardHeight = dimJ * 16;
+    let boardWidth = dimJ * 16;
+    let boardHeight = dimI * 16;
     let nextPanX = viewportCenter[0] - boardWidth * zoomValue / 2;
     let nextPanY = viewportCenter[1] - boardHeight * zoomValue / 2;
     return [
