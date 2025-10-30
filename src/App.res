@@ -718,12 +718,17 @@ let make = () => {
     )
 
   <div className=" flex flex-row h-dvh overflow-x-hidden">
-    <div className="flex flex-row gap-2 h-full flex-none p-2">
-      <SavedBrushesPanel brush setBrush savedBrushes />
-      <SavedTileMasksPanel
-        setTileMask savedTileMasks selectedTileMaskIndex setSelectedTileMaskIndex
-      />
+    <div className="flex flex-col flex-none overflow-x-hidden divide-y divide-gray-300">
+      <ZoomControl zoomOut resetZoom zoomIn centerCanvas fitCanvasToViewport zoom />
+
+      <div className="flex flex-row gap-2 h-full flex-none p-2">
+        <SavedBrushesPanel brush setBrush savedBrushes />
+        <SavedTileMasksPanel
+          setTileMask savedTileMasks selectedTileMaskIndex setSelectedTileMaskIndex
+        />
+      </div>
     </div>
+
     <div className="flex flex-col flex-1 overflow-x-hidden">
       <div className={"flex-1 pt-2"}>
         <CanvasViewport
@@ -786,8 +791,17 @@ let make = () => {
       <div className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"}>
         <ColorsUsed myColor board onSelectUsedColor onReplaceUsedColor />
 
-        <ZoomControl zoomOut resetZoom zoomIn centerCanvas fitCanvasToViewport zoom />
+        <BrushOverlayControl overlayMode setOverlayMode />
+        <CanvasGridControl gridMode setGridMode />
 
+        <CanvasColorsControl
+          myColor
+          canvasBackgroundColor
+          setCanvasBackgroundColor
+          viewportBackgroundColor
+          setViewportBackgroundColor
+        />
+        <SilhouetteControl isSilhouette setIsSilhouette />
         <BrushAndTileMaskSaveControl
           board
           setBrush
@@ -800,18 +814,6 @@ let make = () => {
           canDeleteSelectedTileMask
           handleDeleteSelectedTileMask
         />
-        <BrushOverlayControl overlayMode setOverlayMode />
-        <CanvasGridControl gridMode setGridMode />
-
-        <CanvasColorsControl
-          myColor
-          canvasBackgroundColor
-          setCanvasBackgroundColor
-          viewportBackgroundColor
-          setViewportBackgroundColor
-        />
-        <SilhouetteControl isSilhouette setIsSilhouette />
-
         <CanvasSizeControl
           resizeRowsInput
           setResizeRowsInput

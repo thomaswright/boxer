@@ -6,7 +6,6 @@ function ZoomControl(props) {
   let fitCanvasToViewport = props.fitCanvasToViewport;
   let centerCanvas = props.centerCanvas;
   let zoomIn = props.zoomIn;
-  let resetZoom = props.resetZoom;
   let zoomOut = props.zoomOut;
   let zoomPercentString = (props.zoom * 100).toFixed(0);
   return JsxRuntime.jsxs("div", {
@@ -32,11 +31,6 @@ function ZoomControl(props) {
             onClick: param => zoomOut()
           }),
           JsxRuntime.jsx("button", {
-            children: "100%",
-            className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
-            onClick: param => resetZoom()
-          }),
-          JsxRuntime.jsx("button", {
             children: "+",
             className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
             onClick: param => zoomIn()
@@ -47,14 +41,14 @@ function ZoomControl(props) {
       JsxRuntime.jsxs("div", {
         children: [
           JsxRuntime.jsx("button", {
-            children: "Center",
-            className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
-            onClick: param => centerCanvas()
+            children: "Fit",
+            className: "flex-1 rounded px-2 py-1 text-xs font-medium bg-gray-200",
+            onClick: param => fitCanvasToViewport()
           }),
           JsxRuntime.jsx("button", {
-            children: "Fit",
-            className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200",
-            onClick: param => fitCanvasToViewport()
+            children: "Center",
+            className: "flex-1 rounded px-2 py-1 text-xs font-medium bg-gray-200",
+            onClick: param => centerCanvas()
           })
         ],
         className: "flex flex-row gap-2"

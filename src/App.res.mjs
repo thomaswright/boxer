@@ -808,19 +808,32 @@ function App(props) {
     children: [
       JsxRuntime.jsxs("div", {
         children: [
-          JsxRuntime.jsx(SavedBrushesPanel.make, {
-            brush: brush,
-            setBrush: setBrush,
-            savedBrushes: savedBrushes
+          JsxRuntime.jsx(ZoomControl.make, {
+            zoomOut: zoomOut,
+            resetZoom: resetZoom,
+            zoomIn: zoomIn,
+            centerCanvas: centerCanvas,
+            fitCanvasToViewport: fitCanvasToViewport,
+            zoom: zoom
           }),
-          JsxRuntime.jsx(SavedTileMasksPanel.make, {
-            setTileMask: setTileMask,
-            savedTileMasks: savedTileMasks,
-            selectedTileMaskIndex: selectedTileMaskIndex,
-            setSelectedTileMaskIndex: setSelectedTileMaskIndex
+          JsxRuntime.jsxs("div", {
+            children: [
+              JsxRuntime.jsx(SavedBrushesPanel.make, {
+                brush: brush,
+                setBrush: setBrush,
+                savedBrushes: savedBrushes
+              }),
+              JsxRuntime.jsx(SavedTileMasksPanel.make, {
+                setTileMask: setTileMask,
+                savedTileMasks: savedTileMasks,
+                selectedTileMaskIndex: selectedTileMaskIndex,
+                setSelectedTileMaskIndex: setSelectedTileMaskIndex
+              })
+            ],
+            className: "flex flex-row gap-2 h-full flex-none p-2"
           })
         ],
-        className: "flex flex-row gap-2 h-full flex-none p-2"
+        className: "flex flex-col flex-none overflow-x-hidden divide-y divide-gray-300"
       }),
       JsxRuntime.jsxs("div", {
         children: [
@@ -893,26 +906,6 @@ function App(props) {
                 onReplaceUsedColor: onReplaceUsedColor,
                 myColor: myColor
               }),
-              JsxRuntime.jsx(ZoomControl.make, {
-                zoomOut: zoomOut,
-                resetZoom: resetZoom,
-                zoomIn: zoomIn,
-                centerCanvas: centerCanvas,
-                fitCanvasToViewport: fitCanvasToViewport,
-                zoom: zoom
-              }),
-              JsxRuntime.jsx(BrushAndTileMaskSaveControl.make, {
-                board: board,
-                setBrush: setBrush,
-                setSavedBrushes: setSavedBrushes,
-                canDeleteSelectedBrush: canDeleteSelectedBrush,
-                handleDeleteSelectedBrush: handleDeleteSelectedBrush,
-                setTileMask: setTileMask,
-                setSavedTileMasks: setSavedTileMasks,
-                setSelectedTileMaskIndex: setSelectedTileMaskIndex,
-                canDeleteSelectedTileMask: canDeleteSelectedTileMask,
-                handleDeleteSelectedTileMask: handleDeleteSelectedTileMask
-              }),
               JsxRuntime.jsx(BrushOverlayControl.make, {
                 overlayMode: overlayMode,
                 setOverlayMode: match$8[1]
@@ -931,6 +924,18 @@ function App(props) {
               JsxRuntime.jsx(SilhouetteControl.make, {
                 isSilhouette: isSilhouette,
                 setIsSilhouette: match$13[1]
+              }),
+              JsxRuntime.jsx(BrushAndTileMaskSaveControl.make, {
+                board: board,
+                setBrush: setBrush,
+                setSavedBrushes: setSavedBrushes,
+                canDeleteSelectedBrush: canDeleteSelectedBrush,
+                handleDeleteSelectedBrush: handleDeleteSelectedBrush,
+                setTileMask: setTileMask,
+                setSavedTileMasks: setSavedTileMasks,
+                setSelectedTileMaskIndex: setSelectedTileMaskIndex,
+                canDeleteSelectedTileMask: canDeleteSelectedTileMask,
+                handleDeleteSelectedTileMask: handleDeleteSelectedTileMask
               }),
               JsxRuntime.jsx(CanvasSizeControl.make, {
                 resizeRowsInput: resizeRowsInput,
