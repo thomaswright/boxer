@@ -200,7 +200,6 @@ let make = (
   let widthString = canvasWidth->Int.toString ++ "px"
   let heightString = canvasHeight->Int.toString ++ "px"
   let cellSizeString = cellSize->Int.toString ++ "px"
-  let halfCellSizeString = (cellSize / 2)->Int.toString ++ "px"
   let gridBackgroundImage =
     "linear-gradient(to right, "
     ++ gridLineColor
@@ -208,22 +207,27 @@ let make = (
     ++ gridLineColor
     ++ " 1px, transparent 1px)"
   let gridBackgroundSize = cellSizeString ++ " " ++ cellSizeString
+  let doubleCellSizeString = (cellSize * 2)->Int.toString ++ "px"
+  let checkeredSvg =
+    "<svg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'>"
+    ++ "<rect width='1' height='1' fill='"
+    ++ checkeredPrimaryColor
+    ++ "'/>"
+    ++ "<rect x='1' y='1' width='1' height='1' fill='"
+    ++ checkeredPrimaryColor
+    ++ "'/>"
+    ++ "<rect x='1' width='1' height='1' fill='"
+    ++ checkeredSecondaryColor
+    ++ "'/>"
+    ++ "<rect y='1' width='1' height='1' fill='"
+    ++ checkeredSecondaryColor
+    ++ "'/>"
+    ++ "</svg>"
   let checkeredBackgroundImage =
-    "linear-gradient(45deg, "
-    ++ checkeredPrimaryColor
-    ++ " 25%, transparent 25%, transparent 75%, "
-    ++ checkeredPrimaryColor
-    ++ " 75%, "
-    ++ checkeredPrimaryColor
-    ++ "), linear-gradient(45deg, "
-    ++ checkeredPrimaryColor
-    ++ " 25%, transparent 25%, transparent 75%, "
-    ++ checkeredPrimaryColor
-    ++ " 75%, "
-    ++ checkeredPrimaryColor
-    ++ ")"
-  let checkeredBackgroundPosition = "0 0, " ++ halfCellSizeString ++ " " ++ halfCellSizeString
-  let checkeredBackgroundSize = cellSizeString ++ " " ++ cellSizeString
+    "url(\"data:image/svg+xml,"
+    ++ Js.Global.encodeURIComponent(checkeredSvg)
+    ++ "\")"
+  let checkeredBackgroundSize = doubleCellSizeString ++ " " ++ doubleCellSizeString
   let isGridLines = gridMode == GridLines
   let isCheckeredOverlay = gridMode == CheckeredOverlay
   let isCheckeredUnderlay = gridMode == CheckeredUnderlay
@@ -250,7 +254,7 @@ let make = (
                backgroundImage: checkeredBackgroundImage,
                backgroundColor: checkeredSecondaryColor,
                backgroundSize: checkeredBackgroundSize,
-               backgroundPosition: checkeredBackgroundPosition,
+               imageRendering: "pixelated",
              }}
            />
          : React.null}
@@ -287,7 +291,7 @@ let make = (
                backgroundImage: checkeredBackgroundImage,
                backgroundColor: checkeredSecondaryColor,
                backgroundSize: checkeredBackgroundSize,
-               backgroundPosition: checkeredBackgroundPosition,
+               imageRendering: "pixelated",
              }}
            />
          : React.null}

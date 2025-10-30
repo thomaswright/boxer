@@ -217,12 +217,12 @@ function CanvasViewport(props) {
   let widthString = canvasWidth.toString() + "px";
   let heightString = canvasHeight.toString() + "px";
   let cellSizeString = (16).toString() + "px";
-  let halfCellSizeString = (8).toString() + "px";
   let gridBackgroundImage = "linear-gradient(to right, " + gridLineColor + " 1px, transparent 1px), linear-gradient(to bottom, " + gridLineColor + " 1px, transparent 1px)";
   let gridBackgroundSize = cellSizeString + " " + cellSizeString;
-  let checkeredBackgroundImage = "linear-gradient(45deg, " + checkeredPrimaryColor + " 25%, transparent 25%, transparent 75%, " + checkeredPrimaryColor + " 75%, " + checkeredPrimaryColor + "), linear-gradient(45deg, " + checkeredPrimaryColor + " 25%, transparent 25%, transparent 75%, " + checkeredPrimaryColor + " 75%, " + checkeredPrimaryColor + ")";
-  let checkeredBackgroundPosition = "0 0, " + halfCellSizeString + " " + halfCellSizeString;
-  let checkeredBackgroundSize = cellSizeString + " " + cellSizeString;
+  let doubleCellSizeString = (32).toString() + "px";
+  let checkeredSvg = "<svg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'><rect width='1' height='1' fill='" + checkeredPrimaryColor + "'/><rect x='1' y='1' width='1' height='1' fill='" + checkeredPrimaryColor + "'/><rect x='1' width='1' height='1' fill='" + checkeredSecondaryColor + "'/><rect y='1' width='1' height='1' fill='" + checkeredSecondaryColor + "'/></svg>";
+  let checkeredBackgroundImage = "url(\"data:image/svg+xml," + encodeURIComponent(checkeredSvg) + "\")";
+  let checkeredBackgroundSize = doubleCellSizeString + " " + doubleCellSizeString;
   let isGridLines = gridMode === "grid";
   let isCheckeredOverlay = gridMode === "checkeredOverlay";
   let isCheckeredUnderlay = gridMode === "checkeredUnderlay";
@@ -234,9 +234,9 @@ function CanvasViewport(props) {
             style: {
               backgroundColor: checkeredSecondaryColor,
               backgroundImage: checkeredBackgroundImage,
-              backgroundPosition: checkeredBackgroundPosition,
               backgroundSize: checkeredBackgroundSize,
               height: heightString,
+              imageRendering: "pixelated",
               width: widthString
             }
           }) : null,
@@ -267,9 +267,9 @@ function CanvasViewport(props) {
             style: {
               backgroundColor: checkeredSecondaryColor,
               backgroundImage: checkeredBackgroundImage,
-              backgroundPosition: checkeredBackgroundPosition,
               backgroundSize: checkeredBackgroundSize,
               height: heightString,
+              imageRendering: "pixelated",
               width: widthString
             }
           }) : null
