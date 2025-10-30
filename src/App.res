@@ -308,46 +308,6 @@ let make = () => {
     (nextPanX, nextPanY)
   }
 
-  let centerCanvas = () => {
-    let (nextPanX, nextPanY) = computeCenteredPan(boardDimI, boardDimJ, zoomRef.current)
-    updatePan(((prevX, prevY)) =>
-      if prevX == nextPanX && prevY == nextPanY {
-        (prevX, prevY)
-      } else {
-        (nextPanX, nextPanY)
-      }
-    )
-  }
-  let fitCanvasToViewport = () => {
-    switch canvasContainerRef.current->Js.Nullable.toOption {
-    | Some(containerElement) =>
-      let rect = containerElement->Element.getBoundingClientRect
-      let viewportWidth = rect->DomRect.width
-      let viewportHeight = rect->DomRect.height
-      let cellSize = 16.
-      let boardWidth = Float.fromInt(boardDimJ) *. cellSize
-      let boardHeight = Float.fromInt(boardDimI) *. cellSize
-      if viewportWidth <= 0. || viewportHeight <= 0. || boardWidth <= 0. || boardHeight <= 0. {
-        centerCanvas()
-      } else {
-        let zoomByWidth = viewportWidth /. boardWidth
-        let zoomByHeight = viewportHeight /. boardHeight
-        let zoomToFit = if zoomByWidth < zoomByHeight {
-          zoomByWidth
-        } else {
-          zoomByHeight
-        }
-        let nextZoom = clampZoom(zoomToFit)
-        updateCanvasById(currentCanvasIdRef.current, canvas => {
-          let (nextPanX, nextPanY) = computeCenteredPan(boardDimI, boardDimJ, nextZoom)
-          zoomRef.current = nextZoom
-          panRef.current = (nextPanX, nextPanY)
-          {...canvas, zoom: nextZoom, pan: (nextPanX, nextPanY)}
-        })
-      }
-    | None => centerCanvas()
-    }
-  }
   let centerCanvasForDimensions = (dimI, dimJ) => {
     let (nextPanX, nextPanY) = computeCenteredPan(dimI, dimJ, zoomRef.current)
     updatePan(((prevX, prevY)) =>
@@ -358,6 +318,39 @@ let make = () => {
       }
     )
   }
+
+  let centerCanvas = () => centerCanvasForDimensions(boardDimI, boardDimJ)
+  let fitCanvasToViewportForDimensions = (dimI, dimJ) =>
+    switch canvasContainerRef.current->Js.Nullable.toOption {
+    | Some(containerElement) =>
+      let rect = containerElement->Element.getBoundingClientRect
+      let viewportWidth = rect->DomRect.width
+      let viewportHeight = rect->DomRect.height
+      let cellSize = 16.
+      let boardWidth = Float.fromInt(dimJ) *. cellSize
+      let boardHeight = Float.fromInt(dimI) *. cellSize
+      if viewportWidth <= 0. || viewportHeight <= 0. || boardWidth <= 0. || boardHeight <= 0. {
+        centerCanvasForDimensions(dimI, dimJ)
+      } else {
+        let zoomByWidth = viewportWidth /. boardWidth
+        let zoomByHeight = viewportHeight /. boardHeight
+        let zoomToFit = if zoomByWidth < zoomByHeight {
+          zoomByWidth
+        } else {
+          zoomByHeight
+        }
+        let nextZoom = clampZoom(zoomToFit)
+        updateCanvasById(currentCanvasIdRef.current, canvas => {
+          let (nextPanX, nextPanY) = computeCenteredPan(dimI, dimJ, nextZoom)
+          zoomRef.current = nextZoom
+          panRef.current = (nextPanX, nextPanY)
+          {...canvas, zoom: nextZoom, pan: (nextPanX, nextPanY)}
+        })
+      }
+    | None => centerCanvasForDimensions(dimI, dimJ)
+    }
+
+  let fitCanvasToViewport = () => fitCanvasToViewportForDimensions(boardDimI, boardDimJ)
 
   // Resize controls
   let (resizeRowsInput, setResizeRowsInput) = React.useState(() => boardDimI->Int.toString)
@@ -474,6 +467,7 @@ let make = () => {
       | Scale => setBoard(prev => resizeBoardScale(prev, nextRows, nextCols))
       | Crop => setBoard(prev => resizeBoardCrop(prev, nextRows, nextCols))
       }
+      fitCanvasToViewportForDimensions(nextRows, nextCols)
       clearHoverRef.current()
       setCursorOverlayOff(_ => true)
     | _ => ()

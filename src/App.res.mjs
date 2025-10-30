@@ -421,63 +421,6 @@ function App(props) {
       nextPanY
     ];
   };
-  let centerCanvas = () => {
-    let match = computeCenteredPan(boardDimI, boardDimJ, zoomRef.current);
-    let nextPanY = match[1];
-    let nextPanX = match[0];
-    updatePan(param => {
-      let prevY = param[1];
-      let prevX = param[0];
-      if (prevX === nextPanX && prevY === nextPanY) {
-        return [
-          prevX,
-          prevY
-        ];
-      } else {
-        return [
-          nextPanX,
-          nextPanY
-        ];
-      }
-    });
-  };
-  let fitCanvasToViewport = () => {
-    let containerElement = canvasContainerRef.current;
-    if (containerElement == null) {
-      return centerCanvas();
-    }
-    let rect = containerElement.getBoundingClientRect();
-    let viewportWidth = rect.width;
-    let viewportHeight = rect.height;
-    let boardWidth = boardDimJ * 16;
-    let boardHeight = boardDimI * 16;
-    if (viewportWidth <= 0 || viewportHeight <= 0 || boardWidth <= 0 || boardHeight <= 0) {
-      return centerCanvas();
-    }
-    let zoomByWidth = viewportWidth / boardWidth;
-    let zoomByHeight = viewportHeight / boardHeight;
-    let zoomToFit = zoomByWidth < zoomByHeight ? zoomByWidth : zoomByHeight;
-    let nextZoom = clampZoom(zoomToFit);
-    updateCanvasById(currentCanvasIdRef.current, canvas => {
-      let match = computeCenteredPan(boardDimI, boardDimJ, nextZoom);
-      let nextPanY = match[1];
-      let nextPanX = match[0];
-      zoomRef.current = nextZoom;
-      panRef.current = [
-        nextPanX,
-        nextPanY
-      ];
-      return {
-        id: canvas.id,
-        board: canvas.board,
-        zoom: nextZoom,
-        pan: [
-          nextPanX,
-          nextPanY
-        ]
-      };
-    });
-  };
   let centerCanvasForDimensions = (dimI, dimJ) => {
     let match = computeCenteredPan(dimI, dimJ, zoomRef.current);
     let nextPanY = match[1];
@@ -498,6 +441,45 @@ function App(props) {
       }
     });
   };
+  let centerCanvas = () => centerCanvasForDimensions(boardDimI, boardDimJ);
+  let fitCanvasToViewportForDimensions = (dimI, dimJ) => {
+    let containerElement = canvasContainerRef.current;
+    if (containerElement == null) {
+      return centerCanvasForDimensions(dimI, dimJ);
+    }
+    let rect = containerElement.getBoundingClientRect();
+    let viewportWidth = rect.width;
+    let viewportHeight = rect.height;
+    let boardWidth = dimJ * 16;
+    let boardHeight = dimI * 16;
+    if (viewportWidth <= 0 || viewportHeight <= 0 || boardWidth <= 0 || boardHeight <= 0) {
+      return centerCanvasForDimensions(dimI, dimJ);
+    }
+    let zoomByWidth = viewportWidth / boardWidth;
+    let zoomByHeight = viewportHeight / boardHeight;
+    let zoomToFit = zoomByWidth < zoomByHeight ? zoomByWidth : zoomByHeight;
+    let nextZoom = clampZoom(zoomToFit);
+    updateCanvasById(currentCanvasIdRef.current, canvas => {
+      let match = computeCenteredPan(dimI, dimJ, nextZoom);
+      let nextPanY = match[1];
+      let nextPanX = match[0];
+      zoomRef.current = nextZoom;
+      panRef.current = [
+        nextPanX,
+        nextPanY
+      ];
+      return {
+        id: canvas.id,
+        board: canvas.board,
+        zoom: nextZoom,
+        pan: [
+          nextPanX,
+          nextPanY
+        ]
+      };
+    });
+  };
+  let fitCanvasToViewport = () => fitCanvasToViewportForDimensions(boardDimI, boardDimJ);
   let match$23 = React.useState(() => boardDimI.toString());
   let setResizeRowsInput = match$23[1];
   let resizeRowsInput = match$23[0];
@@ -617,6 +599,7 @@ function App(props) {
     } else {
       setBoard(prev => Array2D.make(match, match$1, () => null).map((row, rowI) => row.map((param, colJ) => Stdlib_Option.getOr(Array2D.check(prev, rowI, colJ), null))));
     }
+    fitCanvasToViewportForDimensions(match, match$1);
     clearHoverRef.current();
     setCursorOverlayOff(param => true);
   };
