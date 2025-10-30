@@ -1,4 +1,5 @@
 import React from "react";
+import { hexToUint32, uint32ToHex } from "./BoardColor.js";
 
 const CANVASES_KEY = "canvases";
 const CANVAS_STORAGE_VERSION = 1;
@@ -6,6 +7,45 @@ const DEFERRED_KEYS = new Set([CANVASES_KEY]);
 const FLUSH_DELAY_MS = 500;
 const pendingWrites = new Map();
 let flushHandlersRegistered = false;
+
+function isTypedBoard(board) {
+  return (
+    board &&
+    typeof board === "object" &&
+    Number.isInteger(board.rows) &&
+    Number.isInteger(board.cols) &&
+    board.data instanceof Uint32Array
+  );
+}
+
+function ensureTypedBoard(board) {
+  if (isTypedBoard(board)) {
+    return {
+      rows: board.rows | 0,
+      cols: board.cols | 0,
+      data: board.data,
+    };
+  }
+
+  if (!Array.isArray(board)) {
+    return { rows: 0, cols: 0, data: new Uint32Array(0) };
+  }
+
+  const rows = board.length;
+  const cols = rows > 0 && Array.isArray(board[0]) ? board[0].length : 0;
+  const data = new Uint32Array(rows * cols);
+  for (let row = 0; row < rows; row += 1) {
+    const rowData = Array.isArray(board[row]) ? board[row] : [];
+    for (let col = 0; col < cols; col += 1) {
+      const cell = rowData[col];
+      if (cell != null) {
+        data[row * cols + col] = hexToUint32(cell);
+      }
+    }
+  }
+
+  return { rows, cols, data };
+}
 
 function dispatchStorageEvent(key, newValue) {
   if (typeof window === "undefined") {
@@ -90,47 +130,48 @@ function fromBase36(value) {
 }
 
 function encodeBoard(board) {
-  if (!Array.isArray(board) || board.length === 0) {
+  const typed = ensureTypedBoard(board);
+  const rows = typed.rows | 0;
+  const cols = typed.cols | 0;
+
+  if (rows === 0 || cols === 0) {
     return { rows: 0, cols: 0, palette: [null], runs: "" };
   }
 
-  const rows = board.length;
-  const cols = Array.isArray(board[0]) ? board[0].length : 0;
-
   const palette = [null];
-  const colorToIndex = new Map([[null, 0]]);
-
-  const getIndex = (value) => {
-    if (value === undefined || value === null) {
-      return 0;
-    }
-    if (colorToIndex.has(value)) {
-      return colorToIndex.get(value);
-    }
-    const nextIndex = palette.length;
-    palette.push(value);
-    colorToIndex.set(value, nextIndex);
-    return nextIndex;
-  };
+  const colorToIndex = new Map();
 
   const runs = [];
   let previousIndex = -1;
   let count = 0;
 
-  for (let row = 0; row < rows; row += 1) {
-    const rowData = Array.isArray(board[row]) ? board[row] : [];
-    for (let col = 0; col < cols; col += 1) {
-      const cell = rowData[col];
-      const index = getIndex(cell);
-      if (index === previousIndex) {
-        count += 1;
-      } else {
-        if (count > 0) {
-          runs.push([previousIndex, count]);
+  const totalCells = rows * cols;
+  const data = typed.data;
+
+  for (let idx = 0; idx < totalCells; idx += 1) {
+    const value = data[idx] >>> 0;
+    let paletteIndex = 0;
+    if (value !== 0) {
+      const color = uint32ToHex(value);
+      if (color) {
+        if (colorToIndex.has(color)) {
+          paletteIndex = colorToIndex.get(color);
+        } else {
+          paletteIndex = palette.length;
+          palette.push(color);
+          colorToIndex.set(color, paletteIndex);
         }
-        previousIndex = index;
-        count = 1;
       }
+    }
+
+    if (paletteIndex === previousIndex) {
+      count += 1;
+    } else {
+      if (count > 0) {
+        runs.push([previousIndex, count]);
+      }
+      previousIndex = paletteIndex;
+      count = 1;
     }
   }
 
@@ -152,29 +193,44 @@ function encodeBoard(board) {
 
 function decodeBoard(encoded) {
   if (!encoded) {
-    return [];
+    return { rows: 0, cols: 0, data: new Uint32Array(0) };
+  }
+
+  if (isTypedBoard(encoded)) {
+    const rows = Math.max(0, encoded.rows | 0);
+    const cols = Math.max(0, encoded.cols | 0);
+    const source = encoded.data;
+    const data = source instanceof Uint32Array ? source : new Uint32Array(source ?? []);
+    if (data.length === rows * cols) {
+      return { rows, cols, data };
+    }
+    const copy = new Uint32Array(rows * cols);
+    const minLength = Math.min(copy.length, data.length);
+    copy.set(data.subarray(0, minLength));
+    return { rows, cols, data: copy };
   }
 
   if (Array.isArray(encoded)) {
-    return encoded;
+    return ensureTypedBoard(encoded);
   }
 
-  const rows = typeof encoded.rows === "number" ? encoded.rows : 0;
-  const cols = typeof encoded.cols === "number" ? encoded.cols : 0;
+  const rows = typeof encoded.rows === "number" ? encoded.rows | 0 : 0;
+  const cols = typeof encoded.cols === "number" ? encoded.cols | 0 : 0;
+  const totalCells = rows * cols;
+  const data = new Uint32Array(totalCells);
   const paletteSource = Array.isArray(encoded.palette) ? encoded.palette : [null];
   const palette = paletteSource.map((entry) =>
-    entry === undefined || entry === null ? null : entry
+    entry === undefined || entry === null ? 0 : hexToUint32(entry)
   );
 
-  const cellCount = rows * cols;
-  const flattened = new Array(cellCount);
   let pointer = 0;
 
   const fillWithValue = (value, length) => {
-    for (let idx = 0; idx < length && pointer < cellCount; idx += 1) {
-      flattened[pointer] = value;
-      pointer += 1;
+    const boundedLength = Math.min(length, totalCells - pointer);
+    for (let idx = 0; idx < boundedLength; idx += 1) {
+      data[pointer + idx] = value;
     }
+    pointer += boundedLength;
   };
 
   if (typeof encoded.runs === "string" && encoded.runs.length > 0) {
@@ -193,23 +249,15 @@ function decodeBoard(encoded) {
       if (Number.isNaN(paletteIndex) || Number.isNaN(runLength)) {
         continue;
       }
-      const value = palette[paletteIndex] ?? null;
+      const value = palette[paletteIndex] ?? 0;
       fillWithValue(value, runLength);
+      if (pointer >= totalCells) {
+        break;
+      }
     }
   }
 
-  while (pointer < cellCount) {
-    flattened[pointer] = null;
-    pointer += 1;
-  }
-
-  const board = [];
-  for (let row = 0; row < rows; row += 1) {
-    const start = row * cols;
-    board.push(flattened.slice(start, start + cols));
-  }
-
-  return board;
+  return { rows, cols, data };
 }
 
 function serializeCanvas(canvas) {

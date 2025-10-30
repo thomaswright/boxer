@@ -15,10 +15,9 @@ let make = (
   let colorCounts = Js.Dict.empty()
   let totalColored = ref(0)
 
-  board->Array.forEach(row =>
-    row->Array.forEach(cell =>
-      switch cell->Nullable.toOption {
-      | None => ()
+  Board.forEachValue(board, (_, _, value) =>
+    if value != 0 {
+      switch Board.valueToNullable(value)->Js.Nullable.toOption {
       | Some(color) =>
         totalColored.contents = totalColored.contents + 1
         let nextCount = switch colorCounts->Js.Dict.get(color) {
@@ -26,8 +25,9 @@ let make = (
         | None => 1
         }
         colorCounts->Js.Dict.set(color, nextCount)
+      | None => ()
       }
-    )
+    }
   )
 
   let totalColoredCells = totalColored.contents

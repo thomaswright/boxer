@@ -162,14 +162,7 @@ let make = (
     | Some((row, col)) =>
       updateHover(Some((row, col)))
       if isPickingColor {
-        let hoveredColor = switch board->Array.get(row) {
-        | Some(rowData) =>
-          switch rowData->Array.get(col) {
-          | Some(cell) => cell->Nullable.toOption
-          | None => None
-          }
-        | None => None
-        }
+        let hoveredColor = Board.get(board, row, col)->Js.Nullable.toOption
         setHoveredPickColor(_ => hoveredColor)
       }
       if isMouseDown && !isPickingColor {

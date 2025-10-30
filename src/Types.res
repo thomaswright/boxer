@@ -1,4 +1,4 @@
-type board = array<array<Nullable.t<string>>>
+type board = Board.t
 type canvasState = {
   id: string,
   board: board,

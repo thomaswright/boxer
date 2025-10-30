@@ -6,7 +6,7 @@ open Types
 @module("./useLocalStorage.js")
 external useLocalStorage: (string, 'a) => ('a, ('a => 'a) => unit, unit => 'a) = "default"
 
-let makeBoard = (i, j) => Array2D.make(i, j, () => Nullable.null)
+let makeBoard = (i, j) => Board.make(i, j)
 let makeBrush = (i, j) => Array2D.make(i, j, () => true)
 let makeTileMask = (i, j) => Array2D.make(i, j, () => true)
 
@@ -243,14 +243,7 @@ let make = () => {
   panRef.current = pan
 
   let handlePickColor = (row, col) => {
-    let pickedColor = switch board->Array.get(row) {
-    | Some(rowData) =>
-      switch rowData->Array.get(col) {
-      | Some(cell) => cell->Nullable.toOption
-      | None => None
-      }
-    | None => None
-    }
+    let pickedColor = Board.get(board, row, col)->Js.Nullable.toOption
     switch pickedColor {
     | Some(color) =>
       setMyColor(_ => color)
@@ -313,7 +306,7 @@ let make = () => {
   let zoomIn = () => adjustZoomByFactor(Initials.zoom_factor)
   let zoomOut = () => adjustZoomByFactor(1. /. Initials.zoom_factor)
 
-  let (boardDimI, boardDimJ) = board->Array2D.dims
+  let (boardDimI, boardDimJ) = Board.dims(board)
   let lastAutoCenteredDimsRef = React.useRef(None)
   let (brushDimI, brushDimJ) = brush->Array2D.dims
   let brushCenterDimI = brushDimI / 2
@@ -451,26 +444,31 @@ let make = () => {
     }
 
   let resizeBoardScale = (prev, nextRows, nextCols) => {
-    let (prevRows, prevCols) = prev->Array2D.dims
+    let (prevRows, prevCols) = Board.dims(prev)
+    let nextBoard = Board.make(nextRows, nextCols)
     if prevRows == 0 || prevCols == 0 {
-      makeBoard(nextRows, nextCols)
+      nextBoard
     } else {
-      Array2D.make(nextRows, nextCols, () => Nullable.null)->Array.mapWithIndex((row, rowI) =>
-        row->Array.mapWithIndex((_, colJ) => {
-          let srcRow = mapIndex(~srcSize=prevRows, ~dstSize=nextRows, rowI)
+      for rowI in 0 to nextRows - 1 {
+        let srcRow = mapIndex(~srcSize=prevRows, ~dstSize=nextRows, rowI)
+        for colJ in 0 to nextCols - 1 {
           let srcCol = mapIndex(~srcSize=prevCols, ~dstSize=nextCols, colJ)
-          prev->Array2D.check(srcRow, srcCol)->Option.getOr(Nullable.null)
-        })
-      )
+          Board.setInPlace(nextBoard, rowI, colJ, Board.get(prev, srcRow, srcCol))
+        }
+      }
+      nextBoard
     }
   }
 
-  let resizeBoardCrop = (prev, nextRows, nextCols) =>
-    Array2D.make(nextRows, nextCols, () => Nullable.null)->Array.mapWithIndex((row, rowI) =>
-      row->Array.mapWithIndex((_, colJ) =>
-        prev->Array2D.check(rowI, colJ)->Option.getOr(Nullable.null)
-      )
-    )
+  let resizeBoardCrop = (prev, nextRows, nextCols) => {
+    let nextBoard = Board.make(nextRows, nextCols)
+    for rowI in 0 to nextRows - 1 {
+      for colJ in 0 to nextCols - 1 {
+        Board.setInPlace(nextBoard, rowI, colJ, Board.get(prev, rowI, colJ))
+      }
+    }
+    nextBoard
+  }
 
   let canSubmitResize = switch (
     parsePositiveInt(resizeRowsInput),
@@ -514,7 +512,7 @@ let make = () => {
   let canDeleteSelectedTileMask = savedTileMasks->Array.length > 1
 
   let handleAddBrush = () => {
-    let newBrush = board->Array.map(row => row->Array.map(cell => !(cell->Nullable.isNullable)))
+    let newBrush = Board.toBoolGrid(board)
     setSavedBrushes(v => v->Array.concat([newBrush]))
     setBrush(_ => newBrush)
   }
@@ -527,7 +525,7 @@ let make = () => {
     }
 
   let handleAddTileMask = () => {
-    let newTileMask = board->Array.map(row => row->Array.map(cell => !(cell->Nullable.isNullable)))
+    let newTileMask = Board.toBoolGrid(board)
     setSavedTileMasks(prev => {
       let next = prev->Array.concat([newTileMask])
       setSelectedTileMaskIndex(_ => next->Array.length - 1)
@@ -619,20 +617,6 @@ let make = () => {
   // Painting helpers
   let onMouseMove = _ => setCursorOverlayOff(_ => false)
 
-  let canApply = (boardI, boardJ, clickI, clickJ) => {
-    let brushPosI = boardI - clickI + brushCenterDimI
-    let brushPosJ = boardJ - clickJ + brushCenterDimJ
-
-    let brushAllows = Array2D.check(brush, brushPosI, brushPosJ)->Option.getOr(false)
-
-    let maskAllows =
-      Array2D.check(tileMask, mod(boardI, tileMaskDimI), mod(boardJ, tileMaskDimJ))->Option.getOr(
-        false,
-      )
-
-    brushAllows && maskAllows
-  }
-
   let getBrushColor = () => {
     switch brushMode {
     | Color => Nullable.Value(myColor)
@@ -641,15 +625,44 @@ let make = () => {
   }
 
   let applyBrush = (clickI, clickJ) => {
-    setBoard(b => {
-      let brush = b->Array.mapWithIndex((row, boardI) =>
-        row->Array.mapWithIndex(
-          (cell, boardJ) => {
-            canApply(boardI, boardJ, clickI, clickJ) ? getBrushColor() : cell
-          },
-        )
-      )
-      brush
+    let brushColor = getBrushColor()
+    setBoard(prev => {
+      let (rows, cols) = Board.dims(prev)
+      if rows == 0 || cols == 0 {
+        prev
+      } else {
+        let updates: array<(int, int, Js.Nullable.t<string>)> = []
+        for brushI in 0 to brushDimI - 1 {
+          let boardI = clickI - brushCenterDimI + brushI
+          if boardI >= 0 && boardI < rows {
+            for brushJ in 0 to brushDimJ - 1 {
+              let boardJ = clickJ - brushCenterDimJ + brushJ
+              if boardJ >= 0 && boardJ < cols {
+                let brushAllows = Array2D.check(brush, brushI, brushJ)->Option.getOr(false)
+                if brushAllows {
+                  let maskAllows = if tileMaskDimI > 0 && tileMaskDimJ > 0 {
+                    Array2D.check(
+                      tileMask,
+                      mod(boardI, tileMaskDimI),
+                      mod(boardJ, tileMaskDimJ),
+                    )->Option.getOr(false)
+                  } else {
+                    true
+                  }
+                  if maskAllows {
+                    ignore(Js.Array2.push(updates, (boardI, boardJ, brushColor)))
+                  }
+                }
+              }
+            }
+          }
+        }
+        if Js.Array2.length(updates) == 0 {
+          prev
+        } else {
+          Board.setMany(prev, updates)
+        }
+      }
     })
   }
 
@@ -717,22 +730,27 @@ let make = () => {
   }
 
   let onReplaceUsedColor = color =>
-    setBoard(prev =>
-      prev->Array.map(row =>
-        row->Array.map(
-          cell =>
-            switch cell->Nullable.toOption {
-            | Some(existing) =>
-              if existing == color {
-                Nullable.Value(myColor)
-              } else {
-                cell
-              }
-            | None => cell
-            },
-        )
-      )
-    )
+    setBoard(prev => {
+      let (rows, cols) = Board.dims(prev)
+      let replacement = Nullable.Value(myColor)
+      let updates: array<(int, int, Js.Nullable.t<string>)> = []
+      for row in 0 to rows - 1 {
+        for col in 0 to cols - 1 {
+          switch Board.get(prev, row, col)->Js.Nullable.toOption {
+          | Some(existing) =>
+            if existing == color {
+              ignore(Js.Array2.push(updates, (row, col, replacement)))
+            }
+          | None => ()
+          }
+        }
+      }
+      if Js.Array2.length(updates) == 0 {
+        prev
+      } else {
+        Board.setMany(prev, updates)
+      }
+    })
 
   <div className=" flex flex-row h-dvh overflow-x-hidden">
     <div className="flex flex-col flex-none overflow-x-hidden divide-y divide-gray-300">

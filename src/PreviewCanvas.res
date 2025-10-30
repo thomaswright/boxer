@@ -40,28 +40,34 @@ let drawBoolGrid = (~canvasElement, ~grid, ~trueColor, ~falseColor) => {
 }
 
 let drawBoard = (~canvasElement, ~board: Types.board, ~emptyColor) => {
-  let (height, width) = board->Array2D.dims
+  let (height, width) = Board.dims(board)
   if height == 0 || width == 0 {
     ()
   } else {
     let ctx = prepareContext(canvasElement, width, height)
     let lastColor = ref("")
-    board->Array.forEachWithIndex((row, rowIndex) =>
-      row->Array.forEachWithIndex((cell, colIndex) => {
-        let color = switch cell->Js.Nullable.toOption {
-        | Some(color) => Some(color)
-        | None => emptyColor
+    Board.forEachValue(board, (rowIndex, colIndex, value) => {
+      let color =
+        if value == 0 {
+          emptyColor
+        } else {
+          Board.valueToNullable(value)->Js.Nullable.toOption
         }
-        switch color {
-        | Some(colorString) =>
-          if colorString != lastColor.contents {
-            Canvas2d.setFillStyle(ctx, Canvas2d.String, colorString)
-            lastColor.contents = colorString
-          }
-          Canvas2d.fillRect(ctx, ~x=colIndex->Int.toFloat, ~y=rowIndex->Int.toFloat, ~w=1., ~h=1.)
-        | None => ()
+      switch color {
+      | Some(colorString) =>
+        if colorString != lastColor.contents {
+          Canvas2d.setFillStyle(ctx, Canvas2d.String, colorString)
+          lastColor.contents = colorString
         }
-      })
-    )
+        Canvas2d.fillRect(
+          ctx,
+          ~x=colIndex->Int.toFloat,
+          ~y=rowIndex->Int.toFloat,
+          ~w=1.,
+          ~h=1.,
+        )
+      | None => ()
+      }
+    })
   }
 }

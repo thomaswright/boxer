@@ -326,8 +326,25 @@ class CanvasRenderer {
   }
 
   updateBoard(board, backgroundColor, isSilhouette) {
-    const rows = Array.isArray(board) ? board.length : 0;
-    const cols = rows > 0 && Array.isArray(board[0]) ? board[0].length : 0;
+    const isTypedBoard =
+      board &&
+      typeof board === "object" &&
+      Number.isInteger(board.rows) &&
+      Number.isInteger(board.cols) &&
+      board.data instanceof Uint32Array;
+    const rows = isTypedBoard
+      ? Math.max(0, board.rows | 0)
+      : Array.isArray(board)
+        ? board.length
+        : 0;
+    const cols =
+      rows > 0
+        ? isTypedBoard
+          ? Math.max(0, board.cols | 0)
+          : Array.isArray(board?.[0])
+            ? board[0].length
+            : 0
+        : 0;
     this.rows = rows;
     this.cols = cols;
     this.isSilhouette = Boolean(isSilhouette);
@@ -365,23 +382,52 @@ class CanvasRenderer {
     }
 
     const data = new Uint8Array(cols * rows * 4);
-    for (let row = 0; row < rows; row += 1) {
-      const line = board[row] || [];
-      for (let col = 0; col < cols; col += 1) {
+    if (isTypedBoard) {
+      const source = board.data;
+      for (let row = 0; row < rows; row += 1) {
         const flippedRow = rows - 1 - row;
-        const idx = (flippedRow * cols + col) * 4;
-        const cell = line[col];
-        if (cell != null) {
-          const color = this.isSilhouette ? [0, 0, 0] : parseHexColor(cell, bg);
-          data[idx] = color[0];
-          data[idx + 1] = color[1];
-          data[idx + 2] = color[2];
-          data[idx + 3] = 255;
-        } else {
-          data[idx] = 0;
-          data[idx + 1] = 0;
-          data[idx + 2] = 0;
-          data[idx + 3] = 0;
+        for (let col = 0; col < cols; col += 1) {
+          const idx = (flippedRow * cols + col) * 4;
+          const sourceIdx = row * cols + col;
+          const value = source[sourceIdx] >>> 0;
+          if (value !== 0) {
+            if (this.isSilhouette) {
+              data[idx] = 0;
+              data[idx + 1] = 0;
+              data[idx + 2] = 0;
+            } else {
+              data[idx] = (value >> 16) & 0xff;
+              data[idx + 1] = (value >> 8) & 0xff;
+              data[idx + 2] = value & 0xff;
+            }
+            data[idx + 3] = 255;
+          } else {
+            data[idx] = 0;
+            data[idx + 1] = 0;
+            data[idx + 2] = 0;
+            data[idx + 3] = 0;
+          }
+        }
+      }
+    } else {
+      for (let row = 0; row < rows; row += 1) {
+        const line = board[row] || [];
+        const flippedRow = rows - 1 - row;
+        for (let col = 0; col < cols; col += 1) {
+          const idx = (flippedRow * cols + col) * 4;
+          const cell = line[col];
+          if (cell != null) {
+            const color = this.isSilhouette ? [0, 0, 0] : parseHexColor(cell, bg);
+            data[idx] = color[0];
+            data[idx + 1] = color[1];
+            data[idx + 2] = color[2];
+            data[idx + 3] = 255;
+          } else {
+            data[idx] = 0;
+            data[idx + 1] = 0;
+            data[idx + 2] = 0;
+            data[idx + 3] = 0;
+          }
         }
       }
     }
