@@ -782,16 +782,6 @@ let make = () => {
 
         <ZoomControl zoomOut resetZoom zoomIn centerCanvas fitCanvasToViewport zoom />
 
-        <SilhouetteControl isSilhouette setIsSilhouette />
-        <ExportControl
-          exportScaleInput
-          setExportScaleInput
-          includeExportBackground
-          setIncludeExportBackground
-          canExport
-          onExport={handleExportPng}
-        />
-
         <BrushAndTileMaskSaveControl
           board
           setBrush
@@ -814,6 +804,8 @@ let make = () => {
           viewportBackgroundColor
           setViewportBackgroundColor
         />
+        <SilhouetteControl isSilhouette setIsSilhouette />
+
         <CanvasSizeControl
           resizeRowsInput
           setResizeRowsInput
@@ -823,6 +815,15 @@ let make = () => {
           setResizeMode
           canSubmitResize
           handleResizeSubmit
+        />
+
+        <ExportControl
+          exportScaleInput
+          setExportScaleInput
+          includeExportBackground
+          setIncludeExportBackground
+          canExport
+          onExport={handleExportPng}
         />
       </div>
     </div>

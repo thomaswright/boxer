@@ -889,18 +889,6 @@ function App(props) {
                 fitCanvasToViewport: fitCanvasToViewport,
                 zoom: zoom
               }),
-              JsxRuntime.jsx(SilhouetteControl.make, {
-                isSilhouette: isSilhouette,
-                setIsSilhouette: match$13[1]
-              }),
-              JsxRuntime.jsx(ExportControl.make, {
-                exportScaleInput: exportScaleInput,
-                setExportScaleInput: match$15[1],
-                includeExportBackground: includeExportBackground,
-                setIncludeExportBackground: match$16[1],
-                canExport: canExport,
-                onExport: handleExportPng
-              }),
               JsxRuntime.jsx(BrushAndTileMaskSaveControl.make, {
                 board: board,
                 setBrush: setBrush,
@@ -928,6 +916,10 @@ function App(props) {
                 viewportBackgroundColor: viewportBackgroundColor,
                 setViewportBackgroundColor: match$12[1]
               }),
+              JsxRuntime.jsx(SilhouetteControl.make, {
+                isSilhouette: isSilhouette,
+                setIsSilhouette: match$13[1]
+              }),
               JsxRuntime.jsx(CanvasSizeControl.make, {
                 resizeRowsInput: resizeRowsInput,
                 setResizeRowsInput: setResizeRowsInput,
@@ -937,6 +929,14 @@ function App(props) {
                 setResizeMode: match$17[1],
                 canSubmitResize: canSubmitResize,
                 handleResizeSubmit: handleResizeSubmit
+              }),
+              JsxRuntime.jsx(ExportControl.make, {
+                exportScaleInput: exportScaleInput,
+                setExportScaleInput: match$15[1],
+                includeExportBackground: includeExportBackground,
+                setIncludeExportBackground: match$16[1],
+                canExport: canExport,
+                onExport: handleExportPng
               })
             ],
             className: "overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"
