@@ -1,6 +1,107 @@
 const VERTEX_SHADER_SOURCE = `#version 300 es\nprecision highp float;\nin vec2 aPosition;\nout vec2 vUV;\nvoid main() {\n  vUV = aPosition * 0.5 + 0.5;\n  gl_Position = vec4(aPosition, 0.0, 1.0);\n}\n`;
 
-const FRAGMENT_SHADER_SOURCE = `#version 300 es\nprecision highp float;\nin vec2 vUV;\nout vec4 outColor;\n\nuniform sampler2D uBoardTex;\nuniform sampler2D uBrushTex;\nuniform sampler2D uTileTex;\nuniform ivec2 uGridSize;\nuniform ivec2 uBrushSize;\nuniform ivec2 uBrushCenter;\nuniform ivec2 uTileSize;\nuniform vec4 uBackgroundColor;\nuniform bool uHasHover;\nuniform ivec2 uHoverCell;\nuniform bool uUseTileMask;\nuniform bool uShowOverlay;\nuniform bool uIsSilhouette;\n\nfloat luminance(vec3 color) {\n  return dot(color, vec3(0.2126, 0.7152, 0.0722));\n}\n\nvec2 texCoordFromCell(ivec2 cell, ivec2 gridSize) {\n  return vec2(\n    (float(cell.x) + 0.5) / float(gridSize.x),\n    1.0 - (float(cell.y) + 0.5) / float(gridSize.y)\n  );\n}\n\nvoid main() {\n  ivec2 gridSize = uGridSize;\n  if (gridSize.x <= 0 || gridSize.y <= 0) {\n    outColor = vec4(0.0, 0.0, 0.0, 0.0);\n    return;\n  }\n\n  ivec2 cell;\n  cell.x = int(floor(vUV.x * float(gridSize.x)));\n  cell.y = int(floor((1.0 - vUV.y) * float(gridSize.y)));\n\n  if (cell.x < 0 || cell.x >= gridSize.x || cell.y < 0 || cell.y >= gridSize.y) {\n    outColor = vec4(0.0, 0.0, 0.0, 0.0);\n    return;\n  }\n\n  vec2 cellCoord = texCoordFromCell(cell, gridSize);\n  vec4 cellData = texture(uBoardTex, cellCoord);\n  float hasFill = cellData.a;\n  vec3 baseColor = cellData.rgb;\n  float baseAlpha = hasFill;\n\n  float overlayAlpha = 0.0;\n  vec3 overlayColor = vec3(1.0);\n\n  if (uShowOverlay && uHasHover) {\n    ivec2 brushCoord = cell - uHoverCell + uBrushCenter;\n    bool brushAllows = false;\n\n    if (brushCoord.x >= 0 && brushCoord.x < uBrushSize.x && brushCoord.y >= 0 && brushCoord.y < uBrushSize.y) {\n      vec2 brushUv = texCoordFromCell(brushCoord, uBrushSize);\n      brushAllows = texture(uBrushTex, brushUv).r > 0.5;\n    }\n\n    bool maskAllows = true;\n    if (uUseTileMask && uTileSize.x > 0 && uTileSize.y > 0) {\n      int maskX = int(mod(float(cell.x), float(uTileSize.x)));\n      int maskY = int(mod(float(cell.y), float(uTileSize.y)));\n      ivec2 maskCell = ivec2(maskX, maskY);\n      vec2 tileUv = texCoordFromCell(maskCell, uTileSize);\n      maskAllows = texture(uTileTex, tileUv).r > 0.5;\n    }\n\n    if (brushAllows && maskAllows) {\n      vec3 luminanceSource = baseAlpha > 0.0 ? baseColor : uBackgroundColor.rgb;\n      float l = luminance(luminanceSource);\n      overlayColor = uIsSilhouette ? vec3(1.0) : (l > 0.5 ? vec3(0.0) : vec3(1.0));\n      overlayAlpha = 0.2;\n    }\n  }\n\n  vec3 finalColor = mix(baseColor, overlayColor, overlayAlpha);\n  float finalAlpha = max(baseAlpha, overlayAlpha);\n  outColor = vec4(finalColor, finalAlpha);\n}\n`;
+const FRAGMENT_SHADER_SOURCE = `#version 300 es
+precision highp float;
+in vec2 vUV;
+out vec4 outColor;
+
+uniform sampler2D uBoardTex;
+uniform sampler2D uBrushTex;
+uniform sampler2D uTileTex;
+uniform ivec2 uGridSize;
+uniform ivec2 uBrushSize;
+uniform ivec2 uBrushCenter;
+uniform ivec2 uTileSize;
+uniform vec4 uBackgroundColor;
+uniform bool uHasHover;
+uniform ivec2 uHoverCell;
+uniform bool uUseTileMask;
+uniform bool uShowOverlay;
+uniform bool uIsSilhouette;
+
+float luminance(vec3 color) {
+    return dot(color, vec3(0.2126, 0.7152, 0.0722));
+  
+}
+
+vec2 texCoordFromCell(ivec2 cell, ivec2 gridSize) {
+    return vec2(
+      (float(cell.x) + 0.5) / float(gridSize.x),
+      1.0 - (float(cell.y) + 0.5) / float(gridSize.y)
+  );
+  
+}
+
+void main() {
+    ivec2 gridSize = uGridSize;
+    if (gridSize.x <= 0 || gridSize.y <= 0) {
+      outColor = vec4(0.0, 0.0, 0.0, 0.0);
+      return;
+  
+  }
+
+  ivec2 cell;
+  cell.x = int(floor(vUV.x * float(gridSize.x)));
+  cell.y = int(floor((1.0 - vUV.y) * float(gridSize.y)));
+
+  if (cell.x < 0 || cell.x >= gridSize.x || cell.y < 0 || cell.y >= gridSize.y) {
+      outColor = vec4(0.0, 0.0, 0.0, 0.0);
+      return;
+  
+  }
+
+  vec2 cellCoord = texCoordFromCell(cell, gridSize);
+  vec4 cellData = texture(uBoardTex, cellCoord);
+  float hasFill = cellData.a;
+  vec3 baseColor = cellData.rgb;
+  float baseAlpha = hasFill;
+
+  float overlayAlpha = 0.0;
+  vec3 overlayColor = vec3(1.0);
+
+  if (uShowOverlay && uHasHover) {
+      ivec2 brushCoord = cell - uHoverCell + uBrushCenter;
+      bool brushAllows = false;
+  
+      if (brushCoord.x >= 0 && brushCoord.x < uBrushSize.x && brushCoord.y >= 0 && brushCoord.y < uBrushSize.y) {
+        vec2 brushUv = texCoordFromCell(brushCoord, uBrushSize);
+        brushAllows = texture(uBrushTex, brushUv).r > 0.5;
+  
+    }
+
+    bool maskAllows = true;
+    if (uUseTileMask && uTileSize.x > 0 && uTileSize.y > 0) {
+        int maskX = int(mod(float(cell.x), float(uTileSize.x)));
+        int maskY = int(mod(float(cell.y), float(uTileSize.y)));
+        ivec2 maskCell = ivec2(maskX, maskY);
+        vec2 tileUv = texCoordFromCell(maskCell, uTileSize);
+        maskAllows = texture(uTileTex, tileUv).r > 0.5;
+  
+    }
+
+    if (brushAllows && maskAllows) {
+        float backgroundL = luminance(uBackgroundColor.rgb);
+        vec3 luminanceSource = baseAlpha > 0.0 ? baseColor : uBackgroundColor.rgb;
+        if (baseAlpha > 0.0) {
+          float l = luminance(luminanceSource);
+          overlayColor = l > 0.5 ? vec3(0.0) : vec3(1.0);
+        } else {
+          if (uIsSilhouette || backgroundL < 0.5) {
+              overlayColor = vec3(1.0);
+          } else (backgroundL < 0.5) {
+              overlayColor = vec3(0.0);
+          }
+        }
+
+      overlayAlpha = 0.3;
+    }
+  }
+
+  vec3 finalColor = mix(baseColor, overlayColor, overlayAlpha);
+  float finalAlpha = max(baseAlpha, overlayAlpha);
+  outColor = vec4(finalColor, finalAlpha);
+}
+`;
 
 function compileShader(gl, type, source) {
   const shader = gl.createShader(type);
