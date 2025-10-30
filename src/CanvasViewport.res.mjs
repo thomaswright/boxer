@@ -229,6 +229,14 @@ function CanvasViewport(props) {
   return JsxRuntime.jsx("div", {
     children: JsxRuntime.jsxs("div", {
       children: [
+        JsxRuntime.jsx("div", {
+          className: "absolute top-0 left-0 pointer-events-none",
+          style: {
+            backgroundColor: canvasBackgroundColor,
+            height: heightString,
+            width: widthString
+          }
+        }),
         isCheckeredUnderlay ? JsxRuntime.jsx("div", {
             className: "absolute top-0 left-0 pointer-events-none",
             style: {
@@ -276,7 +284,6 @@ function CanvasViewport(props) {
       ],
       className: "absolute top-0 left-0",
       style: {
-        backgroundColor: canvasBackgroundColor,
         transform: props.transformValue,
         transformOrigin: "top left"
       }

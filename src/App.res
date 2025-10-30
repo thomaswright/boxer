@@ -98,24 +98,21 @@ let make = () => {
   )
   let (isSilhouette, setIsSilhouette, _) = useLocalStorage("canvas-silhouette", Initials.silhouette)
   let isCanvasBackgroundLight = _isLight(canvasBackgroundColor)
-  let gridLineColor =
-    if isCanvasBackgroundLight {
-      "rgba(0, 0, 0, 0.25)"
-    } else {
-      "rgba(255, 255, 255, 0.25)"
-    }
-  let checkeredPrimaryColor =
-    if isCanvasBackgroundLight {
-      "rgba(0, 0, 0, 0.16)"
-    } else {
-      "rgba(255, 255, 255, 0.18)"
-    }
-  let checkeredSecondaryColor =
-    if isCanvasBackgroundLight {
-      "rgba(0, 0, 0, 0.06)"
-    } else {
-      "rgba(255, 255, 255, 0.08)"
-    }
+  let gridLineColor = if isCanvasBackgroundLight {
+    "rgba(0, 0, 0, 0.25)"
+  } else {
+    "rgba(255, 255, 255, 0.25)"
+  }
+  let checkeredPrimaryColor = if isCanvasBackgroundLight {
+    "rgba(0, 0, 0, 0.15)"
+  } else {
+    "rgba(255, 255, 255, 0.15)"
+  }
+  let checkeredSecondaryColor = if isCanvasBackgroundLight {
+    "rgba(0, 0, 0, 0.00)"
+  } else {
+    "rgba(255, 255, 255, 0.00)"
+  }
 
   // Transient UI state
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)

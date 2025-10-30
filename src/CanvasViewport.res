@@ -243,8 +243,15 @@ let make = (
       style={{
         transform: transformValue,
         transformOrigin: "top left",
-        backgroundColor: canvasBackgroundColor,
       }}>
+      <div
+        className="absolute top-0 left-0 pointer-events-none"
+        style={{
+          width: widthString,
+          height: heightString,
+          backgroundColor: canvasBackgroundColor,
+        }}
+      />
       {isCheckeredUnderlay
          ? <div
              className="absolute top-0 left-0 pointer-events-none"

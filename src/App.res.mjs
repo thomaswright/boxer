@@ -199,8 +199,8 @@ function App(props) {
   let isSilhouette = match$13[0];
   let isCanvasBackgroundLight = _isLight(canvasBackgroundColor);
   let gridLineColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.25)" : "rgba(255, 255, 255, 0.25)";
-  let checkeredPrimaryColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.16)" : "rgba(255, 255, 255, 0.18)";
-  let checkeredSecondaryColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.08)";
+  let checkeredPrimaryColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.15)" : "rgba(255, 255, 255, 0.15)";
+  let checkeredSecondaryColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.00)" : "rgba(255, 255, 255, 0.00)";
   let match$14 = React.useState(() => false);
   let setCursorOverlayOff = match$14[1];
   let match$15 = React.useState(() => "1");
