@@ -512,12 +512,28 @@ let make = () => {
   let canDeleteSelectedBrush = selectedSavedBrushIndex->Option.isSome
   let canDeleteSelectedTileMask = savedTileMasks->Array.length > 1
 
+  let handleAddBrush = () => {
+    let newBrush = board->Array.map(row => row->Array.map(cell => !(cell->Nullable.isNullable)))
+    setSavedBrushes(v => v->Array.concat([newBrush]))
+    setBrush(_ => newBrush)
+  }
+
   let handleDeleteSelectedBrush = () =>
     switch selectedSavedBrushIndex {
     | Some(selectedIndex) =>
       setSavedBrushes(prev => prev->Belt.Array.keepWithIndex((_, idx) => idx != selectedIndex))
     | None => ()
     }
+
+  let handleAddTileMask = () => {
+    let newTileMask = board->Array.map(row => row->Array.map(cell => !(cell->Nullable.isNullable)))
+    setSavedTileMasks(prev => {
+      let next = prev->Array.concat([newTileMask])
+      setSelectedTileMaskIndex(_ => next->Array.length - 1)
+      next
+    })
+    setTileMask(_ => newTileMask)
+  }
 
   let handleDeleteSelectedTileMask = () => {
     if canDeleteSelectedTileMask {
@@ -722,9 +738,22 @@ let make = () => {
       <ZoomControl zoomOut resetZoom zoomIn centerCanvas fitCanvasToViewport zoom />
 
       <div className="flex flex-row gap-2 h-full flex-none p-2">
-        <SavedBrushesPanel brush setBrush savedBrushes />
+        <SavedBrushesPanel
+          brush
+          setBrush
+          savedBrushes
+          handleAddBrush
+          handleDeleteSelectedBrush
+          canDeleteSelectedBrush
+        />
         <SavedTileMasksPanel
-          setTileMask savedTileMasks selectedTileMaskIndex setSelectedTileMaskIndex
+          setTileMask
+          savedTileMasks
+          selectedTileMaskIndex
+          setSelectedTileMaskIndex
+          handleAddTileMask
+          handleDeleteSelectedTileMask
+          canDeleteSelectedTileMask
         />
       </div>
     </div>
@@ -802,18 +831,7 @@ let make = () => {
           setViewportBackgroundColor
         />
         <SilhouetteControl isSilhouette setIsSilhouette />
-        <BrushAndTileMaskSaveControl
-          board
-          setBrush
-          setSavedBrushes
-          canDeleteSelectedBrush
-          handleDeleteSelectedBrush
-          setTileMask
-          setSavedTileMasks
-          setSelectedTileMaskIndex
-          canDeleteSelectedTileMask
-          handleDeleteSelectedTileMask
-        />
+
         <CanvasSizeControl
           resizeRowsInput
           setResizeRowsInput

@@ -1,6 +1,13 @@
 @react.component
-let make = (~brush, ~setBrush, ~savedBrushes) => {
-  <div className={"flex flex-col gap-1 h-full overflow-y-scroll"}>
+let make = (
+  ~brush,
+  ~setBrush,
+  ~savedBrushes,
+  ~handleAddBrush,
+  ~canDeleteSelectedBrush,
+  ~handleDeleteSelectedBrush,
+) => {
+  <div className={"flex flex-col gap-1 h-full overflow-y-scroll items-end"}>
     {savedBrushes
     ->Array.mapWithIndex((savedBrush, savedBrushIndex) => {
       let (dimI, dimJ) = savedBrush->Array2D.dims
@@ -34,5 +41,21 @@ let make = (~brush, ~setBrush, ~savedBrushes) => {
       </button>
     })
     ->React.array}
+    <button
+      className={"rounded p-1 h-6 w-6 text-sm font-medium bg-blue-500 text-white "}
+      onClick={_ => handleAddBrush()}>
+      <Icons.Plus />
+    </button>
+    <button
+      className={[
+        "rounded p-1 h-6 w-6 text-sm font-medium",
+        canDeleteSelectedBrush
+          ? "bg-blue-500 text-white"
+          : "bg-gray-200 text-gray-500 cursor-not-allowed",
+      ]->Array.join(" ")}
+      disabled={!canDeleteSelectedBrush}
+      onClick={_ => handleDeleteSelectedBrush()}>
+      <Icons.Trash />
+    </button>
   </div>
 }

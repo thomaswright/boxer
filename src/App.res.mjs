@@ -26,7 +26,6 @@ import * as BrushOverlayControl from "./BrushOverlayControl.res.mjs";
 import * as CanvasColorsControl from "./CanvasColorsControl.res.mjs";
 import * as SavedTileMasksPanel from "./SavedTileMasksPanel.res.mjs";
 import UseLocalStorageJs from "./useLocalStorage.js";
-import * as BrushAndTileMaskSaveControl from "./BrushAndTileMaskSaveControl.res.mjs";
 
 function generateCanvasId() {
   let timestamp = Date.now().toString();
@@ -640,11 +639,25 @@ function App(props) {
   let selectedSavedBrushIndex = Belt_Array.getIndexBy(savedBrushes, savedBrush => Array2D.isEqual(savedBrush, brush));
   let canDeleteSelectedBrush = Stdlib_Option.isSome(selectedSavedBrushIndex);
   let canDeleteSelectedTileMask = savedTileMasks.length > 1;
+  let handleAddBrush = () => {
+    let newBrush = board.map(row => row.map(cell => !(cell == null)));
+    setSavedBrushes(v => v.concat([newBrush]));
+    setBrush(param => newBrush);
+  };
   let handleDeleteSelectedBrush = () => {
     if (selectedSavedBrushIndex !== undefined) {
       return setSavedBrushes(prev => Belt_Array.keepWithIndex(prev, (param, idx) => idx !== selectedSavedBrushIndex));
     }
     
+  };
+  let handleAddTileMask = () => {
+    let newTileMask = board.map(row => row.map(cell => !(cell == null)));
+    setSavedTileMasks(prev => {
+      let next = prev.concat([newTileMask]);
+      setSelectedTileMaskIndex(param => next.length - 1 | 0);
+      return next;
+    });
+    setTileMask(param => newTileMask);
   };
   let handleDeleteSelectedTileMask = () => {
     if (canDeleteSelectedTileMask) {
@@ -821,13 +834,19 @@ function App(props) {
               JsxRuntime.jsx(SavedBrushesPanel.make, {
                 brush: brush,
                 setBrush: setBrush,
-                savedBrushes: savedBrushes
+                savedBrushes: savedBrushes,
+                handleAddBrush: handleAddBrush,
+                canDeleteSelectedBrush: canDeleteSelectedBrush,
+                handleDeleteSelectedBrush: handleDeleteSelectedBrush
               }),
               JsxRuntime.jsx(SavedTileMasksPanel.make, {
                 setTileMask: setTileMask,
                 savedTileMasks: savedTileMasks,
                 selectedTileMaskIndex: selectedTileMaskIndex,
-                setSelectedTileMaskIndex: setSelectedTileMaskIndex
+                setSelectedTileMaskIndex: setSelectedTileMaskIndex,
+                handleAddTileMask: handleAddTileMask,
+                canDeleteSelectedTileMask: canDeleteSelectedTileMask,
+                handleDeleteSelectedTileMask: handleDeleteSelectedTileMask
               })
             ],
             className: "flex flex-row gap-2 h-full flex-none p-2"
@@ -924,18 +943,6 @@ function App(props) {
               JsxRuntime.jsx(SilhouetteControl.make, {
                 isSilhouette: isSilhouette,
                 setIsSilhouette: match$13[1]
-              }),
-              JsxRuntime.jsx(BrushAndTileMaskSaveControl.make, {
-                board: board,
-                setBrush: setBrush,
-                setSavedBrushes: setSavedBrushes,
-                canDeleteSelectedBrush: canDeleteSelectedBrush,
-                handleDeleteSelectedBrush: handleDeleteSelectedBrush,
-                setTileMask: setTileMask,
-                setSavedTileMasks: setSavedTileMasks,
-                setSelectedTileMaskIndex: setSelectedTileMaskIndex,
-                canDeleteSelectedTileMask: canDeleteSelectedTileMask,
-                handleDeleteSelectedTileMask: handleDeleteSelectedTileMask
               }),
               JsxRuntime.jsx(CanvasSizeControl.make, {
                 resizeRowsInput: resizeRowsInput,

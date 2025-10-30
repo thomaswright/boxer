@@ -1,6 +1,14 @@
 @react.component
-let make = (~setTileMask, ~savedTileMasks, ~selectedTileMaskIndex, ~setSelectedTileMaskIndex) => {
-  <div className={"flex flex-col gap-1 h-full overflow-y-scroll"}>
+let make = (
+  ~setTileMask,
+  ~savedTileMasks,
+  ~selectedTileMaskIndex,
+  ~setSelectedTileMaskIndex,
+  ~handleAddTileMask,
+  ~canDeleteSelectedTileMask,
+  ~handleDeleteSelectedTileMask,
+) => {
+  <div className={"flex flex-col gap-1 h-full overflow-y-scroll items-end"}>
     {savedTileMasks
     ->Array.mapWithIndex((savedTileMask, savedTileMaskIndex) => {
       let selected = savedTileMaskIndex == selectedTileMaskIndex
@@ -27,5 +35,22 @@ let make = (~setTileMask, ~savedTileMasks, ~selectedTileMaskIndex, ~setSelectedT
       </button>
     })
     ->React.array}
+    <button
+      className={"rounded p-1 h-6 w-6 text-sm font-medium bg-blue-500 text-white"}
+      onClick={_ => handleAddTileMask()}>
+      <Icons.Plus />
+    </button>
+
+    <button
+      className={[
+        "rounded p-1 h-6 w-6 text-sm font-medium",
+        canDeleteSelectedTileMask
+          ? "bg-blue-500 text-white"
+          : "bg-gray-200 text-gray-500 cursor-not-allowed",
+      ]->Array.join(" ")}
+      disabled={!canDeleteSelectedTileMask}
+      onClick={_ => handleDeleteSelectedTileMask()}>
+      <Icons.Trash />
+    </button>
   </div>
 }
