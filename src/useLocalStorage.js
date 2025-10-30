@@ -2,9 +2,83 @@ import React from "react";
 
 const CANVASES_KEY = "canvases";
 const CANVAS_STORAGE_VERSION = 1;
+const DEFERRED_KEYS = new Set([CANVASES_KEY]);
+const FLUSH_DELAY_MS = 500;
+const pendingWrites = new Map();
+let flushHandlersRegistered = false;
 
 function dispatchStorageEvent(key, newValue) {
+  if (typeof window === "undefined") {
+    return;
+  }
   window.dispatchEvent(new StorageEvent("storage", { key, newValue }));
+}
+
+function shouldDeferPersistence(key) {
+  return DEFERRED_KEYS.has(key);
+}
+
+function getPendingEntry(key) {
+  return pendingWrites.get(key);
+}
+
+function ensureFlushHandlersRegistered() {
+  if (flushHandlersRegistered || typeof window === "undefined") {
+    return;
+  }
+  const handleBeforeUnload = () => {
+    flushAllDeferredWrites();
+  };
+  const handleVisibilityChange = () => {
+    if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+      flushAllDeferredWrites();
+    }
+  };
+  window.addEventListener("beforeunload", handleBeforeUnload);
+  window.addEventListener("visibilitychange", handleVisibilityChange);
+  flushHandlersRegistered = true;
+}
+
+function flushDeferredWrite(key) {
+  const entry = pendingWrites.get(key);
+  if (!entry || typeof window === "undefined") {
+    return;
+  }
+  window.clearTimeout(entry.timerId);
+  pendingWrites.delete(key);
+  try {
+    window.localStorage.setItem(key, entry.serializedValue);
+  } catch (error) {
+    if (isQuotaExceededError(error)) {
+      console.warn(`Unable to persist deferred value for "${key}" in localStorage: quota exceeded`);
+    } else {
+      console.warn(error);
+    }
+    return;
+  }
+  dispatchStorageEvent(key, entry.serializedValue);
+}
+
+function flushAllDeferredWrites() {
+  Array.from(pendingWrites.keys()).forEach((key) => {
+    flushDeferredWrite(key);
+  });
+}
+
+function scheduleDeferredWrite(key, serializedValue) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  ensureFlushHandlersRegistered();
+  const existing = pendingWrites.get(key);
+  if (existing) {
+    window.clearTimeout(existing.timerId);
+  }
+  const timerId = window.setTimeout(() => {
+    flushDeferredWrite(key);
+  }, FLUSH_DELAY_MS);
+  pendingWrites.set(key, { serializedValue, timerId });
+  dispatchStorageEvent(key, serializedValue);
 }
 
 function toBase36(value) {
@@ -244,16 +318,34 @@ function isQuotaExceededError(error) {
 
 const setLocalStorageItem = (key, value) => {
   const serializedValue = serializeForKey(key, value);
-  window.localStorage.setItem(key, serializedValue);
-  dispatchStorageEvent(key, serializedValue);
+  if (shouldDeferPersistence(key)) {
+    scheduleDeferredWrite(key, serializedValue);
+  } else if (typeof window !== "undefined") {
+    window.localStorage.setItem(key, serializedValue);
+    dispatchStorageEvent(key, serializedValue);
+  }
 };
 
 const removeLocalStorageItem = (key) => {
-  window.localStorage.removeItem(key);
+  const pending = getPendingEntry(key);
+  if (pending && typeof window !== "undefined") {
+    window.clearTimeout(pending.timerId);
+    pendingWrites.delete(key);
+  }
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem(key);
+  }
   dispatchStorageEvent(key, null);
 };
 
 const getLocalStorageItem = (key) => {
+  const pending = getPendingEntry(key);
+  if (pending) {
+    return pending.serializedValue;
+  }
+  if (typeof window === "undefined") {
+    return null;
+  }
   return window.localStorage.getItem(key);
 };
 
