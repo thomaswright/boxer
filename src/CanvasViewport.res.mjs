@@ -28,6 +28,8 @@ function CanvasViewport(props) {
   let gridLineColor = props.gridLineColor;
   let canvasBackgroundColor = props.canvasBackgroundColor;
   let gridMode = props.gridMode;
+  let overlayColor = props.overlayColor;
+  let overlayMode = props.overlayMode;
   let showCursorOverlay = props.showCursorOverlay;
   let isPickingColor = props.isPickingColor;
   let setHoveredPickColor = props.setHoveredPickColor;
@@ -110,13 +112,15 @@ function CanvasViewport(props) {
   React.useEffect(() => {
     withRenderer(renderer => {
       let overlayEnabled = showCursorOverlay && !cursorOverlayOff;
-      CanvasRenderer.setOverlayOptions(renderer, overlayEnabled, isSilhouette);
+      CanvasRenderer.setOverlayOptions(renderer, overlayEnabled, isSilhouette, overlayMode, overlayColor);
       CanvasRenderer.render(renderer);
     });
   }, [
     showCursorOverlay,
     cursorOverlayOff,
-    isSilhouette
+    isSilhouette,
+    overlayMode,
+    overlayColor
   ]);
   let updateHover = hover => {
     hoveredCellRef.current = hover;

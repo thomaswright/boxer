@@ -19,7 +19,8 @@ external updateBrush: (canvasRenderer, array<array<bool>>, int, int) => unit = "
 external updateTileMask: (canvasRenderer, array<array<bool>>) => unit = "updateTileMask"
 
 @module("./CanvasRenderer.js")
-external setOverlayOptions: (canvasRenderer, bool, bool) => unit = "setOverlayOptions"
+external setOverlayOptions: (canvasRenderer, bool, bool, overlayMode, string) => unit =
+  "setOverlayOptions"
 
 @module("./CanvasRenderer.js")
 external setHover: (canvasRenderer, Js.Nullable.t<(int, int)>) => unit = "setHover"

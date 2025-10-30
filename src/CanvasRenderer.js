@@ -18,6 +18,8 @@ uniform ivec2 uHoverCell;
 uniform bool uUseTileMask;
 uniform bool uShowOverlay;
 uniform bool uIsSilhouette;
+uniform int uOverlayMode;
+uniform vec4 uOverlayColorOverride;
 
 float luminance(vec3 color) {
     return dot(color, vec3(0.2126, 0.7152, 0.0722));
@@ -58,6 +60,7 @@ void main() {
 
   float overlayAlpha = 0.0;
   vec3 overlayColor = vec3(1.0);
+  bool colorSet = false;
 
   if (uShowOverlay && uHasHover) {
       ivec2 brushCoord = cell - uHoverCell + uBrushCenter;
@@ -80,17 +83,24 @@ void main() {
     }
 
     if (brushAllows && maskAllows) {
-      vec3 referenceColor = baseAlpha > 0.0 ? baseColor : uBackgroundColor.rgb;
-      float testL = luminance(referenceColor);
-      overlayColor = testL > 0.5 ? vec3(0.0) : vec3(1.0);
-      overlayAlpha = 0.2;
+      if (uOverlayMode == 2) {
+        outColor = uOverlayColorOverride;
+        colorSet = true;
+      } else {
+        vec3 referenceColor = baseAlpha > 0.0 ? baseColor : uBackgroundColor.rgb;
+        float testL = luminance(referenceColor);
+        overlayColor = testL > 0.5 ? vec3(0.0) : vec3(1.0);
+        overlayAlpha = 0.2;
+      }
     }
   }
 
-  vec3 colorAfterOverlay = mix(baseColor, overlayColor, overlayAlpha);
-  vec3 finalColor = mix(overlayColor, colorAfterOverlay, baseAlpha);
-  float finalAlpha = max(baseAlpha, overlayAlpha);
-  outColor = vec4(finalColor, finalAlpha);
+  if (!colorSet) {
+    vec3 colorAfterOverlay = mix(baseColor, overlayColor, overlayAlpha);
+    vec3 finalColor = mix(overlayColor, colorAfterOverlay, baseAlpha);
+    float finalAlpha = max(baseAlpha, overlayAlpha);
+    outColor = vec4(finalColor, finalAlpha);
+  }
 }
 `;
 
@@ -218,6 +228,11 @@ class CanvasRenderer {
       useTileMask: gl.getUniformLocation(program, "uUseTileMask"),
       showOverlay: gl.getUniformLocation(program, "uShowOverlay"),
       isSilhouette: gl.getUniformLocation(program, "uIsSilhouette"),
+      overlayMode: gl.getUniformLocation(program, "uOverlayMode"),
+      overlayColorOverride: gl.getUniformLocation(
+        program,
+        "uOverlayColorOverride"
+      ),
     };
 
     gl.uniform1i(this.uniforms.boardTex, 0);
@@ -233,6 +248,12 @@ class CanvasRenderer {
     gl.uniform1i(this.uniforms.useTileMask, 0);
     gl.uniform1i(this.uniforms.showOverlay, 1);
     gl.uniform1i(this.uniforms.isSilhouette, 0);
+    if (this.uniforms.overlayMode != null) {
+      gl.uniform1i(this.uniforms.overlayMode, 1);
+    }
+    if (this.uniforms.overlayColorOverride != null) {
+      gl.uniform4f(this.uniforms.overlayColorOverride, 1, 1, 1, 1);
+    }
 
     this.boardTexture = gl.createTexture();
     gl.activeTexture(gl.TEXTURE0);
@@ -487,13 +508,41 @@ class CanvasRenderer {
     );
   }
 
-  setOverlayOptions(showOverlay, isSilhouette) {
+  setOverlayOptions(showOverlay, isSilhouette, overlayMode, overlayColor) {
     const { gl } = this;
     this.overlayEnabled = Boolean(showOverlay);
     this.isSilhouette = Boolean(isSilhouette);
+    const modeValue =
+      overlayMode === "color" ? 2 : overlayMode === "none" ? 0 : 1;
+    const color = parseHexColor(overlayColor, [255, 255, 255]);
+    let alpha = 1;
+    if (typeof overlayColor === "string") {
+      let trimmed = overlayColor.trim();
+      if (trimmed.startsWith("#")) {
+        trimmed = trimmed.slice(1);
+      }
+      if (trimmed.length === 8) {
+        const parsedAlpha = parseInt(trimmed.slice(6, 8), 16);
+        if (!Number.isNaN(parsedAlpha)) {
+          alpha = parsedAlpha / 255;
+        }
+      }
+    }
     gl.useProgram(this.program);
     gl.uniform1i(this.uniforms.showOverlay, this.overlayEnabled ? 1 : 0);
     gl.uniform1i(this.uniforms.isSilhouette, this.isSilhouette ? 1 : 0);
+    if (this.uniforms.overlayMode != null) {
+      gl.uniform1i(this.uniforms.overlayMode, modeValue);
+    }
+    if (this.uniforms.overlayColorOverride != null) {
+      gl.uniform4f(
+        this.uniforms.overlayColorOverride,
+        color[0] / 255,
+        color[1] / 255,
+        color[2] / 255,
+        alpha
+      );
+    }
   }
 
   setHover(hover) {
@@ -581,9 +630,20 @@ export function updateTileMask(renderer, tileMask) {
   }
 }
 
-export function setOverlayOptions(renderer, showOverlay, isSilhouette) {
+export function setOverlayOptions(
+  renderer,
+  showOverlay,
+  isSilhouette,
+  overlayMode,
+  overlayColor
+) {
   if (renderer instanceof CanvasRenderer) {
-    renderer.setOverlayOptions(showOverlay, isSilhouette);
+    renderer.setOverlayOptions(
+      showOverlay,
+      isSilhouette,
+      overlayMode,
+      overlayColor
+    );
   }
 }
 

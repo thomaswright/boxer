@@ -29,6 +29,8 @@ let make = (
   ~setHoveredPickColor,
   ~isPickingColor,
   ~showCursorOverlay,
+  ~overlayMode: Types.overlayMode,
+  ~overlayColor,
   ~gridMode,
   ~canvasBackgroundColor,
   ~gridLineColor,
@@ -104,14 +106,20 @@ let make = (
     None
   }, (tileMask, tileMaskDimI, tileMaskDimJ))
 
-  React.useEffect3(() => {
+  React.useEffect5(() => {
     withRenderer(renderer => {
       let overlayEnabled = showCursorOverlay && !cursorOverlayOff
-      CanvasRenderer.setOverlayOptions(renderer, overlayEnabled, isSilhouette)
+      CanvasRenderer.setOverlayOptions(
+        renderer,
+        overlayEnabled,
+        isSilhouette,
+        overlayMode,
+        overlayColor,
+      )
       CanvasRenderer.render(renderer)
     })
     None
-  }, (showCursorOverlay, cursorOverlayOff, isSilhouette))
+  }, (showCursorOverlay, cursorOverlayOff, isSilhouette, overlayMode, overlayColor))
 
   let updateHover = hover => {
     hoveredCellRef.current = hover
@@ -201,32 +209,28 @@ let make = (
   let heightString = canvasHeight->Int.toString ++ "px"
   let cellSizeString = cellSize->Int.toString ++ "px"
   let gridBackgroundImage =
-    "linear-gradient(to right, "
-    ++ gridLineColor
-    ++ " 1px, transparent 1px), linear-gradient(to bottom, "
-    ++ gridLineColor
-    ++ " 1px, transparent 1px)"
+    "linear-gradient(to right, " ++
+    gridLineColor ++
+    " 1px, transparent 1px), linear-gradient(to bottom, " ++
+    gridLineColor ++ " 1px, transparent 1px)"
   let gridBackgroundSize = cellSizeString ++ " " ++ cellSizeString
   let doubleCellSizeString = (cellSize * 2)->Int.toString ++ "px"
   let checkeredSvg =
-    "<svg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'>"
-    ++ "<rect width='1' height='1' fill='"
-    ++ checkeredPrimaryColor
-    ++ "'/>"
-    ++ "<rect x='1' y='1' width='1' height='1' fill='"
-    ++ checkeredPrimaryColor
-    ++ "'/>"
-    ++ "<rect x='1' width='1' height='1' fill='"
-    ++ checkeredSecondaryColor
-    ++ "'/>"
-    ++ "<rect y='1' width='1' height='1' fill='"
-    ++ checkeredSecondaryColor
-    ++ "'/>"
-    ++ "</svg>"
+    "<svg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'>" ++
+    "<rect width='1' height='1' fill='" ++
+    checkeredPrimaryColor ++
+    "'/>" ++
+    "<rect x='1' y='1' width='1' height='1' fill='" ++
+    checkeredPrimaryColor ++
+    "'/>" ++
+    "<rect x='1' width='1' height='1' fill='" ++
+    checkeredSecondaryColor ++
+    "'/>" ++
+    "<rect y='1' width='1' height='1' fill='" ++
+    checkeredSecondaryColor ++
+    "'/>" ++ "</svg>"
   let checkeredBackgroundImage =
-    "url(\"data:image/svg+xml,"
-    ++ Js.Global.encodeURIComponent(checkeredSvg)
-    ++ "\")"
+    "url(\"data:image/svg+xml," ++ Js.Global.encodeURIComponent(checkeredSvg) ++ "\")"
   let checkeredBackgroundSize = doubleCellSizeString ++ " " ++ doubleCellSizeString
   let isGridLines = gridMode == GridLines
   let isCheckeredOverlay = gridMode == CheckeredOverlay
@@ -253,18 +257,18 @@ let make = (
         }}
       />
       {isCheckeredUnderlay
-         ? <div
-             className="absolute top-0 left-0 pointer-events-none"
-             style={{
-               width: widthString,
-               height: heightString,
-               backgroundImage: checkeredBackgroundImage,
-               backgroundColor: checkeredSecondaryColor,
-               backgroundSize: checkeredBackgroundSize,
-               imageRendering: "pixelated",
-             }}
-           />
-         : React.null}
+        ? <div
+            className="absolute top-0 left-0 pointer-events-none"
+            style={{
+              width: widthString,
+              height: heightString,
+              backgroundImage: checkeredBackgroundImage,
+              backgroundColor: checkeredSecondaryColor,
+              backgroundSize: checkeredBackgroundSize,
+              imageRendering: "pixelated",
+            }}
+          />
+        : React.null}
       <canvas
         ref={ReactDOM.Ref.domRef(canvasRef)}
         className="absolute top-0 left-0 block"
@@ -279,29 +283,29 @@ let make = (
         onMouseDown={handleMouseDown}
       />
       {isGridLines
-         ? <div
-             className="absolute top-0 left-0 pointer-events-none"
-             style={{
-               width: widthString,
-               height: heightString,
-               backgroundImage: gridBackgroundImage,
-               backgroundSize: gridBackgroundSize,
-             }}
-           />
-         : React.null}
+        ? <div
+            className="absolute top-0 left-0 pointer-events-none"
+            style={{
+              width: widthString,
+              height: heightString,
+              backgroundImage: gridBackgroundImage,
+              backgroundSize: gridBackgroundSize,
+            }}
+          />
+        : React.null}
       {isCheckeredOverlay
-         ? <div
-             className="absolute top-0 left-0 pointer-events-none"
-             style={{
-               width: widthString,
-               height: heightString,
-               backgroundImage: checkeredBackgroundImage,
-               backgroundColor: checkeredSecondaryColor,
-               backgroundSize: checkeredBackgroundSize,
-               imageRendering: "pixelated",
-             }}
-           />
-         : React.null}
+        ? <div
+            className="absolute top-0 left-0 pointer-events-none"
+            style={{
+              width: widthString,
+              height: heightString,
+              backgroundImage: checkeredBackgroundImage,
+              backgroundColor: checkeredSecondaryColor,
+              backgroundSize: checkeredBackgroundSize,
+              imageRendering: "pixelated",
+            }}
+          />
+        : React.null}
     </div>
   </div>
 }

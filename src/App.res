@@ -85,7 +85,11 @@ let make = () => {
     0,
   )
   let (tileMask, setTileMask, _) = useLocalStorage("tile-mask", makeTileMask(4, 4))
-  let (showCursorOverlay, setShowCursorOverlay, _) = useLocalStorage("show-cursor-overlay", true)
+  let (overlayMode, setOverlayMode, _) = useLocalStorage("brush-overlay-mode", OverlayDefault)
+  let showCursorOverlay = switch overlayMode {
+  | OverlayNone => false
+  | _ => true
+  }
   let (gridMode, setGridMode, _) = useLocalStorage("grid-mode", GridNone)
   let (myColor, setMyColor, _) = useLocalStorage("my-color", Initials.myColor)
   let (canvasBackgroundColor, setCanvasBackgroundColor, _) = useLocalStorage(
@@ -738,9 +742,11 @@ let make = () => {
           setHoveredPickColor
           isPickingColor
           showCursorOverlay
+          overlayMode
           gridMode
           canvasBackgroundColor
           gridLineColor
+          overlayColor=myColor
           checkeredPrimaryColor
           checkeredSecondaryColor
           viewportBackgroundColor
@@ -794,7 +800,7 @@ let make = () => {
           canDeleteSelectedTileMask
           handleDeleteSelectedTileMask
         />
-        <BrushOverlayControl showCursorOverlay setShowCursorOverlay />
+        <BrushOverlayControl overlayMode setOverlayMode />
         <CanvasGridControl gridMode setGridMode />
 
         <CanvasColorsControl

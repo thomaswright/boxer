@@ -26,8 +26,8 @@ function updateTileMask(prim0, prim1) {
   CanvasRendererJs.updateTileMask(prim0, prim1);
 }
 
-function setOverlayOptions(prim0, prim1, prim2) {
-  CanvasRendererJs.setOverlayOptions(prim0, prim1, prim2);
+function setOverlayOptions(prim0, prim1, prim2, prim3, prim4) {
+  CanvasRendererJs.setOverlayOptions(prim0, prim1, prim2, prim3, prim4);
 }
 
 function setHover(prim0, prim1) {

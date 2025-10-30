@@ -184,8 +184,18 @@ function App(props) {
   let match$7 = UseLocalStorageJs("tile-mask", Array2D.make(4, 4, () => true));
   let setTileMask = match$7[1];
   let tileMask = match$7[0];
-  let match$8 = UseLocalStorageJs("show-cursor-overlay", true);
-  let showCursorOverlay = match$8[0];
+  let match$8 = UseLocalStorageJs("brush-overlay-mode", "overlay");
+  let overlayMode = match$8[0];
+  let showCursorOverlay;
+  switch (overlayMode) {
+    case "none" :
+      showCursorOverlay = false;
+      break;
+    case "overlay" :
+    case "color" :
+      showCursorOverlay = true;
+      break;
+  }
   let match$9 = UseLocalStorageJs("grid-mode", "none");
   let gridMode = match$9[0];
   let match$10 = UseLocalStorageJs("my-color", Initials.myColor);
@@ -831,6 +841,8 @@ function App(props) {
               setHoveredPickColor: setHoveredPickColor,
               isPickingColor: isPickingColor,
               showCursorOverlay: showCursorOverlay,
+              overlayMode: overlayMode,
+              overlayColor: myColor,
               gridMode: gridMode,
               canvasBackgroundColor: canvasBackgroundColor,
               gridLineColor: gridLineColor,
@@ -902,8 +914,8 @@ function App(props) {
                 handleDeleteSelectedTileMask: handleDeleteSelectedTileMask
               }),
               JsxRuntime.jsx(BrushOverlayControl.make, {
-                showCursorOverlay: showCursorOverlay,
-                setShowCursorOverlay: match$8[1]
+                overlayMode: overlayMode,
+                setOverlayMode: match$8[1]
               }),
               JsxRuntime.jsx(CanvasGridControl.make, {
                 gridMode: gridMode,

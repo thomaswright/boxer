@@ -17,5 +17,6 @@ type gridMode =
   | @as("grid") GridLines
   | @as("checkeredOverlay") CheckeredOverlay
   | @as("checkeredUnderlay") CheckeredUnderlay
+type overlayMode = | @as("none") OverlayNone | @as("overlay") OverlayDefault | @as("color") OverlayColor
 
 type canvasRenderer

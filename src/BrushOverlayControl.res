@@ -1,7 +1,30 @@
+open Types
+
+let options = [(OverlayNone, "None"), (OverlayDefault, "Shadow"), (OverlayColor, "Color")]
+
+let buttonClass = (~isActive) =>
+  "flex-1 text-xs font-medium px-1 py-1 rounded border transition-colors " ++ if isActive {
+    "bg-gray-900 text-white border-gray-900"
+  } else {
+    "bg-white text-gray-800 border-gray-200 hover:border-gray-400"
+  }
+
 @react.component
-let make = (~showCursorOverlay, ~setShowCursorOverlay) => {
-  <div className="flex flex-row justify-between p-2 w-full">
-    <div className="flex flex-row font-medium"> {"Brush Overlay"->React.string} </div>
-    <Switch checked={showCursorOverlay} onChange={v => setShowCursorOverlay(_ => v)} />
+let make = (~overlayMode, ~setOverlayMode) => {
+  <div className="p-2 flex flex-col gap-2 w-full">
+    <div className="font-medium"> {"Brush Overlay"->React.string} </div>
+    <div className="grid grid-cols-3 gap-2">
+      {options
+      ->Belt.Array.map(((mode, label)) =>
+        <button
+          type_="button"
+          className={buttonClass(~isActive=overlayMode == mode)}
+          onClick={_ => setOverlayMode(_ => mode)}
+          key={label}>
+          {label->React.string}
+        </button>
+      )
+      ->React.array}
+    </div>
   </div>
 }
