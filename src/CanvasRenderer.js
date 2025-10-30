@@ -80,24 +80,15 @@ void main() {
     }
 
     if (brushAllows && maskAllows) {
-        float backgroundL = luminance(uBackgroundColor.rgb);
-        vec3 luminanceSource = baseAlpha > 0.0 ? baseColor : uBackgroundColor.rgb;
-        if (baseAlpha > 0.0) {
-          float l = luminance(luminanceSource);
-          overlayColor = l > 0.5 ? vec3(0.0) : vec3(1.0);
-        } else {
-          if (uIsSilhouette || backgroundL < 0.5) {
-              overlayColor = vec3(1.0);
-          } else (backgroundL < 0.5) {
-              overlayColor = vec3(0.0);
-          }
-        }
-
-      overlayAlpha = 0.3;
+      vec3 referenceColor = baseAlpha > 0.0 ? baseColor : uBackgroundColor.rgb;
+      float testL = luminance(referenceColor);
+      overlayColor = testL > 0.5 ? vec3(0.0) : vec3(1.0);
+      overlayAlpha = 0.2;
     }
   }
 
-  vec3 finalColor = mix(baseColor, overlayColor, overlayAlpha);
+  vec3 colorAfterOverlay = mix(baseColor, overlayColor, overlayAlpha);
+  vec3 finalColor = mix(overlayColor, colorAfterOverlay, baseAlpha);
   float finalAlpha = max(baseAlpha, overlayAlpha);
   outColor = vec4(finalColor, finalAlpha);
 }
