@@ -23,6 +23,7 @@ function CanvasViewport(props) {
   let brush = props.brush;
   let clearHoverRef = props.clearHoverRef;
   let isSilhouette = props.isSilhouette;
+  let gridLineColor = props.gridLineColor;
   let canvasBackgroundColor = props.canvasBackgroundColor;
   let showCursorOverlay = props.showCursorOverlay;
   let isPickingColor = props.isPickingColor;
@@ -212,21 +213,35 @@ function CanvasViewport(props) {
   let canvasHeight = (boardDimI << 4);
   let widthString = canvasWidth.toString() + "px";
   let heightString = canvasHeight.toString() + "px";
+  let cellSizeString = (16).toString() + "px";
+  let gridBackgroundImage = "linear-gradient(to right, " + gridLineColor + " 1px, transparent 1px), linear-gradient(to bottom, " + gridLineColor + " 1px, transparent 1px)";
+  let gridBackgroundSize = cellSizeString + " " + cellSizeString;
   return JsxRuntime.jsx("div", {
-    children: JsxRuntime.jsx("div", {
-      children: JsxRuntime.jsx("canvas", {
-        ref: Primitive_option.some(canvasRef),
-        className: "absolute top-0 left-0 block",
-        style: {
-          height: heightString,
-          imageRendering: "pixelated",
-          width: widthString
-        },
-        onMouseDown: handleMouseDown,
-        onMouseEnter: handleMouseMove,
-        onMouseLeave: handleMouseLeave,
-        onMouseMove: handleMouseMove
-      }),
+    children: JsxRuntime.jsxs("div", {
+      children: [
+        JsxRuntime.jsx("canvas", {
+          ref: Primitive_option.some(canvasRef),
+          className: "absolute top-0 left-0 block",
+          style: {
+            height: heightString,
+            imageRendering: "pixelated",
+            width: widthString
+          },
+          onMouseDown: handleMouseDown,
+          onMouseEnter: handleMouseMove,
+          onMouseLeave: handleMouseLeave,
+          onMouseMove: handleMouseMove
+        }),
+        props.showGrid ? JsxRuntime.jsx("div", {
+            className: "absolute top-0 left-0 pointer-events-none",
+            style: {
+              backgroundImage: gridBackgroundImage,
+              backgroundSize: gridBackgroundSize,
+              height: heightString,
+              width: widthString
+            }
+          }) : null
+      ],
       className: "absolute top-0 left-0",
       style: {
         backgroundColor: canvasBackgroundColor,

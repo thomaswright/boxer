@@ -29,7 +29,9 @@ let make = (
   ~setHoveredPickColor,
   ~isPickingColor,
   ~showCursorOverlay,
+  ~showGrid,
   ~canvasBackgroundColor,
+  ~gridLineColor,
   ~viewportBackgroundColor,
   ~isSilhouette,
   ~clearHoverRef: React.ref<unit => unit>,
@@ -195,6 +197,14 @@ let make = (
   let canvasHeight = boardDimI * cellSize
   let widthString = canvasWidth->Int.toString ++ "px"
   let heightString = canvasHeight->Int.toString ++ "px"
+  let cellSizeString = cellSize->Int.toString ++ "px"
+  let gridBackgroundImage =
+    "linear-gradient(to right, "
+    ++ gridLineColor
+    ++ " 1px, transparent 1px), linear-gradient(to bottom, "
+    ++ gridLineColor
+    ++ " 1px, transparent 1px)"
+  let gridBackgroundSize = cellSizeString ++ " " ++ cellSizeString
 
   <div
     ref={ReactDOM.Ref.domRef(canvasContainerRef)}
@@ -222,6 +232,17 @@ let make = (
         onMouseLeave={handleMouseLeave}
         onMouseDown={handleMouseDown}
       />
+      {showGrid
+         ? <div
+             className="absolute top-0 left-0 pointer-events-none"
+             style={{
+               width: widthString,
+               height: heightString,
+               backgroundImage: gridBackgroundImage,
+               backgroundSize: gridBackgroundSize,
+             }}
+           />
+         : React.null}
     </div>
   </div>
 }

@@ -8,6 +8,7 @@ import * as Belt_Float from "rescript/lib/es6/Belt_Float.js";
 import * as ColorsUsed from "./ColorsUsed.res.mjs";
 import * as Stdlib_Int from "rescript/lib/es6/Stdlib_Int.js";
 import * as ZoomControl from "./ZoomControl.res.mjs";
+import * as Color from "@texel/color";
 import * as ColorControl from "./ColorControl.res.mjs";
 import * as ExportControl from "./ExportControl.res.mjs";
 import * as Primitive_int from "rescript/lib/es6/Primitive_int.js";
@@ -16,6 +17,7 @@ import * as CanvasViewport from "./CanvasViewport.res.mjs";
 import * as ExportBoardJs from "./exportBoard.js";
 import * as CanvasThumbnails from "./CanvasThumbnails.res.mjs";
 import * as Primitive_option from "rescript/lib/es6/Primitive_option.js";
+import * as CanvasGridControl from "./CanvasGridControl.res.mjs";
 import * as CanvasSizeControl from "./CanvasSizeControl.res.mjs";
 import * as SavedBrushesPanel from "./SavedBrushesPanel.res.mjs";
 import * as SilhouetteControl from "./SilhouetteControl.res.mjs";
@@ -55,6 +57,11 @@ function useIsMouseDown() {
     };
   }, []);
   return match[0];
+}
+
+function _isLight(color) {
+  let match = Color.convert(Color.hexToRGB(color), Color.sRGB, Color.OKHSL);
+  return match[2] > 0.5;
 }
 
 let defaultTileMasks = [
@@ -179,28 +186,31 @@ function App(props) {
   let tileMask = match$7[0];
   let match$8 = UseLocalStorageJs("show-cursor-overlay", true);
   let showCursorOverlay = match$8[0];
-  let match$9 = UseLocalStorageJs("my-color", Initials.myColor);
-  let setMyColor = match$9[1];
-  let myColor = match$9[0];
-  let match$10 = UseLocalStorageJs("canvas-background-color", Initials.canvasBackgroundColor);
-  let canvasBackgroundColor = match$10[0];
-  let match$11 = UseLocalStorageJs("viewport-background-color", Initials.viewportBackgroundColor);
-  let viewportBackgroundColor = match$11[0];
-  let match$12 = UseLocalStorageJs("canvas-silhouette", false);
-  let isSilhouette = match$12[0];
-  let match$13 = React.useState(() => false);
-  let setCursorOverlayOff = match$13[1];
-  let match$14 = React.useState(() => "1");
-  let exportScaleInput = match$14[0];
-  let match$15 = React.useState(() => true);
-  let includeExportBackground = match$15[0];
-  let match$16 = React.useState(() => "Scale");
-  let resizeMode = match$16[0];
-  let match$17 = React.useState(() => false);
-  let setIsPickingColor = match$17[1];
-  let isPickingColor = match$17[0];
-  let match$18 = React.useState(() => {});
-  let setHoveredPickColor = match$18[1];
+  let match$9 = UseLocalStorageJs("show-grid", false);
+  let showGrid = match$9[0];
+  let match$10 = UseLocalStorageJs("my-color", Initials.myColor);
+  let setMyColor = match$10[1];
+  let myColor = match$10[0];
+  let match$11 = UseLocalStorageJs("canvas-background-color", Initials.canvasBackgroundColor);
+  let canvasBackgroundColor = match$11[0];
+  let match$12 = UseLocalStorageJs("viewport-background-color", Initials.viewportBackgroundColor);
+  let viewportBackgroundColor = match$12[0];
+  let match$13 = UseLocalStorageJs("canvas-silhouette", false);
+  let isSilhouette = match$13[0];
+  let gridLineColor = _isLight(canvasBackgroundColor) ? "rgba(0, 0, 0, 0.25)" : "rgba(255, 255, 255, 0.25)";
+  let match$14 = React.useState(() => false);
+  let setCursorOverlayOff = match$14[1];
+  let match$15 = React.useState(() => "1");
+  let exportScaleInput = match$15[0];
+  let match$16 = React.useState(() => true);
+  let includeExportBackground = match$16[0];
+  let match$17 = React.useState(() => "Scale");
+  let resizeMode = match$17[0];
+  let match$18 = React.useState(() => false);
+  let setIsPickingColor = match$18[1];
+  let isPickingColor = match$18[0];
+  let match$19 = React.useState(() => {});
+  let setHoveredPickColor = match$19[1];
   let clearHoverRef = React.useRef(() => {});
   let zoomRef = React.useRef(1);
   let panRef = React.useRef([
@@ -208,12 +218,12 @@ function App(props) {
     0
   ]);
   let canvasContainerRef = React.useRef(null);
-  let match$19 = React.useState(() => [
+  let match$20 = React.useState(() => [
     192,
     192
   ]);
-  let setViewportCenter = match$19[1];
-  let viewportCenter = match$19[0];
+  let setViewportCenter = match$20[1];
+  let viewportCenter = match$20[0];
   let viewportCenterRef = React.useRef(viewportCenter);
   viewportCenterRef.current = viewportCenter;
   let updateViewportCenter = () => {
@@ -399,18 +409,18 @@ function App(props) {
     let factor = 1 / Initials.zoom_factor;
     updateZoom(prev => prev * factor);
   };
-  let match$20 = Array2D.dims(board);
-  let boardDimJ = match$20[1];
-  let boardDimI = match$20[0];
+  let match$21 = Array2D.dims(board);
+  let boardDimJ = match$21[1];
+  let boardDimI = match$21[0];
   let lastAutoCenteredDimsRef = React.useRef(undefined);
-  let match$21 = Array2D.dims(brush);
-  let brushDimJ = match$21[1];
-  let brushDimI = match$21[0];
+  let match$22 = Array2D.dims(brush);
+  let brushDimJ = match$22[1];
+  let brushDimI = match$22[0];
   let brushCenterDimI = brushDimI / 2 | 0;
   let brushCenterDimJ = brushDimJ / 2 | 0;
-  let match$22 = Array2D.dims(tileMask);
-  let tileMaskDimJ = match$22[1];
-  let tileMaskDimI = match$22[0];
+  let match$23 = Array2D.dims(tileMask);
+  let tileMaskDimJ = match$23[1];
+  let tileMaskDimI = match$23[0];
   let computeCenteredPan = (dimI, dimJ, zoomValue) => {
     let boardWidth = dimI * 16;
     let boardHeight = dimJ * 16;
@@ -480,12 +490,12 @@ function App(props) {
     });
   };
   let fitCanvasToViewport = () => fitCanvasToViewportForDimensions(boardDimI, boardDimJ);
-  let match$23 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$23[1];
-  let resizeRowsInput = match$23[0];
-  let match$24 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$24[1];
-  let resizeColsInput = match$24[0];
+  let match$24 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$24[1];
+  let resizeRowsInput = match$24[0];
+  let match$25 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$25[1];
+  let resizeColsInput = match$25[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -567,9 +577,9 @@ function App(props) {
       return mapped;
     }
   };
-  let match$25 = parsePositiveInt(resizeRowsInput);
-  let match$26 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$25 !== undefined && match$26 !== undefined ? match$25 !== boardDimI || match$26 !== boardDimJ : false;
+  let match$26 = parsePositiveInt(resizeRowsInput);
+  let match$27 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$26 !== undefined && match$27 !== undefined ? match$26 !== boardDimI || match$27 !== boardDimJ : false;
   let exportScaleValue = parsePositiveFloat(exportScaleInput);
   let canExport = Stdlib_Option.isSome(exportScaleValue);
   let handleResizeSubmit = () => {
@@ -810,7 +820,7 @@ function App(props) {
               transformValue: transformValue,
               zoom: zoom,
               pan: pan,
-              cursorOverlayOff: match$13[0],
+              cursorOverlayOff: match$14[0],
               setCursorOverlayOff: setCursorOverlayOff,
               isMouseDown: isMouseDown,
               applyBrush: applyBrush,
@@ -818,7 +828,9 @@ function App(props) {
               setHoveredPickColor: setHoveredPickColor,
               isPickingColor: isPickingColor,
               showCursorOverlay: showCursorOverlay,
+              showGrid: showGrid,
               canvasBackgroundColor: canvasBackgroundColor,
+              gridLineColor: gridLineColor,
               viewportBackgroundColor: viewportBackgroundColor,
               isSilhouette: isSilhouette,
               clearHoverRef: clearHoverRef,
@@ -851,7 +863,7 @@ function App(props) {
             setBrushMode: setBrushMode,
             myColor: myColor,
             setMyColor: setMyColor,
-            hoveredPickColor: match$18[0],
+            hoveredPickColor: match$19[0],
             isPickingColor: isPickingColor,
             onStartColorPick: onStartColorPick,
             canvasBackgroundColor: canvasBackgroundColor
@@ -874,13 +886,13 @@ function App(props) {
               }),
               JsxRuntime.jsx(SilhouetteControl.make, {
                 isSilhouette: isSilhouette,
-                setIsSilhouette: match$12[1]
+                setIsSilhouette: match$13[1]
               }),
               JsxRuntime.jsx(ExportControl.make, {
                 exportScaleInput: exportScaleInput,
-                setExportScaleInput: match$14[1],
+                setExportScaleInput: match$15[1],
                 includeExportBackground: includeExportBackground,
-                setIncludeExportBackground: match$15[1],
+                setIncludeExportBackground: match$16[1],
                 canExport: canExport,
                 onExport: handleExportPng
               }),
@@ -900,12 +912,16 @@ function App(props) {
                 showCursorOverlay: showCursorOverlay,
                 setShowCursorOverlay: match$8[1]
               }),
+              JsxRuntime.jsx(CanvasGridControl.make, {
+                showGrid: showGrid,
+                setShowGrid: match$9[1]
+              }),
               JsxRuntime.jsx(CanvasColorsControl.make, {
                 myColor: myColor,
                 canvasBackgroundColor: canvasBackgroundColor,
-                setCanvasBackgroundColor: match$10[1],
+                setCanvasBackgroundColor: match$11[1],
                 viewportBackgroundColor: viewportBackgroundColor,
-                setViewportBackgroundColor: match$11[1]
+                setViewportBackgroundColor: match$12[1]
               }),
               JsxRuntime.jsx(CanvasSizeControl.make, {
                 resizeRowsInput: resizeRowsInput,
@@ -913,7 +929,7 @@ function App(props) {
                 resizeColsInput: resizeColsInput,
                 setResizeColsInput: setResizeColsInput,
                 resizeMode: resizeMode,
-                setResizeMode: match$16[1],
+                setResizeMode: match$17[1],
                 canSubmitResize: canSubmitResize,
                 handleResizeSubmit: handleResizeSubmit
               })

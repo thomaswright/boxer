@@ -86,6 +86,7 @@ let make = () => {
   )
   let (tileMask, setTileMask, _) = useLocalStorage("tile-mask", makeTileMask(4, 4))
   let (showCursorOverlay, setShowCursorOverlay, _) = useLocalStorage("show-cursor-overlay", true)
+  let (showGrid, setShowGrid, _) = useLocalStorage("show-grid", false)
   let (myColor, setMyColor, _) = useLocalStorage("my-color", Initials.myColor)
   let (canvasBackgroundColor, setCanvasBackgroundColor, _) = useLocalStorage(
     "canvas-background-color",
@@ -96,6 +97,12 @@ let make = () => {
     Initials.viewportBackgroundColor,
   )
   let (isSilhouette, setIsSilhouette, _) = useLocalStorage("canvas-silhouette", Initials.silhouette)
+  let gridLineColor =
+    if _isLight(canvasBackgroundColor) {
+      "rgba(0, 0, 0, 0.25)"
+    } else {
+      "rgba(255, 255, 255, 0.25)"
+    }
 
   // Transient UI state
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
@@ -721,7 +728,9 @@ let make = () => {
           setHoveredPickColor
           isPickingColor
           showCursorOverlay
+          showGrid
           canvasBackgroundColor
+          gridLineColor
           viewportBackgroundColor
           isSilhouette
           clearHoverRef
@@ -784,6 +793,7 @@ let make = () => {
           handleDeleteSelectedTileMask
         />
         <BrushOverlayControl showCursorOverlay setShowCursorOverlay />
+        <CanvasGridControl showGrid setShowGrid />
 
         <CanvasColorsControl
           myColor
