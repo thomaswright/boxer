@@ -12,5 +12,10 @@ type exportOptions = {
 
 type brushMode = | @as("Color") Color | @as("Erase") Erase
 type resizeMode = | @as("Scale") Scale | @as("Crop") Crop
+type gridMode =
+  | @as("none") GridNone
+  | @as("grid") GridLines
+  | @as("checkeredOverlay") CheckeredOverlay
+  | @as("checkeredUnderlay") CheckeredUnderlay
 
 type canvasRenderer

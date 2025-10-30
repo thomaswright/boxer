@@ -186,8 +186,8 @@ function App(props) {
   let tileMask = match$7[0];
   let match$8 = UseLocalStorageJs("show-cursor-overlay", true);
   let showCursorOverlay = match$8[0];
-  let match$9 = UseLocalStorageJs("show-grid", false);
-  let showGrid = match$9[0];
+  let match$9 = UseLocalStorageJs("grid-mode", "none");
+  let gridMode = match$9[0];
   let match$10 = UseLocalStorageJs("my-color", Initials.myColor);
   let setMyColor = match$10[1];
   let myColor = match$10[0];
@@ -197,7 +197,10 @@ function App(props) {
   let viewportBackgroundColor = match$12[0];
   let match$13 = UseLocalStorageJs("canvas-silhouette", false);
   let isSilhouette = match$13[0];
-  let gridLineColor = _isLight(canvasBackgroundColor) ? "rgba(0, 0, 0, 0.25)" : "rgba(255, 255, 255, 0.25)";
+  let isCanvasBackgroundLight = _isLight(canvasBackgroundColor);
+  let gridLineColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.25)" : "rgba(255, 255, 255, 0.25)";
+  let checkeredPrimaryColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.16)" : "rgba(255, 255, 255, 0.18)";
+  let checkeredSecondaryColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.08)";
   let match$14 = React.useState(() => false);
   let setCursorOverlayOff = match$14[1];
   let match$15 = React.useState(() => "1");
@@ -828,9 +831,11 @@ function App(props) {
               setHoveredPickColor: setHoveredPickColor,
               isPickingColor: isPickingColor,
               showCursorOverlay: showCursorOverlay,
-              showGrid: showGrid,
+              gridMode: gridMode,
               canvasBackgroundColor: canvasBackgroundColor,
               gridLineColor: gridLineColor,
+              checkeredPrimaryColor: checkeredPrimaryColor,
+              checkeredSecondaryColor: checkeredSecondaryColor,
               viewportBackgroundColor: viewportBackgroundColor,
               isSilhouette: isSilhouette,
               clearHoverRef: clearHoverRef,
@@ -913,8 +918,8 @@ function App(props) {
                 setShowCursorOverlay: match$8[1]
               }),
               JsxRuntime.jsx(CanvasGridControl.make, {
-                showGrid: showGrid,
-                setShowGrid: match$9[1]
+                gridMode: gridMode,
+                setGridMode: match$9[1]
               }),
               JsxRuntime.jsx(CanvasColorsControl.make, {
                 myColor: myColor,

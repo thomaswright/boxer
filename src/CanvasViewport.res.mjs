@@ -23,8 +23,11 @@ function CanvasViewport(props) {
   let brush = props.brush;
   let clearHoverRef = props.clearHoverRef;
   let isSilhouette = props.isSilhouette;
+  let checkeredSecondaryColor = props.checkeredSecondaryColor;
+  let checkeredPrimaryColor = props.checkeredPrimaryColor;
   let gridLineColor = props.gridLineColor;
   let canvasBackgroundColor = props.canvasBackgroundColor;
+  let gridMode = props.gridMode;
   let showCursorOverlay = props.showCursorOverlay;
   let isPickingColor = props.isPickingColor;
   let setHoveredPickColor = props.setHoveredPickColor;
@@ -214,11 +217,29 @@ function CanvasViewport(props) {
   let widthString = canvasWidth.toString() + "px";
   let heightString = canvasHeight.toString() + "px";
   let cellSizeString = (16).toString() + "px";
+  let halfCellSizeString = (8).toString() + "px";
   let gridBackgroundImage = "linear-gradient(to right, " + gridLineColor + " 1px, transparent 1px), linear-gradient(to bottom, " + gridLineColor + " 1px, transparent 1px)";
   let gridBackgroundSize = cellSizeString + " " + cellSizeString;
+  let checkeredBackgroundImage = "linear-gradient(45deg, " + checkeredPrimaryColor + " 25%, transparent 25%, transparent 75%, " + checkeredPrimaryColor + " 75%, " + checkeredPrimaryColor + "), linear-gradient(45deg, " + checkeredPrimaryColor + " 25%, transparent 25%, transparent 75%, " + checkeredPrimaryColor + " 75%, " + checkeredPrimaryColor + ")";
+  let checkeredBackgroundPosition = "0 0, " + halfCellSizeString + " " + halfCellSizeString;
+  let checkeredBackgroundSize = cellSizeString + " " + cellSizeString;
+  let isGridLines = gridMode === "grid";
+  let isCheckeredOverlay = gridMode === "checkeredOverlay";
+  let isCheckeredUnderlay = gridMode === "checkeredUnderlay";
   return JsxRuntime.jsx("div", {
     children: JsxRuntime.jsxs("div", {
       children: [
+        isCheckeredUnderlay ? JsxRuntime.jsx("div", {
+            className: "absolute top-0 left-0 pointer-events-none",
+            style: {
+              backgroundColor: checkeredSecondaryColor,
+              backgroundImage: checkeredBackgroundImage,
+              backgroundPosition: checkeredBackgroundPosition,
+              backgroundSize: checkeredBackgroundSize,
+              height: heightString,
+              width: widthString
+            }
+          }) : null,
         JsxRuntime.jsx("canvas", {
           ref: Primitive_option.some(canvasRef),
           className: "absolute top-0 left-0 block",
@@ -232,11 +253,22 @@ function CanvasViewport(props) {
           onMouseLeave: handleMouseLeave,
           onMouseMove: handleMouseMove
         }),
-        props.showGrid ? JsxRuntime.jsx("div", {
+        isGridLines ? JsxRuntime.jsx("div", {
             className: "absolute top-0 left-0 pointer-events-none",
             style: {
               backgroundImage: gridBackgroundImage,
               backgroundSize: gridBackgroundSize,
+              height: heightString,
+              width: widthString
+            }
+          }) : null,
+        isCheckeredOverlay ? JsxRuntime.jsx("div", {
+            className: "absolute top-0 left-0 pointer-events-none",
+            style: {
+              backgroundColor: checkeredSecondaryColor,
+              backgroundImage: checkeredBackgroundImage,
+              backgroundPosition: checkeredBackgroundPosition,
+              backgroundSize: checkeredBackgroundSize,
               height: heightString,
               width: widthString
             }
