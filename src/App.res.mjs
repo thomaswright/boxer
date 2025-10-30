@@ -434,8 +434,8 @@ function App(props) {
   let tileMaskDimJ = match$23[1];
   let tileMaskDimI = match$23[0];
   let computeCenteredPan = (dimI, dimJ, zoomValue) => {
-    let boardWidth = dimJ * 16;
-    let boardHeight = dimI * 16;
+    let boardWidth = dimJ * 1;
+    let boardHeight = dimI * 1;
     let nextPanX = viewportCenter[0] - boardWidth * zoomValue / 2;
     let nextPanY = viewportCenter[1] - boardHeight * zoomValue / 2;
     return [
@@ -472,8 +472,8 @@ function App(props) {
     let rect = containerElement.getBoundingClientRect();
     let viewportWidth = rect.width;
     let viewportHeight = rect.height;
-    let boardWidth = dimJ * 16;
-    let boardHeight = dimI * 16;
+    let boardWidth = dimJ * 1;
+    let boardHeight = dimI * 1;
     if (viewportWidth <= 0 || viewportHeight <= 0 || boardWidth <= 0 || boardHeight <= 0) {
       return centerCanvasForDimensions(dimI, dimJ);
     }

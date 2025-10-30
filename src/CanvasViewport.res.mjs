@@ -75,7 +75,7 @@ function CanvasViewport(props) {
   }, []);
   React.useEffect(() => {
     withRenderer(renderer => {
-      CanvasRenderer.setSize(renderer, boardDimJ, boardDimI, 16);
+      CanvasRenderer.setSize(renderer, boardDimJ, boardDimI, 1);
       CanvasRenderer.updateBoard(renderer, board, canvasBackgroundColor, isSilhouette);
       CanvasRenderer.render(renderer);
       CanvasRenderer.setHover(renderer, hoverToNullable(hoveredCellRef.current));
@@ -147,8 +147,8 @@ function CanvasViewport(props) {
     if (boardX < 0 || boardY < 0) {
       return;
     }
-    let col = Math.floor(boardX / 16) | 0;
-    let row = Math.floor(boardY / 16) | 0;
+    let col = Math.floor(boardX / 1) | 0;
+    let row = Math.floor(boardY / 1) | 0;
     if (col < 0 || col >= boardDimJ || row < 0 || row >= boardDimI) {
       return;
     } else {
@@ -216,14 +216,14 @@ function CanvasViewport(props) {
     }
     
   };
-  let canvasWidth = (boardDimJ << 4);
-  let canvasHeight = (boardDimI << 4);
+  let canvasWidth = (boardDimJ << 0);
+  let canvasHeight = (boardDimI << 0);
   let widthString = canvasWidth.toString() + "px";
   let heightString = canvasHeight.toString() + "px";
-  let cellSizeString = (16).toString() + "px";
+  let cellSizeString = (1).toString() + "px";
   let gridBackgroundImage = "linear-gradient(to right, " + gridLineColor + " 1px, transparent 1px), linear-gradient(to bottom, " + gridLineColor + " 1px, transparent 1px)";
   let gridBackgroundSize = cellSizeString + " " + cellSizeString;
-  let doubleCellSizeString = (32).toString() + "px";
+  let doubleCellSizeString = (2).toString() + "px";
   let checkeredSvg = "<svg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'><rect width='1' height='1' fill='" + checkeredPrimaryColor + "'/><rect x='1' y='1' width='1' height='1' fill='" + checkeredPrimaryColor + "'/><rect x='1' width='1' height='1' fill='" + checkeredSecondaryColor + "'/><rect y='1' width='1' height='1' fill='" + checkeredSecondaryColor + "'/></svg>";
   let checkeredBackgroundImage = "url(\"data:image/svg+xml," + encodeURIComponent(checkeredSvg) + "\")";
   let checkeredBackgroundSize = doubleCellSizeString + " " + doubleCellSizeString;
@@ -300,9 +300,9 @@ function CanvasViewport(props) {
   });
 }
 
-let cellSize = 16;
+let cellSize = 1;
 
-let cellSizeFloat = 16;
+let cellSizeFloat = 1;
 
 let make = CanvasViewport;
 

@@ -3,8 +3,8 @@ open Webapi.Dom
 
 open Types
 
-let cellSize = 16
-let cellSizeFloat = 16.
+let cellSize = 1
+let cellSizeFloat = 1.
 
 let hoverToNullable = cell =>
   switch cell {

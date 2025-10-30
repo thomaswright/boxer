@@ -321,7 +321,7 @@ let make = () => {
   let (tileMaskDimI, tileMaskDimJ) = tileMask->Array2D.dims
   let computeCenteredPan = (dimI, dimJ, zoomValue) => {
     let (centerX, centerY) = viewportCenter
-    let cellSize = 16.
+    let cellSize = 1.
     let boardWidth = Float.fromInt(dimJ) *. cellSize
     let boardHeight = Float.fromInt(dimI) *. cellSize
     let nextPanX = centerX -. boardWidth *. zoomValue /. 2.
@@ -347,7 +347,7 @@ let make = () => {
       let rect = containerElement->Element.getBoundingClientRect
       let viewportWidth = rect->DomRect.width
       let viewportHeight = rect->DomRect.height
-      let cellSize = 16.
+      let cellSize = 1.
       let boardWidth = Float.fromInt(dimJ) *. cellSize
       let boardHeight = Float.fromInt(dimI) *. cellSize
       if viewportWidth <= 0. || viewportHeight <= 0. || boardWidth <= 0. || boardHeight <= 0. {
