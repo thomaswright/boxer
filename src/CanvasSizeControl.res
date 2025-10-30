@@ -11,7 +11,7 @@ let make = (
   ~canSubmitResize,
   ~handleResizeSubmit,
 ) => {
-  let baseButtonClasses = "flex-1 rounded px-2 py-1 text-xs font-medium border"
+  let baseButtonClasses = "flex-1 px-2 py-1 text-xs font-medium border first:rounded-l last:rounded-r"
   let scaleButtonClasses = [
     baseButtonClasses,
     switch resizeMode {
@@ -35,7 +35,7 @@ let make = (
       {"Canvas Size"->React.string}
     </div>
     <div className="flex flex-col gap-2">
-      <div className="flex flex-row gap-2">
+      <div className="flex flex-row">
         <button
           type_="button"
           className={scaleButtonClasses}

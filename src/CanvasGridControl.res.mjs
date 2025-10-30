@@ -23,7 +23,7 @@ let options = [
 ];
 
 function buttonClass(isActive) {
-  return "flex-1 text-xs font-medium px-2 py-1 rounded border transition-colors " + (
+  return "flex-1 text-xs font-medium px-2 py-1 nth-[1]:rounded-tl nth-[2]:rounded-tr nth-[3]:rounded-bl nth-[4]:rounded-br border transition-colors " + (
     isActive ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-800 border-gray-200 hover:border-gray-400"
   );
 }
@@ -48,7 +48,7 @@ function CanvasGridControl(props) {
             onClick: param => setGridMode(param => mode)
           }, label);
         }),
-        className: "grid grid-cols-2 gap-2"
+        className: "grid grid-cols-2"
       })
     ],
     className: "p-2 flex flex-col gap-2 w-full"

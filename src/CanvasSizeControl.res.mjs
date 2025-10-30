@@ -10,7 +10,7 @@ function CanvasSizeControl(props) {
   let resizeMode = props.resizeMode;
   let setResizeColsInput = props.setResizeColsInput;
   let setResizeRowsInput = props.setResizeRowsInput;
-  let baseButtonClasses = "flex-1 rounded px-2 py-1 text-xs font-medium border";
+  let baseButtonClasses = "flex-1 px-2 py-1 text-xs font-medium border first:rounded-l last:rounded-r";
   let tmp;
   tmp = resizeMode === "Scale" ? "bg-blue-500 text-white border-blue-500" : "bg-gray-100 text-gray-700 border-gray-300";
   let scaleButtonClasses = [
@@ -51,7 +51,7 @@ function CanvasSizeControl(props) {
                 onClick: param => setResizeMode(param => "Crop")
               })
             ],
-            className: "flex flex-row gap-2"
+            className: "flex flex-row"
           }),
           JsxRuntime.jsxs("div", {
             children: [

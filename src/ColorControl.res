@@ -17,11 +17,11 @@ let make = (
   }
 
   <div className="relative flex flex-col gap-2 w-full overflow-x-visible items-center flex-none">
-    <div className="flex flex-row gap-2 justify-center">
+    <div className="flex flex-row justify-center">
       <button
         className={[
           brushMode == Color ? " bg-blue-500 text-white" : "bg-gray-200",
-          "px-2 font-medium rounded",
+          "px-2 font-medium rounded-l",
         ]->Array.join(" ")}
         onClick={_ => setBrushMode(_ => Color)}>
         {"Color"->React.string}
@@ -29,7 +29,7 @@ let make = (
       <button
         className={[
           brushMode == Erase ? " bg-blue-500 text-white" : "bg-gray-200",
-          "px-2 font-medium rounded",
+          "px-2 font-medium rounded-r",
         ]->Array.join(" ")}
         onClick={_ => setBrushMode(_ => Erase)}>
         {"Erase"->React.string}
@@ -37,7 +37,7 @@ let make = (
       <button
         className={[
           isPickingColor ? " bg-blue-500 text-white" : "bg-gray-200",
-          "px-2 font-medium rounded",
+          "px-2 font-medium rounded ml-2",
         ]->Array.join(" ")}
         onClick={_ => onStartColorPick()}>
         {"Pick"->React.string}

@@ -19,7 +19,7 @@ function ColorControl(props) {
             children: "Color",
             className: [
               brushMode === "Color" ? " bg-blue-500 text-white" : "bg-gray-200",
-              "px-2 font-medium rounded"
+              "px-2 font-medium rounded-l"
             ].join(" "),
             onClick: param => setBrushMode(param => "Color")
           }),
@@ -27,7 +27,7 @@ function ColorControl(props) {
             children: "Erase",
             className: [
               brushMode === "Erase" ? " bg-blue-500 text-white" : "bg-gray-200",
-              "px-2 font-medium rounded"
+              "px-2 font-medium rounded-r"
             ].join(" "),
             onClick: param => setBrushMode(param => "Erase")
           }),
@@ -35,12 +35,12 @@ function ColorControl(props) {
             children: "Pick",
             className: [
               isPickingColor ? " bg-blue-500 text-white" : "bg-gray-200",
-              "px-2 font-medium rounded"
+              "px-2 font-medium rounded ml-2"
             ].join(" "),
             onClick: param => onStartColorPick()
           })
         ],
-        className: "flex flex-row gap-2 justify-center"
+        className: "flex flex-row justify-center"
       }),
       isPickingColor ? JsxRuntime.jsx("div", {
           className: "w-full h-[200px] border border-gray-300",
