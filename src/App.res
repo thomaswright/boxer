@@ -635,6 +635,7 @@ let make = () => {
   }
 
   let applyBrush = (clickI, clickJ) => {
+    setLocalStoragePersistencePaused(true)
     let brushColor = getBrushColor()
     setBoard(prev => {
       let (rows, cols) = Board.dims(prev)

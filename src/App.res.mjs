@@ -751,6 +751,7 @@ function App(props) {
     }
   };
   let applyBrush = (clickI, clickJ) => {
+    UseLocalStorageJs$1.setLocalStoragePersistencePaused(true);
     let brushColor = getBrushColor();
     setBoard(prev => {
       let match = Board.dims(prev);
