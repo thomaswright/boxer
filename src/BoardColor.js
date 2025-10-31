@@ -22,6 +22,13 @@ function normalizeHex(hex) {
   return parsed & 0xffffff;
 }
 
+const HEX_DIGITS = "0123456789ABCDEF";
+const HEX_TABLE = Array.from({ length: 256 }, (_, value) => {
+  const hi = HEX_DIGITS[(value >>> 4) & 0xf];
+  const lo = HEX_DIGITS[value & 0xf];
+  return hi + lo;
+});
+
 export function hexToUint32(color) {
   const normalized = normalizeHex(color);
   if (normalized === null) {
@@ -36,5 +43,8 @@ export function uint32ToHex(value) {
     return null;
   }
   const rgb = value & 0xffffff;
-  return `#${rgb.toString(16).padStart(6, "0").toUpperCase()}`;
+  const r = (rgb >>> 16) & 0xff;
+  const g = (rgb >>> 8) & 0xff;
+  const b = rgb & 0xff;
+  return `#${HEX_TABLE[r]}${HEX_TABLE[g]}${HEX_TABLE[b]}`;
 }

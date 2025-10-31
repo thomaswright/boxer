@@ -1,5 +1,5 @@
 import React from "react";
-import { hexToUint32, uint32ToHex } from "./BoardColor.js";
+import { hexToUint32 } from "./BoardColor.js";
 
 const CANVASES_KEY = "canvases";
 const CANVAS_STORAGE_VERSION = 1;
@@ -176,10 +176,10 @@ function encodeBoard(board) {
   const cols = typed.cols | 0;
 
   if (rows === 0 || cols === 0) {
-    return { rows: 0, cols: 0, palette: [null], runs: "" };
+    return { rows: 0, cols: 0, palette: [0], runs: "" };
   }
 
-  const palette = [null];
+  const palette = [0];
   const colorToIndex = new Map();
 
   const runs = [];
@@ -193,15 +193,12 @@ function encodeBoard(board) {
     const value = data[idx] >>> 0;
     let paletteIndex = 0;
     if (value !== 0) {
-      const color = uint32ToHex(value);
-      if (color) {
-        if (colorToIndex.has(color)) {
-          paletteIndex = colorToIndex.get(color);
-        } else {
-          paletteIndex = palette.length;
-          palette.push(color);
-          colorToIndex.set(color, paletteIndex);
-        }
+      if (colorToIndex.has(value)) {
+        paletteIndex = colorToIndex.get(value);
+      } else {
+        paletteIndex = palette.length;
+        palette.push(value);
+        colorToIndex.set(value, paletteIndex);
       }
     }
 
@@ -262,9 +259,13 @@ function decodeBoard(encoded) {
   const data = new Uint32Array(totalCells);
   const paletteSource = Array.isArray(encoded.palette)
     ? encoded.palette
-    : [null];
+    : [0];
   const palette = paletteSource.map((entry) =>
-    entry === undefined || entry === null ? 0 : hexToUint32(entry)
+    entry === undefined || entry === null
+      ? 0
+      : typeof entry === "number"
+      ? entry >>> 0
+      : hexToUint32(entry)
   );
 
   let pointer = 0;
