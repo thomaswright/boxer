@@ -7,6 +7,7 @@ const DEFERRED_KEYS = new Set([CANVASES_KEY]);
 const FLUSH_DELAY_MS = 500;
 const pendingWrites = new Map();
 let flushHandlersRegistered = false;
+let persistencePaused = false;
 
 function isTypedBoard(board) {
   return (
@@ -84,10 +85,14 @@ function flushDeferredWrite(key) {
   if (!entry || typeof window === "undefined") {
     return;
   }
-  window.clearTimeout(entry.timerId);
+  if (entry.timerId != null) {
+    window.clearTimeout(entry.timerId);
+  }
   pendingWrites.delete(key);
+  const serializedValue =
+    entry.serializedValue != null ? entry.serializedValue : entry.serialize();
   try {
-    window.localStorage.setItem(key, entry.serializedValue);
+    window.localStorage.setItem(key, serializedValue);
   } catch (error) {
     if (isQuotaExceededError(error)) {
       console.warn(`Unable to persist deferred value for "${key}" in localStorage: quota exceeded`);
@@ -96,7 +101,7 @@ function flushDeferredWrite(key) {
     }
     return;
   }
-  dispatchStorageEvent(key, entry.serializedValue);
+  dispatchStorageEvent(key, serializedValue);
 }
 
 function flushAllDeferredWrites() {
@@ -105,19 +110,27 @@ function flushAllDeferredWrites() {
   });
 }
 
-function scheduleDeferredWrite(key, serializedValue) {
+function scheduleDeferredWrite(key, value, serialize) {
   if (typeof window === "undefined") {
     return;
   }
   ensureFlushHandlersRegistered();
   const existing = pendingWrites.get(key);
   if (existing) {
-    window.clearTimeout(existing.timerId);
+    if (existing.timerId != null) {
+      window.clearTimeout(existing.timerId);
+    }
   }
+  if (persistencePaused) {
+    pendingWrites.set(key, { value, serialize, serializedValue: null, timerId: null });
+    dispatchStorageEvent(key, null);
+    return;
+  }
+  const serializedValue = serialize();
   const timerId = window.setTimeout(() => {
     flushDeferredWrite(key);
   }, FLUSH_DELAY_MS);
-  pendingWrites.set(key, { serializedValue, timerId });
+  pendingWrites.set(key, { value, serialize, serializedValue, timerId });
   dispatchStorageEvent(key, serializedValue);
 }
 
@@ -305,7 +318,22 @@ function serializeCanvases(canvases) {
 }
 
 function deserializeCanvases(rawValue, fallback) {
+  if (Array.isArray(rawValue)) {
+    return rawValue;
+  }
+  if (
+    rawValue &&
+    typeof rawValue === "object" &&
+    Array.isArray(rawValue.canvases)
+  ) {
+    return rawValue.canvases
+      .map(deserializeCanvas)
+      .filter(Boolean);
+  }
   try {
+    if (typeof rawValue !== "string") {
+      return fallback;
+    }
     const parsed = JSON.parse(rawValue);
 
     if (Array.isArray(parsed)) {
@@ -344,6 +372,10 @@ function deserializeForKey(key, rawValue, fallback) {
     return deserializeCanvases(rawValue, fallback);
   }
 
+  if (typeof rawValue !== "string") {
+    return rawValue;
+  }
+
   try {
     return JSON.parse(rawValue);
   } catch (error) {
@@ -365,10 +397,12 @@ function isQuotaExceededError(error) {
 }
 
 const setLocalStorageItem = (key, value) => {
-  const serializedValue = serializeForKey(key, value);
   if (shouldDeferPersistence(key)) {
-    scheduleDeferredWrite(key, serializedValue);
-  } else if (typeof window !== "undefined") {
+    scheduleDeferredWrite(key, value, () => serializeForKey(key, value));
+    return;
+  }
+  const serializedValue = serializeForKey(key, value);
+  if (typeof window !== "undefined") {
     window.localStorage.setItem(key, serializedValue);
     dispatchStorageEvent(key, serializedValue);
   }
@@ -377,7 +411,9 @@ const setLocalStorageItem = (key, value) => {
 const removeLocalStorageItem = (key) => {
   const pending = getPendingEntry(key);
   if (pending && typeof window !== "undefined") {
-    window.clearTimeout(pending.timerId);
+    if (pending.timerId != null) {
+      window.clearTimeout(pending.timerId);
+    }
     pendingWrites.delete(key);
   }
   if (typeof window !== "undefined") {
@@ -389,7 +425,10 @@ const removeLocalStorageItem = (key) => {
 const getLocalStorageItem = (key) => {
   const pending = getPendingEntry(key);
   if (pending) {
-    return pending.serializedValue;
+    if (pending.serializedValue != null) {
+      return pending.serializedValue;
+    }
+    return pending.value;
   }
   if (typeof window === "undefined") {
     return null;
@@ -405,6 +444,25 @@ const useLocalStorageSubscribe = (callback) => {
 const getLocalStorageServerSnapshot = () => {
   throw Error("useLocalStorage is a client-only hook");
 };
+
+export function setLocalStoragePersistencePaused(paused) {
+  if (persistencePaused === paused) {
+    return;
+  }
+  persistencePaused = paused;
+  if (paused) {
+    if (typeof window !== "undefined") {
+      pendingWrites.forEach((entry) => {
+        if (entry && entry.timerId != null) {
+          window.clearTimeout(entry.timerId);
+          entry.timerId = null;
+        }
+      });
+    }
+  } else {
+    flushAllDeferredWrites();
+  }
+}
 
 export default function useLocalStorage(key, initialValue) {
   const getSnapshot = React.useCallback(() => getLocalStorageItem(key), [key]);

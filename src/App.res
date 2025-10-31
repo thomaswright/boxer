@@ -6,6 +6,9 @@ open Types
 @module("./useLocalStorage.js")
 external useLocalStorage: (string, 'a) => ('a, ('a => 'a) => unit, unit => 'a) = "default"
 
+@module("./useLocalStorage.js")
+external setLocalStoragePersistencePaused: bool => unit = "setLocalStoragePersistencePaused"
+
 let makeBoard = (i, j) => Board.make(i, j)
 let makeBrush = (i, j) => Array2D.make(i, j, () => true)
 let makeTileMask = (i, j) => Array2D.make(i, j, () => true)
@@ -165,6 +168,11 @@ let make = () => {
   }
 
   let isMouseDown = useIsMouseDown()
+
+  React.useEffect1(() => {
+    setLocalStoragePersistencePaused(isMouseDown)
+    Some(() => setLocalStoragePersistencePaused(false))
+  }, [isMouseDown])
 
   let onStartColorPick = () =>
     setIsPickingColor(prev => {
