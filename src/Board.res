@@ -194,3 +194,5 @@ let mapValues = (board, mapper) => {
   }
   next
 }
+
+let data = board => board.data

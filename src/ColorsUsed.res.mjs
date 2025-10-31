@@ -4,21 +4,30 @@ import * as Board from "./Board.res.mjs";
 import * as React from "react";
 import * as Js_dict from "rescript/lib/es6/Js_dict.js";
 import * as Primitive_int from "rescript/lib/es6/Primitive_int.js";
+import * as Primitive_option from "rescript/lib/es6/Primitive_option.js";
 import * as Primitive_string from "rescript/lib/es6/Primitive_string.js";
 import * as JsxRuntime from "react/jsx-runtime";
+import * as IdleSchedulerJs from "./IdleScheduler.js";
 
-function ColorsUsed(props) {
-  let myColor = props.myColor;
-  let onReplaceUsedColor = props.onReplaceUsedColor;
-  let onSelectUsedColor = props.onSelectUsedColor;
-  let match = React.useState(() => false);
-  let setReplaceMode = match[1];
-  let replaceMode = match[0];
-  let colorCounts = {};
+function schedule(prim) {
+  return IdleSchedulerJs.schedule(prim);
+}
+
+function cancel(prim) {
+  IdleSchedulerJs.cancel(prim);
+}
+
+let IdleScheduler = {
+  schedule: schedule,
+  cancel: cancel
+};
+
+function computeUsage(board) {
+  let counts = {};
   let totalColored = {
     contents: 0
   };
-  Board.forEachValue(props.board, (param, param$1, value) => {
+  Board.forEachValue(board, (param, param$1, value) => {
     if (value === 0) {
       return;
     }
@@ -27,11 +36,54 @@ function ColorsUsed(props) {
       return;
     }
     totalColored.contents = totalColored.contents + 1 | 0;
-    let count = Js_dict.get(colorCounts, color);
+    let count = Js_dict.get(counts, color);
     let nextCount = count !== undefined ? count + 1 | 0 : 1;
-    colorCounts[color] = nextCount;
+    counts[color] = nextCount;
   });
-  let totalColoredCells = totalColored.contents;
+  return {
+    counts: counts,
+    total: totalColored.contents
+  };
+}
+
+function ColorsUsed(props) {
+  let myColor = props.myColor;
+  let onReplaceUsedColor = props.onReplaceUsedColor;
+  let onSelectUsedColor = props.onSelectUsedColor;
+  let board = props.board;
+  let match = React.useState(() => false);
+  let setReplaceMode = match[1];
+  let replaceMode = match[0];
+  let match$1 = React.useState(() => ({
+    counts: {},
+    total: 0
+  }));
+  let setUsageState = match$1[1];
+  let usageState = match$1[0];
+  let idleHandleRef = React.useRef(undefined);
+  React.useEffect(() => {
+    let handle = idleHandleRef.current;
+    if (handle !== undefined) {
+      IdleSchedulerJs.cancel(Primitive_option.valFromOption(handle));
+      idleHandleRef.current = undefined;
+    }
+    let handle$1 = IdleSchedulerJs.schedule(() => {
+      idleHandleRef.current = undefined;
+      setUsageState(param => computeUsage(board));
+    });
+    idleHandleRef.current = Primitive_option.some(handle$1);
+    return () => {
+      let handle = idleHandleRef.current;
+      if (handle !== undefined) {
+        IdleSchedulerJs.cancel(Primitive_option.valFromOption(handle));
+        idleHandleRef.current = undefined;
+        return;
+      }
+      
+    };
+  }, [Board.data(board)]);
+  let colorCounts = usageState.counts;
+  let totalColoredCells = usageState.total;
   let usages = Js_dict.entries(colorCounts).map(param => {
     let count = param[1];
     let percent = totalColoredCells === 0 ? 0 : count / totalColoredCells * 100;
@@ -49,7 +101,7 @@ function ColorsUsed(props) {
     }
   });
   let uniqueColorCount = usages.length;
-  let match$1 = usages.length;
+  let match$2 = usages.length;
   return JsxRuntime.jsxs("div", {
     children: [
       JsxRuntime.jsxs("div", {
@@ -74,7 +126,7 @@ function ColorsUsed(props) {
         ],
         className: "flex flex-row items-center justify-between"
       }),
-      match$1 !== 0 ? JsxRuntime.jsx("div", {
+      match$2 !== 0 ? JsxRuntime.jsx("div", {
           children: usages.map(param => {
             let color = param.color;
             let percentLabel = param.percent.toFixed(0);
@@ -126,6 +178,8 @@ function ColorsUsed(props) {
 let make = ColorsUsed;
 
 export {
+  IdleScheduler,
+  computeUsage,
   make,
 }
 /* Board Not a pure module */

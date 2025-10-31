@@ -237,6 +237,10 @@ function mapValues(board, mapper) {
   return next;
 }
 
+function data(board) {
+  return board.data;
+}
+
 let $$Uint32Array$1;
 
 let $$TypedArray;
@@ -267,5 +271,6 @@ export {
   toArray2D,
   fill,
   mapValues,
+  data,
 }
 /* ./BoardColor.js Not a pure module */

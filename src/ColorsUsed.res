@@ -1,7 +1,42 @@
+type usage = {
+  counts: Js.Dict.t<int>,
+  total: int,
+}
+
 type colorUsage = {
   color: string,
   count: int,
   percent: float,
+}
+
+module IdleScheduler = {
+  type handle
+  @module("./IdleScheduler.js")
+  external schedule: (unit => unit) => handle = "schedule"
+  @module("./IdleScheduler.js")
+  external cancel: handle => unit = "cancel"
+}
+
+let computeUsage = board => {
+  let counts = Js.Dict.empty()
+  let totalColored = ref(0)
+
+  Board.forEachValue(board, (_, _, value) =>
+    if value != 0 {
+      switch Board.valueToNullable(value)->Js.Nullable.toOption {
+      | Some(color) =>
+        totalColored.contents = totalColored.contents + 1
+        let nextCount = switch Js.Dict.get(counts, color) {
+        | Some(count) => count + 1
+        | None => 1
+        }
+        Js.Dict.set(counts, color, nextCount)
+      | None => ()
+      }
+    }
+  )
+
+  {counts, total: totalColored.contents}
 }
 
 @react.component
@@ -12,25 +47,37 @@ let make = (
   ~myColor,
 ) => {
   let (replaceMode, setReplaceMode) = React.useState(_ => false)
-  let colorCounts = Js.Dict.empty()
-  let totalColored = ref(0)
+  let (usageState, setUsageState) = React.useState(() => {counts: Js.Dict.empty(), total: 0})
+  let idleHandleRef = React.useRef(None)
 
-  Board.forEachValue(board, (_, _, value) =>
-    if value != 0 {
-      switch Board.valueToNullable(value)->Js.Nullable.toOption {
-      | Some(color) =>
-        totalColored.contents = totalColored.contents + 1
-        let nextCount = switch colorCounts->Js.Dict.get(color) {
-        | Some(count) => count + 1
-        | None => 1
-        }
-        colorCounts->Js.Dict.set(color, nextCount)
-      | None => ()
-      }
+  React.useEffect1(() => {
+    switch idleHandleRef.current {
+    | Some(handle) =>
+      IdleScheduler.cancel(handle)
+      idleHandleRef.current = None
+    | None => ()
     }
-  )
 
-  let totalColoredCells = totalColored.contents
+    let handle = IdleScheduler.schedule(() => {
+      idleHandleRef.current = None
+      setUsageState(_ => computeUsage(board))
+    })
+    idleHandleRef.current = Some(handle)
+
+    Some(
+      () => {
+        switch idleHandleRef.current {
+        | Some(handle) =>
+          IdleScheduler.cancel(handle)
+          idleHandleRef.current = None
+        | None => ()
+        }
+      },
+    )
+  }, [Board.data(board)])
+
+  let colorCounts = usageState.counts
+  let totalColoredCells = usageState.total
 
   let usages: array<colorUsage> =
     colorCounts
