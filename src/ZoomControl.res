@@ -9,15 +9,15 @@ let make = (~zoomOut, ~zoomIn, ~centerCanvas, ~fitCanvasToViewport, ~zoomPercent
     </div>
     <div className="flex flex-row gap-2">
       <button
-        className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
+        className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200  flex justify-center items-center"
         onClick={_ => zoomOut()}>
-        {"-"->React.string}
+        <Icons.Minus />
       </button>
 
       <button
-        className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200"
+        className="flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200 flex justify-center items-center"
         onClick={_ => zoomIn()}>
-        {"+"->React.string}
+        <Icons.Plus />
       </button>
     </div>
     <div className="flex flex-row gap-2">
