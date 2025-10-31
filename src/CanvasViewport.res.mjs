@@ -6,6 +6,8 @@ import * as CanvasRenderer from "./CanvasRenderer.res.mjs";
 import * as Primitive_option from "rescript/lib/es6/Primitive_option.js";
 import * as JsxRuntime from "react/jsx-runtime";
 
+let gridLineThickness = 1 / 16;
+
 function hoverToNullable(cell) {
   if (cell !== undefined) {
     return [
@@ -216,7 +218,10 @@ function CanvasViewport(props) {
   let widthString = canvasWidth.toString() + "px";
   let heightString = canvasHeight.toString() + "px";
   let cellSizeString = (1).toString() + "px";
-  let gridBackgroundImage = "linear-gradient(to right, " + gridLineColor + " 1px, transparent 1px), linear-gradient(to bottom, " + gridLineColor + " 1px, transparent 1px)";
+  let gridLineThicknessNormalized = gridLineThickness / 1;
+  let gridLineThicknessNormalizedString = gridLineThicknessNormalized.toString();
+  let gridSvg = "<svg xmlns='http://www.w3.org/2000/svg' width='1' height='1' viewBox='0 0 1 1' shape-rendering='crispEdges'><rect width='1' height='" + gridLineThicknessNormalizedString + "' fill='" + gridLineColor + "'/><rect height='1' width='" + gridLineThicknessNormalizedString + "' fill='" + gridLineColor + "'/></svg>";
+  let gridBackgroundImage = "url(\"data:image/svg+xml," + encodeURIComponent(gridSvg) + "\")";
   let gridBackgroundSize = cellSizeString + " " + cellSizeString;
   let doubleCellSizeString = (2).toString() + "px";
   let checkeredSvg = "<svg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'><rect width='1' height='1' fill='" + checkeredPrimaryColor + "'/><rect x='1' y='1' width='1' height='1' fill='" + checkeredPrimaryColor + "'/><rect x='1' width='1' height='1' fill='" + checkeredSecondaryColor + "'/><rect y='1' width='1' height='1' fill='" + checkeredSecondaryColor + "'/></svg>";
@@ -299,11 +304,15 @@ let cellSize = 1;
 
 let cellSizeFloat = 1;
 
+let baseGridCellSize = 16;
+
 let make = CanvasViewport;
 
 export {
   cellSize,
   cellSizeFloat,
+  baseGridCellSize,
+  gridLineThickness,
   hoverToNullable,
   make,
 }

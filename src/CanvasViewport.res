@@ -5,6 +5,8 @@ open Types
 
 let cellSize = 1
 let cellSizeFloat = 1.
+let baseGridCellSize = 16.
+let gridLineThickness = cellSizeFloat /. baseGridCellSize
 
 let hoverToNullable = cell =>
   switch cell {
@@ -201,11 +203,22 @@ let make = (
   let widthString = canvasWidth->Int.toString ++ "px"
   let heightString = canvasHeight->Int.toString ++ "px"
   let cellSizeString = cellSize->Int.toString ++ "px"
-  let gridBackgroundImage =
-    "linear-gradient(to right, " ++
+  let gridLineThicknessNormalized = gridLineThickness /. cellSizeFloat
+  let gridLineThicknessNormalizedString = gridLineThicknessNormalized->Js.Float.toString
+  let gridSvg =
+    "<svg xmlns='http://www.w3.org/2000/svg' width='1' height='1' viewBox='0 0 1 1' shape-rendering='crispEdges'>" ++
+    "<rect width='1' height='" ++
+    gridLineThicknessNormalizedString ++
+    "' fill='" ++
     gridLineColor ++
-    " 1px, transparent 1px), linear-gradient(to bottom, " ++
-    gridLineColor ++ " 1px, transparent 1px)"
+    "'/>" ++
+    "<rect height='1' width='" ++
+    gridLineThicknessNormalizedString ++
+    "' fill='" ++
+    gridLineColor ++
+    "'/>" ++ "</svg>"
+  let gridBackgroundImage =
+    "url(\"data:image/svg+xml," ++ Js.Global.encodeURIComponent(gridSvg) ++ "\")"
   let gridBackgroundSize = cellSizeString ++ " " ++ cellSizeString
   let doubleCellSizeString = (cellSize * 2)->Int.toString ++ "px"
   let checkeredSvg =
