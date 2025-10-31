@@ -82,10 +82,98 @@ let defaultBrushes = [
 
 @react.component
 let make = () => {
+  // Layout helpers
+  let canvasContainerRef = React.useRef(Js.Nullable.null)
+  let (viewportCenter, setViewportCenter) = React.useState(() => (192., 192.))
+  let viewportCenterRef = React.useRef(viewportCenter)
+  viewportCenterRef.current = viewportCenter
+
+  let updateViewportCenter = () =>
+    switch canvasContainerRef.current->Js.Nullable.toOption {
+    | Some(element) =>
+      let rect = element->Element.getBoundingClientRect
+      let nextCenter = (rect->DomRect.width /. 2., rect->DomRect.height /. 2.)
+      viewportCenterRef.current = nextCenter
+      setViewportCenter(_ => nextCenter)
+    | None => ()
+    }
+
+  React.useEffect0(() => {
+    updateViewportCenter()
+    let handleResize = _ => updateViewportCenter()
+    window->Window.addEventListener("resize", handleResize)
+    Some(() => window->Window.removeEventListener("resize", handleResize))
+  })
+
+  let clampZoom = value => {
+    let cappedMax = if value > Initials.maxZoomIn {
+      Initials.maxZoomIn
+    } else {
+      value
+    }
+    if cappedMax < Initials.maxZoomOut {
+      Initials.maxZoomOut
+    } else {
+      cappedMax
+    }
+  }
+
+  let computeCenteredPan = (dimI, dimJ, zoomValue) => {
+    let (centerX, centerY) = viewportCenterRef.current
+    let cellSize = 1.
+    let boardWidth = Float.fromInt(dimJ) *. cellSize
+    let boardHeight = Float.fromInt(dimI) *. cellSize
+    let nextPanX = centerX -. boardWidth *. zoomValue /. 2.
+    let nextPanY = centerY -. boardHeight *. zoomValue /. 2.
+    (nextPanX, nextPanY)
+  }
+
+  let computeZoomToFitForDimensions = (dimI, dimJ) =>
+    switch canvasContainerRef.current->Js.Nullable.toOption {
+    | Some(containerElement) =>
+      let rect = containerElement->Element.getBoundingClientRect
+      let viewportWidth = rect->DomRect.width
+      let viewportHeight = rect->DomRect.height
+      let cellSize = 1.
+      let boardWidth = Float.fromInt(dimJ) *. cellSize
+      let boardHeight = Float.fromInt(dimI) *. cellSize
+      if viewportWidth <= 0. || viewportHeight <= 0. || boardWidth <= 0. || boardHeight <= 0. {
+        None
+      } else {
+        let zoomByWidth = viewportWidth /. boardWidth
+        let zoomByHeight = viewportHeight /. boardHeight
+        let zoomToFit = if zoomByWidth < zoomByHeight {
+          zoomByWidth
+        } else {
+          zoomByHeight
+        }
+        Some(clampZoom(zoomToFit))
+      }
+    | None => None
+    }
+
+  let computeFitViewForDimensions = (dimI, dimJ) => {
+    let fallbackZoom = 1.
+    let fallbackPan = computeCenteredPan(dimI, dimJ, fallbackZoom)
+    switch computeZoomToFitForDimensions(dimI, dimJ) {
+    | Some(nextZoom) =>
+      let nextPan = computeCenteredPan(dimI, dimJ, nextZoom)
+      (nextZoom, nextPan)
+    | None => (fallbackZoom, fallbackPan)
+    }
+  }
+
+  let makeDefaultCanvas = () => {
+    let defaultDimI = 12
+    let defaultDimJ = 12
+    let defaultBoard = makeBoard(defaultDimI, defaultDimJ)
+    let (defaultZoom, defaultPan) = computeFitViewForDimensions(defaultDimI, defaultDimJ)
+    makeCanvas(~board=defaultBoard, ~zoom=defaultZoom, ~pan=defaultPan)
+  }
+
   // Persistent tool state
   let (brushMode, setBrushMode, _) = useLocalStorage("brush-mode", Color)
-  let makeDefaultCanvas = () => makeCanvas(~board=makeBoard(12, 12), ~zoom=1., ~pan=(0., 0.))
-  let (canvases, setCanvases, _) = useLocalStorage("canvases-v2", [makeDefaultCanvas()])
+  let (canvases, setCanvases, _) = useLocalStorage("canvases-v2", [])
   let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage("selected-canvas-id", "")
   let (brush, setBrush, _) = useLocalStorage("brush", makeBrush(3, 3))
   let (savedBrushes, setSavedBrushes, _) = useLocalStorage("saved-brushes", defaultBrushes)
@@ -140,40 +228,6 @@ let make = () => {
   let zoomRef = React.useRef(1.)
   let panRef = React.useRef((0., 0.))
 
-  // Layout helpers
-  let canvasContainerRef = React.useRef(Js.Nullable.null)
-  let (viewportCenter, setViewportCenter) = React.useState(() => (192., 192.))
-  let viewportCenterRef = React.useRef(viewportCenter)
-  viewportCenterRef.current = viewportCenter
-
-  let updateViewportCenter = () =>
-    switch canvasContainerRef.current->Js.Nullable.toOption {
-    | Some(element) =>
-      let rect = element->Element.getBoundingClientRect
-      setViewportCenter(_ => (rect->DomRect.width /. 2., rect->DomRect.height /. 2.))
-    | None => ()
-    }
-
-  React.useEffect0(() => {
-    updateViewportCenter()
-    let handleResize = _ => updateViewportCenter()
-    window->Window.addEventListener("resize", handleResize)
-    Some(() => window->Window.removeEventListener("resize", handleResize))
-  })
-
-  let clampZoom = value => {
-    let cappedMax = if value > Initials.maxZoomIn {
-      Initials.maxZoomIn
-    } else {
-      value
-    }
-    if cappedMax < Initials.maxZoomOut {
-      Initials.maxZoomOut
-    } else {
-      cappedMax
-    }
-  }
-
   let isMouseDown = useIsMouseDown()
 
   let onStartColorPick = () =>
@@ -192,6 +246,7 @@ let make = () => {
 
   React.useEffect0(() => {
     if canvasCount == 0 {
+      updateViewportCenter()
       let defaultCanvas = makeDefaultCanvas()
       setCanvases(_ => [defaultCanvas])
       setSelectedCanvasId(_ => defaultCanvas.id)
@@ -322,15 +377,6 @@ let make = () => {
   let brushCenterDimI = brushDimI / 2
   let brushCenterDimJ = brushDimJ / 2
   let (tileMaskDimI, tileMaskDimJ) = tileMask->Array2D.dims
-  let computeCenteredPan = (dimI, dimJ, zoomValue) => {
-    let (centerX, centerY) = viewportCenter
-    let cellSize = 1.
-    let boardWidth = Float.fromInt(dimJ) *. cellSize
-    let boardHeight = Float.fromInt(dimI) *. cellSize
-    let nextPanX = centerX -. boardWidth *. zoomValue /. 2.
-    let nextPanY = centerY -. boardHeight *. zoomValue /. 2.
-    (nextPanX, nextPanY)
-  }
 
   let centerCanvasForDimensions = (dimI, dimJ) => {
     let (nextPanX, nextPanY) = computeCenteredPan(dimI, dimJ, zoomRef.current)
@@ -344,29 +390,6 @@ let make = () => {
   }
 
   let centerCanvas = () => centerCanvasForDimensions(boardDimI, boardDimJ)
-  let computeZoomToFitForDimensions = (dimI, dimJ) =>
-    switch canvasContainerRef.current->Js.Nullable.toOption {
-    | Some(containerElement) =>
-      let rect = containerElement->Element.getBoundingClientRect
-      let viewportWidth = rect->DomRect.width
-      let viewportHeight = rect->DomRect.height
-      let cellSize = 1.
-      let boardWidth = Float.fromInt(dimJ) *. cellSize
-      let boardHeight = Float.fromInt(dimI) *. cellSize
-      if viewportWidth <= 0. || viewportHeight <= 0. || boardWidth <= 0. || boardHeight <= 0. {
-        None
-      } else {
-        let zoomByWidth = viewportWidth /. boardWidth
-        let zoomByHeight = viewportHeight /. boardHeight
-        let zoomToFit = if zoomByWidth < zoomByHeight {
-          zoomByWidth
-        } else {
-          zoomByHeight
-        }
-        Some(clampZoom(zoomToFit))
-      }
-    | None => None
-    }
   let fitCanvasToViewportForDimensions = (dimI, dimJ) =>
     switch computeZoomToFitForDimensions(dimI, dimJ) {
     | Some(nextZoom) =>
@@ -574,13 +597,8 @@ let make = () => {
   let canDeleteCanvas = canvasCount > 1
 
   let handleAddCanvas = () => {
-    let defaultZoom = 1.
     let newBoard = makeBoard(boardDimI, boardDimJ)
-    let fittedZoom = switch computeZoomToFitForDimensions(boardDimI, boardDimJ) {
-    | Some(zoomToFit) => zoomToFit
-    | None => defaultZoom
-    }
-    let newPan = computeCenteredPan(boardDimI, boardDimJ, fittedZoom)
+    let (fittedZoom, newPan) = computeFitViewForDimensions(boardDimI, boardDimJ)
     let newCanvas = makeCanvas(~board=newBoard, ~zoom=fittedZoom, ~pan=newPan)
     setCanvases(prev => prev->Array.concat([newCanvas]))
     setSelectedCanvasId(_ => newCanvas.id)
