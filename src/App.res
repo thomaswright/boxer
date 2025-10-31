@@ -243,7 +243,7 @@ let make = () => {
       )
     }
     None
-  }, canvases)
+  }, [canvases])
 
   let board = currentCanvas.board
   let zoom = currentCanvas.zoom
@@ -344,7 +344,7 @@ let make = () => {
   }
 
   let centerCanvas = () => centerCanvasForDimensions(boardDimI, boardDimJ)
-  let fitCanvasToViewportForDimensions = (dimI, dimJ) => {
+  let computeZoomToFitForDimensions = (dimI, dimJ) =>
     switch canvasContainerRef.current->Js.Nullable.toOption {
     | Some(containerElement) =>
       let rect = containerElement->Element.getBoundingClientRect
@@ -354,7 +354,7 @@ let make = () => {
       let boardWidth = Float.fromInt(dimJ) *. cellSize
       let boardHeight = Float.fromInt(dimI) *. cellSize
       if viewportWidth <= 0. || viewportHeight <= 0. || boardWidth <= 0. || boardHeight <= 0. {
-        centerCanvasForDimensions(dimI, dimJ)
+        None
       } else {
         let zoomByWidth = viewportWidth /. boardWidth
         let zoomByHeight = viewportHeight /. boardHeight
@@ -363,17 +363,21 @@ let make = () => {
         } else {
           zoomByHeight
         }
-        let nextZoom = clampZoom(zoomToFit)
-        updateCanvasById(currentCanvasIdRef.current, canvas => {
-          let (nextPanX, nextPanY) = computeCenteredPan(dimI, dimJ, nextZoom)
-          zoomRef.current = nextZoom
-          panRef.current = (nextPanX, nextPanY)
-          {...canvas, zoom: nextZoom, pan: (nextPanX, nextPanY)}
-        })
+        Some(clampZoom(zoomToFit))
       }
+    | None => None
+    }
+  let fitCanvasToViewportForDimensions = (dimI, dimJ) =>
+    switch computeZoomToFitForDimensions(dimI, dimJ) {
+    | Some(nextZoom) =>
+      updateCanvasById(currentCanvasIdRef.current, canvas => {
+        let (nextPanX, nextPanY) = computeCenteredPan(dimI, dimJ, nextZoom)
+        zoomRef.current = nextZoom
+        panRef.current = (nextPanX, nextPanY)
+        {...canvas, zoom: nextZoom, pan: (nextPanX, nextPanY)}
+      })
     | None => centerCanvasForDimensions(dimI, dimJ)
     }
-  }
 
   let fitCanvasToViewport = () => fitCanvasToViewportForDimensions(boardDimI, boardDimJ)
 
@@ -572,10 +576,16 @@ let make = () => {
   let handleAddCanvas = () => {
     let defaultZoom = 1.
     let newBoard = makeBoard(boardDimI, boardDimJ)
-    let newPan = computeCenteredPan(boardDimI, boardDimJ, defaultZoom)
-    let newCanvas = makeCanvas(~board=newBoard, ~zoom=defaultZoom, ~pan=newPan)
+    let fittedZoom = switch computeZoomToFitForDimensions(boardDimI, boardDimJ) {
+    | Some(zoomToFit) => zoomToFit
+    | None => defaultZoom
+    }
+    let newPan = computeCenteredPan(boardDimI, boardDimJ, fittedZoom)
+    let newCanvas = makeCanvas(~board=newBoard, ~zoom=fittedZoom, ~pan=newPan)
     setCanvases(prev => prev->Array.concat([newCanvas]))
     setSelectedCanvasId(_ => newCanvas.id)
+    zoomRef.current = fittedZoom
+    panRef.current = newPan
     clearHoverRef.current()
     setCursorOverlayOff(_ => true)
     lastAutoCenteredDimsRef.current = Some((boardDimI, boardDimJ))

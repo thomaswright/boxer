@@ -338,7 +338,6 @@ function deserializeCanvas(entry) {
 }
 
 function serializeCanvases(canvases) {
-  console.log("serialize");
   const payload = Array.isArray(canvases) ? canvases.map(serializeCanvas) : [];
   return JSON.stringify({
     version: CANVAS_STORAGE_VERSION,
