@@ -24,25 +24,26 @@ let IdleScheduler = {
 
 function computeUsage(board) {
   let counts = {};
-  let totalColored = {
-    contents: 0
-  };
-  Board.forEachValue(board, (param, param$1, value) => {
-    if (value === 0) {
-      return;
+  let totalColored = 0;
+  let data = Board.data(board);
+  let dataLength = data.length;
+  for (let idx = 0; idx < dataLength; ++idx) {
+    let value = data[idx];
+    if (value !== undefined && value !== 0) {
+      totalColored = totalColored + 1 | 0;
+      let color = Board.uint32ToHex(value);
+      if (!(color == null)) {
+        let count = Js_dict.get(counts, color);
+        let nextCount = count !== undefined ? count + 1 | 0 : 1;
+        counts[color] = nextCount;
+      }
+      
     }
-    let color = Board.valueToNullable(value);
-    if (color == null) {
-      return;
-    }
-    totalColored.contents = totalColored.contents + 1 | 0;
-    let count = Js_dict.get(counts, color);
-    let nextCount = count !== undefined ? count + 1 | 0 : 1;
-    counts[color] = nextCount;
-  });
+    
+  }
   return {
     counts: counts,
-    total: totalColored.contents
+    total: totalColored
   };
 }
 

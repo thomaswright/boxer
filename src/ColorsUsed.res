@@ -20,21 +20,27 @@ module IdleScheduler = {
 let computeUsage = board => {
   let counts = Js.Dict.empty()
   let totalColored = ref(0)
+  let data = Board.data(board)
+  let dataLength = data->Board.TypedArray.length
 
-  Board.forEachValue(board, (_, _, value) =>
-    if value != 0 {
-      switch Board.valueToNullable(value)->Js.Nullable.toOption {
-      | Some(color) =>
+  for idx in 0 to dataLength - 1 {
+    switch data->Board.TypedArray.get(idx) {
+    | Some(value) =>
+      if value != 0 {
         totalColored.contents = totalColored.contents + 1
-        let nextCount = switch Js.Dict.get(counts, color) {
-        | Some(count) => count + 1
-        | None => 1
+        switch Board.uint32ToHex(value)->Js.Nullable.toOption {
+        | Some(color) =>
+          let nextCount = switch Js.Dict.get(counts, color) {
+          | Some(count) => count + 1
+          | None => 1
+          }
+          Js.Dict.set(counts, color, nextCount)
+        | None => ()
         }
-        Js.Dict.set(counts, color, nextCount)
-      | None => ()
       }
+    | None => ()
     }
-  )
+  }
 
   {counts, total: totalColored.contents}
 }
