@@ -6,6 +6,7 @@ import * as BoolGridPreview from "./BoolGridPreview.res.mjs";
 import * as JsxRuntime from "react/jsx-runtime";
 
 function SavedBrushesPanel(props) {
+  let canSaveBrush = props.canSaveBrush;
   let handleDeleteSelectedBrush = props.handleDeleteSelectedBrush;
   let canDeleteSelectedBrush = props.canDeleteSelectedBrush;
   let handleAddBrush = props.handleAddBrush;
@@ -53,7 +54,11 @@ function SavedBrushesPanel(props) {
       }),
       JsxRuntime.jsx("button", {
         children: JsxRuntime.jsx(Tb.TbPlus, {}),
-        className: "rounded p-1 h-6 w-6 text-sm font-medium bg-blue-500 text-white ",
+        className: [
+          "rounded p-1 h-6 w-6 text-sm font-medium",
+          canSaveBrush ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+        ].join(" "),
+        disabled: canSaveBrush,
         onClick: param => handleAddBrush()
       }),
       JsxRuntime.jsx("button", {

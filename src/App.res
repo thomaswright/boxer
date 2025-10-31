@@ -775,6 +775,7 @@ let make = () => {
           handleAddBrush
           handleDeleteSelectedBrush
           canDeleteSelectedBrush
+          canSaveBrush={boardDimI <= 32 && boardDimJ <= 32}
         />
         <SavedTileMasksPanel
           setTileMask
@@ -784,6 +785,7 @@ let make = () => {
           handleAddTileMask
           handleDeleteSelectedTileMask
           canDeleteSelectedTileMask
+          canSaveTileMask={boardDimI <= 32 && boardDimJ <= 32}
         />
       </div>
     </div>

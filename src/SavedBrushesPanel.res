@@ -6,6 +6,7 @@ let make = (
   ~handleAddBrush,
   ~canDeleteSelectedBrush,
   ~handleDeleteSelectedBrush,
+  ~canSaveBrush,
 ) => {
   <div className={"flex flex-col gap-1 h-full overflow-y-scroll items-end"}>
     {savedBrushes
@@ -42,7 +43,11 @@ let make = (
     })
     ->React.array}
     <button
-      className={"rounded p-1 h-6 w-6 text-sm font-medium bg-blue-500 text-white "}
+      className={[
+        "rounded p-1 h-6 w-6 text-sm font-medium",
+        canSaveBrush ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed",
+      ]->Array.join(" ")}
+      disabled={canSaveBrush}
       onClick={_ => handleAddBrush()}>
       <Icons.Plus />
     </button>

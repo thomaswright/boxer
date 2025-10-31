@@ -5,6 +5,7 @@ import * as BoolGridPreview from "./BoolGridPreview.res.mjs";
 import * as JsxRuntime from "react/jsx-runtime";
 
 function SavedTileMasksPanel(props) {
+  let canSaveTileMask = props.canSaveTileMask;
   let handleDeleteSelectedTileMask = props.handleDeleteSelectedTileMask;
   let canDeleteSelectedTileMask = props.canDeleteSelectedTileMask;
   let handleAddTileMask = props.handleAddTileMask;
@@ -42,7 +43,11 @@ function SavedTileMasksPanel(props) {
       }),
       JsxRuntime.jsx("button", {
         children: JsxRuntime.jsx(Tb.TbPlus, {}),
-        className: "rounded p-1 h-6 w-6 text-sm font-medium bg-blue-500 text-white",
+        className: [
+          "rounded p-1 h-6 w-6 text-sm font-medium",
+          canSaveTileMask ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+        ].join(" "),
+        disabled: canSaveTileMask,
         onClick: param => handleAddTileMask()
       }),
       JsxRuntime.jsx("button", {

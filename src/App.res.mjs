@@ -891,7 +891,8 @@ function App(props) {
                 savedBrushes: savedBrushes,
                 handleAddBrush: handleAddBrush,
                 canDeleteSelectedBrush: canDeleteSelectedBrush,
-                handleDeleteSelectedBrush: handleDeleteSelectedBrush
+                handleDeleteSelectedBrush: handleDeleteSelectedBrush,
+                canSaveBrush: boardDimI <= 32 && boardDimJ <= 32
               }),
               JsxRuntime.jsx(SavedTileMasksPanel.make, {
                 setTileMask: setTileMask,
@@ -900,7 +901,8 @@ function App(props) {
                 setSelectedTileMaskIndex: setSelectedTileMaskIndex,
                 handleAddTileMask: handleAddTileMask,
                 canDeleteSelectedTileMask: canDeleteSelectedTileMask,
-                handleDeleteSelectedTileMask: handleDeleteSelectedTileMask
+                handleDeleteSelectedTileMask: handleDeleteSelectedTileMask,
+                canSaveTileMask: boardDimI <= 32 && boardDimJ <= 32
               })
             ],
             className: "flex flex-row gap-2 h-full flex-none p-2"
