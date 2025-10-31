@@ -14,9 +14,11 @@ type brushMode = | @as("Color") Color | @as("Erase") Erase
 type resizeMode = | @as("Scale") Scale | @as("Crop") Crop
 type gridMode =
   | @as("none") GridNone
-  | @as("grid") GridLines
+  | @as("gridOverlay") GridLinesOverlay
+  | @as("gridUnderlay") GridLinesUnderlay
   | @as("checkeredOverlay") CheckeredOverlay
   | @as("checkeredUnderlay") CheckeredUnderlay
-type overlayMode = | @as("none") OverlayNone | @as("overlay") OverlayDefault | @as("color") OverlayColor
+type overlayMode =
+  | @as("none") OverlayNone | @as("overlay") OverlayDefault | @as("color") OverlayColor
 
 type canvasRenderer

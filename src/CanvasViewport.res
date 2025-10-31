@@ -239,7 +239,8 @@ let make = (
   let checkeredBackgroundImage =
     "url(\"data:image/svg+xml," ++ Js.Global.encodeURIComponent(checkeredSvg) ++ "\")"
   let checkeredBackgroundSize = doubleCellSizeString ++ " " ++ doubleCellSizeString
-  let isGridLines = gridMode == GridLines
+  let isGridLinesOverlay = gridMode == GridLinesOverlay
+  let isGridLinesUnderlay = gridMode == GridLinesUnderlay
   let isCheckeredOverlay = gridMode == CheckeredOverlay
   let isCheckeredUnderlay = gridMode == CheckeredUnderlay
 
@@ -276,6 +277,17 @@ let make = (
             }}
           />
         : React.null}
+      {isGridLinesUnderlay
+        ? <div
+            className="absolute top-0 left-0 pointer-events-none"
+            style={{
+              width: widthString,
+              height: heightString,
+              backgroundImage: gridBackgroundImage,
+              backgroundSize: gridBackgroundSize,
+            }}
+          />
+        : React.null}
       <canvas
         ref={ReactDOM.Ref.domRef(canvasRef)}
         className="absolute top-0 left-0 block"
@@ -289,7 +301,7 @@ let make = (
         onMouseLeave={handleMouseLeave}
         onMouseDown={handleMouseDown}
       />
-      {isGridLines
+      {isGridLinesOverlay
         ? <div
             className="absolute top-0 left-0 pointer-events-none"
             style={{

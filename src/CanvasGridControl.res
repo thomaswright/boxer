@@ -2,13 +2,14 @@ open Types
 
 let options = [
   (GridNone, "None"),
-  (GridLines, "Grid"),
-  (CheckeredOverlay, "Checkered Overlay"),
-  (CheckeredUnderlay, "Checkered Underlay"),
+  (GridLinesOverlay, "Grid Over"),
+  (GridLinesUnderlay, "Grid Under"),
+  (CheckeredOverlay, "Check Over"),
+  (CheckeredUnderlay, "Check Under"),
 ]
 
 let buttonClass = (~isActive) =>
-  "flex-1 text-xs font-medium px-2 py-1 nth-[1]:rounded-tl nth-[2]:rounded-tr nth-[3]:rounded-bl nth-[4]:rounded-br border transition-colors " ++ if (
+  "flex-1 text-xs font-medium px-1 py-1 nth-[1]:rounded-t nth-[1]:col-span-2 nth-[4]:rounded-bl nth-[5]:rounded-br border transition-colors " ++ if (
     isActive
   ) {
     "bg-gray-900 text-white border-gray-900"

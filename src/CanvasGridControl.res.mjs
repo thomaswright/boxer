@@ -9,21 +9,25 @@ let options = [
     "None"
   ],
   [
-    "grid",
-    "Grid"
+    "gridOverlay",
+    "Grid Over"
+  ],
+  [
+    "gridUnderlay",
+    "Grid Under"
   ],
   [
     "checkeredOverlay",
-    "Checkered Overlay"
+    "Check Over"
   ],
   [
     "checkeredUnderlay",
-    "Checkered Underlay"
+    "Check Under"
   ]
 ];
 
 function buttonClass(isActive) {
-  return "flex-1 text-xs font-medium px-2 py-1 nth-[1]:rounded-tl nth-[2]:rounded-tr nth-[3]:rounded-bl nth-[4]:rounded-br border transition-colors " + (
+  return "flex-1 text-xs font-medium px-1 py-1 nth-[1]:rounded-t nth-[1]:col-span-2 nth-[4]:rounded-bl nth-[5]:rounded-br border transition-colors " + (
     isActive ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-800 border-gray-200 hover:border-gray-400"
   );
 }
