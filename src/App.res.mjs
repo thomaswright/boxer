@@ -170,7 +170,7 @@ function App(props) {
     0,
     0
   ]);
-  let match$1 = UseLocalStorageJs("canvases", [makeDefaultCanvas()]);
+  let match$1 = UseLocalStorageJs("canvases-v2", [makeDefaultCanvas()]);
   let setCanvases = match$1[1];
   let canvases = match$1[0];
   let match$2 = UseLocalStorageJs("selected-canvas-id", "");

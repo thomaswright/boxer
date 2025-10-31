@@ -85,7 +85,7 @@ let make = () => {
   // Persistent tool state
   let (brushMode, setBrushMode, _) = useLocalStorage("brush-mode", Color)
   let makeDefaultCanvas = () => makeCanvas(~board=makeBoard(12, 12), ~zoom=1., ~pan=(0., 0.))
-  let (canvases, setCanvases, _) = useLocalStorage("canvases", [makeDefaultCanvas()])
+  let (canvases, setCanvases, _) = useLocalStorage("canvases-v2", [makeDefaultCanvas()])
   let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage("selected-canvas-id", "")
   let (brush, setBrush, _) = useLocalStorage("brush", makeBrush(3, 3))
   let (savedBrushes, setSavedBrushes, _) = useLocalStorage("saved-brushes", defaultBrushes)

@@ -1,7 +1,7 @@
 import React from "react";
 import { hexToUint32 } from "./BoardColor.js";
 
-const CANVASES_KEY = "canvases";
+const CANVASES_KEY = "canvases-v2";
 const CANVAS_STORAGE_VERSION = 1;
 const DEFERRED_KEYS = new Set([CANVASES_KEY]);
 const FLUSH_DELAY_MS = 500;
@@ -257,9 +257,7 @@ function decodeBoard(encoded) {
   const cols = typeof encoded.cols === "number" ? encoded.cols | 0 : 0;
   const totalCells = rows * cols;
   const data = new Uint32Array(totalCells);
-  const paletteSource = Array.isArray(encoded.palette)
-    ? encoded.palette
-    : [0];
+  const paletteSource = Array.isArray(encoded.palette) ? encoded.palette : [0];
   const palette = paletteSource.map((entry) =>
     entry === undefined || entry === null
       ? 0
