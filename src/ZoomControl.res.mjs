@@ -7,7 +7,7 @@ function ZoomControl(props) {
   let centerCanvas = props.centerCanvas;
   let zoomIn = props.zoomIn;
   let zoomOut = props.zoomOut;
-  let zoomPercentString = (props.zoom * 100).toFixed(0);
+  let zoomPercentString = props.zoomPercent.toFixed(0);
   return JsxRuntime.jsxs("div", {
     children: [
       JsxRuntime.jsxs("div", {

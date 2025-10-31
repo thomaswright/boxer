@@ -466,7 +466,6 @@ function App(props) {
     zoomRef.current = nextZoom;
     return canvas;
   });
-  let resetZoom = () => updateZoom(param => 1);
   let zoomIn = () => updateZoom(prev => prev * Initials.zoom_factor);
   let zoomOut = () => {
     let factor = 1 / Initials.zoom_factor;
@@ -475,6 +474,10 @@ function App(props) {
   let match$21 = Board.dims(board);
   let boardDimJ = match$21[1];
   let boardDimI = match$21[0];
+  let fitZoom = computeZoomToFitForDimensions(boardDimI, boardDimJ);
+  let zoomPercent = fitZoom !== undefined ? (
+      fitZoom <= 0 ? zoom * 100 : zoom / fitZoom * 100
+    ) : zoom * 100;
   let lastAutoCenteredDimsRef = React.useRef(undefined);
   let match$22 = Array2D.dims(brush);
   let brushDimJ = match$22[1];
@@ -910,11 +913,10 @@ function App(props) {
         children: [
           JsxRuntime.jsx(ZoomControl.make, {
             zoomOut: zoomOut,
-            resetZoom: resetZoom,
             zoomIn: zoomIn,
             centerCanvas: centerCanvas,
             fitCanvasToViewport: fitCanvasToViewport,
-            zoom: zoom
+            zoomPercent: zoomPercent
           }),
           JsxRuntime.jsxs("div", {
             children: [

@@ -367,11 +367,19 @@ let make = () => {
     })
 
   let adjustZoomByFactor = factor => updateZoom(prev => prev *. factor)
-  let resetZoom = () => updateZoom(_ => 1.)
   let zoomIn = () => adjustZoomByFactor(Initials.zoom_factor)
   let zoomOut = () => adjustZoomByFactor(1. /. Initials.zoom_factor)
 
   let (boardDimI, boardDimJ) = Board.dims(board)
+  let zoomPercent = switch computeZoomToFitForDimensions(boardDimI, boardDimJ) {
+  | Some(fitZoom) =>
+    if fitZoom <= 0. {
+      zoom *. 100.
+    } else {
+      zoom /. fitZoom *. 100.
+    }
+  | None => zoom *. 100.
+  }
   let lastAutoCenteredDimsRef = React.useRef(None)
   let (brushDimI, brushDimJ) = brush->Array2D.dims
   let brushCenterDimI = brushDimI / 2
@@ -793,7 +801,7 @@ let make = () => {
 
   <div className=" flex flex-row h-dvh overflow-x-hidden">
     <div className="flex flex-col flex-none overflow-x-hidden divide-y divide-gray-300">
-      <ZoomControl zoomOut resetZoom zoomIn centerCanvas fitCanvasToViewport zoom />
+      <ZoomControl zoomOut zoomIn centerCanvas fitCanvasToViewport zoomPercent />
 
       <div className="flex flex-row gap-2 h-full flex-none p-2">
         <SavedBrushesPanel

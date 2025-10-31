@@ -1,6 +1,6 @@
 @react.component
-let make = (~zoomOut, ~resetZoom as _, ~zoomIn, ~centerCanvas, ~fitCanvasToViewport, ~zoom) => {
-  let zoomPercentString = (zoom *. 100.)->Float.toFixed(~digits=0)
+let make = (~zoomOut, ~zoomIn, ~centerCanvas, ~fitCanvasToViewport, ~zoomPercent) => {
+  let zoomPercentString = zoomPercent->Float.toFixed(~digits=0)
 
   <div className="p-2 flex flex-col gap-2 w-full">
     <div className="flex flex-row items-center justify-between">
