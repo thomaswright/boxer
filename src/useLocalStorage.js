@@ -8,6 +8,7 @@ const FLUSH_DELAY_MS = 500;
 const pendingWrites = new Map();
 let flushHandlersRegistered = false;
 let persistencePaused = false;
+let listenersAttached = false;
 
 function isTypedBoard(board) {
   return (
@@ -71,7 +72,10 @@ function ensureFlushHandlersRegistered() {
     flushAllDeferredWrites();
   };
   const handleVisibilityChange = () => {
-    if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+    if (
+      typeof document !== "undefined" &&
+      document.visibilityState === "hidden"
+    ) {
       flushAllDeferredWrites();
     }
   };
@@ -95,7 +99,9 @@ function flushDeferredWrite(key) {
     window.localStorage.setItem(key, serializedValue);
   } catch (error) {
     if (isQuotaExceededError(error)) {
-      console.warn(`Unable to persist deferred value for "${key}" in localStorage: quota exceeded`);
+      console.warn(
+        `Unable to persist deferred value for "${key}" in localStorage: quota exceeded`
+      );
     } else {
       console.warn(error);
     }
@@ -110,10 +116,27 @@ function flushAllDeferredWrites() {
   });
 }
 
+function ensurePersistenceListeners() {
+  if (listenersAttached || typeof window === "undefined") {
+    return;
+  }
+  const captureOptions = { capture: true };
+  const pause = () => setLocalStoragePersistencePaused(true);
+  const resume = () => setLocalStoragePersistencePaused(false);
+  window.addEventListener("pointerdown", pause, captureOptions);
+  window.addEventListener("pointerup", resume, captureOptions);
+  window.addEventListener("pointercancel", resume, captureOptions);
+  window.addEventListener("mousedown", pause, captureOptions);
+  window.addEventListener("mouseup", resume, captureOptions);
+  window.addEventListener("blur", resume, captureOptions);
+  listenersAttached = true;
+}
+
 function scheduleDeferredWrite(key, value, serialize) {
   if (typeof window === "undefined") {
     return;
   }
+  ensurePersistenceListeners();
   ensureFlushHandlersRegistered();
   const existing = pendingWrites.get(key);
   if (existing) {
@@ -122,7 +145,12 @@ function scheduleDeferredWrite(key, value, serialize) {
     }
   }
   if (persistencePaused) {
-    pendingWrites.set(key, { value, serialize, serializedValue: null, timerId: null });
+    pendingWrites.set(key, {
+      value,
+      serialize,
+      serializedValue: null,
+      timerId: null,
+    });
     dispatchStorageEvent(key, null);
     return;
   }
@@ -213,7 +241,8 @@ function decodeBoard(encoded) {
     const rows = Math.max(0, encoded.rows | 0);
     const cols = Math.max(0, encoded.cols | 0);
     const source = encoded.data;
-    const data = source instanceof Uint32Array ? source : new Uint32Array(source ?? []);
+    const data =
+      source instanceof Uint32Array ? source : new Uint32Array(source ?? []);
     if (data.length === rows * cols) {
       return { rows, cols, data };
     }
@@ -231,7 +260,9 @@ function decodeBoard(encoded) {
   const cols = typeof encoded.cols === "number" ? encoded.cols | 0 : 0;
   const totalCells = rows * cols;
   const data = new Uint32Array(totalCells);
-  const paletteSource = Array.isArray(encoded.palette) ? encoded.palette : [null];
+  const paletteSource = Array.isArray(encoded.palette)
+    ? encoded.palette
+    : [null];
   const palette = paletteSource.map((entry) =>
     entry === undefined || entry === null ? 0 : hexToUint32(entry)
   );
@@ -308,9 +339,8 @@ function deserializeCanvas(entry) {
 }
 
 function serializeCanvases(canvases) {
-  const payload = Array.isArray(canvases)
-    ? canvases.map(serializeCanvas)
-    : [];
+  console.log("serialize");
+  const payload = Array.isArray(canvases) ? canvases.map(serializeCanvas) : [];
   return JSON.stringify({
     version: CANVAS_STORAGE_VERSION,
     canvases: payload,
@@ -326,9 +356,7 @@ function deserializeCanvases(rawValue, fallback) {
     typeof rawValue === "object" &&
     Array.isArray(rawValue.canvases)
   ) {
-    return rawValue.canvases
-      .map(deserializeCanvas)
-      .filter(Boolean);
+    return rawValue.canvases.map(deserializeCanvas).filter(Boolean);
   }
   try {
     if (typeof rawValue !== "string") {
@@ -340,13 +368,8 @@ function deserializeCanvases(rawValue, fallback) {
       return parsed;
     }
 
-    if (
-      parsed &&
-      Array.isArray(parsed.canvases)
-    ) {
-      return parsed.canvases
-        .map(deserializeCanvas)
-        .filter(Boolean);
+    if (parsed && Array.isArray(parsed.canvases)) {
+      return parsed.canvases.map(deserializeCanvas).filter(Boolean);
     }
 
     return fallback;
@@ -444,6 +467,10 @@ const useLocalStorageSubscribe = (callback) => {
 const getLocalStorageServerSnapshot = () => {
   throw Error("useLocalStorage is a client-only hook");
 };
+
+if (typeof window !== "undefined") {
+  ensurePersistenceListeners();
+}
 
 export function setLocalStoragePersistencePaused(paused) {
   if (persistencePaused === paused) {

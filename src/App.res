@@ -31,8 +31,14 @@ let useIsMouseDown = () => {
 
   // Global listeners
   React.useEffect0(() => {
-    let downHandler = _ => setIsMouseDown(_ => true)
-    let upHandler = _ => setIsMouseDown(_ => false)
+    let downHandler = _ => {
+      setIsMouseDown(_ => true)
+      setLocalStoragePersistencePaused(true)
+    }
+    let upHandler = _ => {
+      setIsMouseDown(_ => false)
+      setLocalStoragePersistencePaused(false)
+    }
     window->Window.addMouseDownEventListener(downHandler)
     window->Window.addMouseUpEventListener(upHandler)
 
@@ -40,6 +46,7 @@ let useIsMouseDown = () => {
       () => {
         window->Window.removeMouseDownEventListener(downHandler)
         window->Window.removeMouseUpEventListener(upHandler)
+        setLocalStoragePersistencePaused(false)
       },
     )
   })
@@ -168,11 +175,6 @@ let make = () => {
   }
 
   let isMouseDown = useIsMouseDown()
-
-  React.useEffect1(() => {
-    setLocalStoragePersistencePaused(isMouseDown)
-    Some(() => setLocalStoragePersistencePaused(false))
-  }, [isMouseDown])
 
   let onStartColorPick = () =>
     setIsPickingColor(prev => {

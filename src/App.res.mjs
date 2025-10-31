@@ -25,8 +25,8 @@ import * as JsxRuntime from "react/jsx-runtime";
 import * as BrushOverlayControl from "./BrushOverlayControl.res.mjs";
 import * as CanvasColorsControl from "./CanvasColorsControl.res.mjs";
 import * as SavedTileMasksPanel from "./SavedTileMasksPanel.res.mjs";
-import * as UseLocalStorageJs from "./useLocalStorage.js";
-import UseLocalStorageJs$1 from "./useLocalStorage.js";
+import UseLocalStorageJs from "./useLocalStorage.js";
+import * as UseLocalStorageJs$1 from "./useLocalStorage.js";
 
 function generateCanvasId() {
   let timestamp = Date.now().toString();
@@ -47,13 +47,20 @@ function useIsMouseDown() {
   let match = React.useState(() => false);
   let setIsMouseDown = match[1];
   React.useEffect(() => {
-    let downHandler = param => setIsMouseDown(param => true);
-    let upHandler = param => setIsMouseDown(param => false);
+    let downHandler = param => {
+      setIsMouseDown(param => true);
+      UseLocalStorageJs$1.setLocalStoragePersistencePaused(true);
+    };
+    let upHandler = param => {
+      setIsMouseDown(param => false);
+      UseLocalStorageJs$1.setLocalStoragePersistencePaused(false);
+    };
     window.addEventListener("mousedown", downHandler);
     window.addEventListener("mouseup", upHandler);
     return () => {
       window.removeEventListener("mousedown", downHandler);
       window.removeEventListener("mouseup", upHandler);
+      UseLocalStorageJs$1.setLocalStoragePersistencePaused(false);
     };
   }, []);
   return match[0];
@@ -156,35 +163,35 @@ let defaultBrushes = [
 ];
 
 function App(props) {
-  let match = UseLocalStorageJs$1("brush-mode", "Color");
+  let match = UseLocalStorageJs("brush-mode", "Color");
   let setBrushMode = match[1];
   let brushMode = match[0];
   let makeDefaultCanvas = () => makeCanvas(Board.make(12, 12), 1, [
     0,
     0
   ]);
-  let match$1 = UseLocalStorageJs$1("canvases", [makeDefaultCanvas()]);
+  let match$1 = UseLocalStorageJs("canvases", [makeDefaultCanvas()]);
   let setCanvases = match$1[1];
   let canvases = match$1[0];
-  let match$2 = UseLocalStorageJs$1("selected-canvas-id", "");
+  let match$2 = UseLocalStorageJs("selected-canvas-id", "");
   let setSelectedCanvasId = match$2[1];
   let selectedCanvasId = match$2[0];
-  let match$3 = UseLocalStorageJs$1("brush", Array2D.make(3, 3, () => true));
+  let match$3 = UseLocalStorageJs("brush", Array2D.make(3, 3, () => true));
   let setBrush = match$3[1];
   let brush = match$3[0];
-  let match$4 = UseLocalStorageJs$1("saved-brushes", defaultBrushes);
+  let match$4 = UseLocalStorageJs("saved-brushes", defaultBrushes);
   let setSavedBrushes = match$4[1];
   let savedBrushes = match$4[0];
-  let match$5 = UseLocalStorageJs$1("saved-tile-masks", defaultTileMasks);
+  let match$5 = UseLocalStorageJs("saved-tile-masks", defaultTileMasks);
   let setSavedTileMasks = match$5[1];
   let savedTileMasks = match$5[0];
-  let match$6 = UseLocalStorageJs$1("selected-tile-mask-index", 0);
+  let match$6 = UseLocalStorageJs("selected-tile-mask-index", 0);
   let setSelectedTileMaskIndex = match$6[1];
   let selectedTileMaskIndex = match$6[0];
-  let match$7 = UseLocalStorageJs$1("tile-mask", Array2D.make(4, 4, () => true));
+  let match$7 = UseLocalStorageJs("tile-mask", Array2D.make(4, 4, () => true));
   let setTileMask = match$7[1];
   let tileMask = match$7[0];
-  let match$8 = UseLocalStorageJs$1("brush-overlay-mode", "overlay");
+  let match$8 = UseLocalStorageJs("brush-overlay-mode", "overlay");
   let overlayMode = match$8[0];
   let showCursorOverlay;
   switch (overlayMode) {
@@ -196,16 +203,16 @@ function App(props) {
       showCursorOverlay = true;
       break;
   }
-  let match$9 = UseLocalStorageJs$1("grid-mode", "none");
+  let match$9 = UseLocalStorageJs("grid-mode", "none");
   let gridMode = match$9[0];
-  let match$10 = UseLocalStorageJs$1("my-color", Initials.myColor);
+  let match$10 = UseLocalStorageJs("my-color", Initials.myColor);
   let setMyColor = match$10[1];
   let myColor = match$10[0];
-  let match$11 = UseLocalStorageJs$1("canvas-background-color", Initials.canvasBackgroundColor);
+  let match$11 = UseLocalStorageJs("canvas-background-color", Initials.canvasBackgroundColor);
   let canvasBackgroundColor = match$11[0];
-  let match$12 = UseLocalStorageJs$1("viewport-background-color", Initials.viewportBackgroundColor);
+  let match$12 = UseLocalStorageJs("viewport-background-color", Initials.viewportBackgroundColor);
   let viewportBackgroundColor = match$12[0];
-  let match$13 = UseLocalStorageJs$1("canvas-silhouette", false);
+  let match$13 = UseLocalStorageJs("canvas-silhouette", false);
   let isSilhouette = match$13[0];
   let isCanvasBackgroundLight = _isLight(canvasBackgroundColor);
   let gridLineColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.25)" : "rgba(255, 255, 255, 0.25)";
@@ -267,12 +274,6 @@ function App(props) {
     }
   };
   let isMouseDown = useIsMouseDown();
-  React.useEffect(() => {
-    UseLocalStorageJs.setLocalStoragePersistencePaused(isMouseDown);
-    return () => {
-      UseLocalStorageJs.setLocalStoragePersistencePaused(false);
-    };
-  }, [isMouseDown]);
   let onStartColorPick = () => setIsPickingColor(prev => {
     let next = !prev;
     setHoveredPickColor(param => {});
