@@ -203,20 +203,21 @@ let make = (
   let widthString = canvasWidth->Int.toString ++ "px"
   let heightString = canvasHeight->Int.toString ++ "px"
   let cellSizeString = cellSize->Int.toString ++ "px"
-  let gridLineThicknessNormalized = gridLineThickness /. cellSizeFloat
-  let gridLineThicknessNormalizedString = gridLineThicknessNormalized->Js.Float.toString
+  let lineBreadthFull = gridLineThickness /. cellSizeFloat
+  let lineBreadth = (lineBreadthFull /. 2.)->Js.Float.toString
+  let lineLength1 = (1. -. lineBreadthFull /. 2.)->Js.Float.toString
+  let lineLength2 = (1. -. lineBreadthFull)->Js.Float.toString
+
   let gridSvg =
     "<svg xmlns='http://www.w3.org/2000/svg' width='1' height='1' viewBox='0 0 1 1' shape-rendering='crispEdges'>" ++
-    "<rect width='1' height='" ++
-    gridLineThicknessNormalizedString ++
-    "' fill='" ++
-    gridLineColor ++
-    "'/>" ++
-    "<rect height='1' width='" ++
-    gridLineThicknessNormalizedString ++
-    "' fill='" ++
-    gridLineColor ++
-    "'/>" ++ "</svg>"
+    // left
+    `<rect x='0' y='0' width='${lineBreadth}' height='1' fill='${gridLineColor}'/>` ++
+    // top
+    `<rect x='${lineBreadth}' y='0' width='${lineLength1}' height='${lineBreadth}' fill='${gridLineColor}'/>` ++
+    // bottom
+    `<rect x='${lineBreadth}' y='${lineLength1}' width='${lineLength1}' height='${lineBreadth}' fill='${gridLineColor}'/>` ++
+    // right
+    `<rect x='${lineLength1}' y='${lineBreadth}' width='${lineBreadth}' height='${lineLength2}' fill='${gridLineColor}'/>` ++ "</svg>"
   let gridBackgroundImage =
     "url(\"data:image/svg+xml," ++ Js.Global.encodeURIComponent(gridSvg) ++ "\")"
   let gridBackgroundSize = cellSizeString ++ " " ++ cellSizeString

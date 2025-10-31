@@ -218,9 +218,11 @@ function CanvasViewport(props) {
   let widthString = canvasWidth.toString() + "px";
   let heightString = canvasHeight.toString() + "px";
   let cellSizeString = (1).toString() + "px";
-  let gridLineThicknessNormalized = gridLineThickness / 1;
-  let gridLineThicknessNormalizedString = gridLineThicknessNormalized.toString();
-  let gridSvg = "<svg xmlns='http://www.w3.org/2000/svg' width='1' height='1' viewBox='0 0 1 1' shape-rendering='crispEdges'><rect width='1' height='" + gridLineThicknessNormalizedString + "' fill='" + gridLineColor + "'/><rect height='1' width='" + gridLineThicknessNormalizedString + "' fill='" + gridLineColor + "'/></svg>";
+  let lineBreadthFull = gridLineThickness / 1;
+  let lineBreadth = (lineBreadthFull / 2).toString();
+  let lineLength1 = (1 - lineBreadthFull / 2).toString();
+  let lineLength2 = (1 - lineBreadthFull).toString();
+  let gridSvg = "<svg xmlns='http://www.w3.org/2000/svg' width='1' height='1' viewBox='0 0 1 1' shape-rendering='crispEdges'>" + ("<rect x='0' y='0' width='" + lineBreadth + "' height='1' fill='" + gridLineColor + "'/>") + ("<rect x='" + lineBreadth + "' y='0' width='" + lineLength1 + "' height='" + lineBreadth + "' fill='" + gridLineColor + "'/>") + ("<rect x='" + lineBreadth + "' y='" + lineLength1 + "' width='" + lineLength1 + "' height='" + lineBreadth + "' fill='" + gridLineColor + "'/>") + ("<rect x='" + lineLength1 + "' y='" + lineBreadth + "' width='" + lineBreadth + "' height='" + lineLength2 + "' fill='" + gridLineColor + "'/>") + "</svg>";
   let gridBackgroundImage = "url(\"data:image/svg+xml," + encodeURIComponent(gridSvg) + "\")";
   let gridBackgroundSize = cellSizeString + " " + cellSizeString;
   let doubleCellSizeString = (2).toString() + "px";
