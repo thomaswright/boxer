@@ -5,6 +5,7 @@ import * as Tb from "react-icons/tb";
 import * as JsxRuntime from "react/jsx-runtime";
 
 function CanvasThumbnails(props) {
+  let isMouseDown = props.isMouseDown;
   let handleSelectCanvas = props.handleSelectCanvas;
   let handleAddCanvas = props.handleAddCanvas;
   let handleDeleteCanvas = props.handleDeleteCanvas;
@@ -21,7 +22,8 @@ function CanvasThumbnails(props) {
               children: JsxRuntime.jsx("div", {
                 children: JsxRuntime.jsx(BoardPreview.make, {
                   board: canvasBoard,
-                  emptyColor: undefined
+                  emptyColor: undefined,
+                  isMouseDown: isMouseDown
                 }),
                 className: "h-16 w-16 rounded-xs overflow-hidden"
               }),

@@ -47,6 +47,7 @@ function computeUsage(board) {
 }
 
 function ColorsUsed(props) {
+  let isMouseDown = props.isMouseDown;
   let myColor = props.myColor;
   let onReplaceUsedColor = props.onReplaceUsedColor;
   let onSelectUsedColor = props.onSelectUsedColor;
@@ -54,10 +55,7 @@ function ColorsUsed(props) {
   let match = React.useState(() => false);
   let setReplaceMode = match[1];
   let replaceMode = match[0];
-  let match$1 = React.useState(() => ({
-    counts: {},
-    total: 0
-  }));
+  let match$1 = React.useState(() => computeUsage(board));
   let setUsageState = match$1[1];
   let usageState = match$1[0];
   let idleHandleRef = React.useRef(undefined);
@@ -67,11 +65,13 @@ function ColorsUsed(props) {
       IdleSchedulerJs.cancel(Primitive_option.valFromOption(handle));
       idleHandleRef.current = undefined;
     }
-    let handle$1 = IdleSchedulerJs.schedule(() => {
-      idleHandleRef.current = undefined;
-      setUsageState(param => computeUsage(board));
-    });
-    idleHandleRef.current = Primitive_option.some(handle$1);
+    if (!isMouseDown) {
+      let handle$1 = IdleSchedulerJs.schedule(() => {
+        idleHandleRef.current = undefined;
+        setUsageState(param => computeUsage(board));
+      });
+      idleHandleRef.current = Primitive_option.some(handle$1);
+    }
     return () => {
       let handle = idleHandleRef.current;
       if (handle !== undefined) {
@@ -81,7 +81,10 @@ function ColorsUsed(props) {
       }
       
     };
-  }, [Board.data(board)]);
+  }, [
+    Board.data(board),
+    isMouseDown
+  ]);
   let colorCounts = usageState.counts;
   let totalColoredCells = usageState.total;
   let usages = Js_dict.entries(colorCounts).map(param => {

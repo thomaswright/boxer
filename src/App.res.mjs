@@ -945,7 +945,8 @@ function App(props) {
             canDeleteCanvas: canDeleteCanvas,
             handleDeleteCanvas: handleDeleteCanvas,
             handleAddCanvas: handleAddCanvas,
-            handleSelectCanvas: handleSelectCanvas
+            handleSelectCanvas: handleSelectCanvas,
+            isMouseDown: isMouseDown
           })
         ],
         className: "flex flex-col flex-1 overflow-x-hidden"
@@ -968,7 +969,8 @@ function App(props) {
                 board: board,
                 onSelectUsedColor: onSelectUsedColor,
                 onReplaceUsedColor: onReplaceUsedColor,
-                myColor: myColor
+                myColor: myColor,
+                isMouseDown: isMouseDown
               }),
               JsxRuntime.jsx(BrushOverlayControl.make, {
                 overlayMode: overlayMode,

@@ -823,6 +823,7 @@ let make = () => {
         handleDeleteCanvas
         handleAddCanvas
         handleSelectCanvas
+        isMouseDown
       />
     </div>
     <div className=" h-full overflow-x-visible flex flex-col w-48 py-2">
@@ -837,7 +838,7 @@ let make = () => {
         canvasBackgroundColor
       />
       <div className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"}>
-        <ColorsUsed myColor board onSelectUsedColor onReplaceUsedColor />
+        <ColorsUsed myColor board onSelectUsedColor onReplaceUsedColor isMouseDown />
 
         <BrushOverlayControl overlayMode setOverlayMode />
         <CanvasGridControl gridMode setGridMode />

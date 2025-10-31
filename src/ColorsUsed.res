@@ -45,12 +45,13 @@ let make = (
   ~onSelectUsedColor: string => unit,
   ~onReplaceUsedColor: string => unit,
   ~myColor,
+  ~isMouseDown,
 ) => {
   let (replaceMode, setReplaceMode) = React.useState(_ => false)
-  let (usageState, setUsageState) = React.useState(() => {counts: Js.Dict.empty(), total: 0})
+  let (usageState, setUsageState) = React.useState(() => computeUsage(board))
   let idleHandleRef = React.useRef(None)
 
-  React.useEffect1(() => {
+  React.useEffect2(() => {
     switch idleHandleRef.current {
     | Some(handle) =>
       IdleScheduler.cancel(handle)
@@ -58,11 +59,13 @@ let make = (
     | None => ()
     }
 
-    let handle = IdleScheduler.schedule(() => {
-      idleHandleRef.current = None
-      setUsageState(_ => computeUsage(board))
-    })
-    idleHandleRef.current = Some(handle)
+    if !isMouseDown {
+      let handle = IdleScheduler.schedule(() => {
+        idleHandleRef.current = None
+        setUsageState(_ => computeUsage(board))
+      })
+      idleHandleRef.current = Some(handle)
+    }
 
     Some(
       () => {
@@ -74,7 +77,7 @@ let make = (
         }
       },
     )
-  }, [Board.data(board)])
+  }, (Board.data(board), isMouseDown))
 
   let colorCounts = usageState.counts
   let totalColoredCells = usageState.total
