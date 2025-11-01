@@ -19,8 +19,8 @@ let generateCanvasId = () => {
   timestamp ++ "-" ++ random
 }
 
-let makeCanvas = (~board, ~zoom, ~pan) => {
-  {id: generateCanvasId(), board, zoom, pan}
+let makeCanvas = (~board, ~zoom, ~pan, ~isDotMask) => {
+  {id: generateCanvasId(), board, zoom, pan, isDotMask}
 }
 
 @module("./exportBoard.js")
@@ -168,12 +168,12 @@ let make = () => {
     let defaultDimJ = 12
     let defaultBoard = makeBoard(defaultDimI, defaultDimJ)
     let (defaultZoom, defaultPan) = computeFitViewForDimensions(defaultDimI, defaultDimJ)
-    makeCanvas(~board=defaultBoard, ~zoom=defaultZoom, ~pan=defaultPan)
+    makeCanvas(~board=defaultBoard, ~zoom=defaultZoom, ~pan=defaultPan, ~isDotMask=false)
   }
 
   // Persistent tool state
   let (brushMode, setBrushMode, _) = useLocalStorage("brush-mode", Color)
-  let (canvases, setCanvases, _) = useLocalStorage("canvases-v2", [])
+  let (canvases, setCanvases, _) = useLocalStorage("canvases-v3", [])
   let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage("selected-canvas-id", "")
   let (brush, setBrush, _) = useLocalStorage("brush", makeBrush(3, 3))
   let (savedBrushes, setSavedBrushes, _) = useLocalStorage("saved-brushes", defaultBrushes)
@@ -280,29 +280,10 @@ let make = () => {
     }
     None
   }, (canvases, selectedCanvasId))
-
-  React.useEffect1(() => {
-    let requiresMigration =
-      canvases->Belt.Array.some(canvas => Js.typeof(canvas.id) != "string" || canvas.id == "")
-    if requiresMigration {
-      setCanvases(prev =>
-        prev->Array.mapWithIndex(
-          (canvas, idx) =>
-            if Js.typeof(canvas.id) == "string" && canvas.id != "" {
-              canvas
-            } else {
-              let uniqueSuffix = "-" ++ idx->Int.toString
-              {...canvas, id: generateCanvasId() ++ uniqueSuffix}
-            },
-        )
-      )
-    }
-    None
-  }, [canvases])
-
   let board = currentCanvas.board
   let zoom = currentCanvas.zoom
   let pan = currentCanvas.pan
+  let isDotMask = currentCanvas.isDotMask
 
   zoomRef.current = zoom
   panRef.current = pan
@@ -332,6 +313,11 @@ let make = () => {
     updateCanvasById(currentCanvasIdRef.current, canvas => {
       ...canvas,
       board: updater(canvas.board),
+    })
+
+  let setCanvasDotMask = updater =>
+    updateCanvasById(currentCanvasIdRef.current, canvas => {
+      {...canvas, isDotMask: updater(canvas.isDotMask)}
     })
 
   let updatePan = updater => {
@@ -607,7 +593,7 @@ let make = () => {
   let handleAddCanvas = () => {
     let newBoard = makeBoard(boardDimI, boardDimJ)
     let (fittedZoom, newPan) = computeFitViewForDimensions(boardDimI, boardDimJ)
-    let newCanvas = makeCanvas(~board=newBoard, ~zoom=fittedZoom, ~pan=newPan)
+    let newCanvas = makeCanvas(~board=newBoard, ~zoom=fittedZoom, ~pan=newPan, ~isDotMask=false)
     setCanvases(prev => prev->Array.concat([newCanvas]))
     setSelectedCanvasId(_ => newCanvas.id)
     zoomRef.current = fittedZoom
@@ -862,6 +848,7 @@ let make = () => {
           tileMask
           tileMaskDimI
           tileMaskDimJ
+          isDotMask
         />
       </div>
 
@@ -900,6 +887,7 @@ let make = () => {
           setViewportBackgroundColor
         />
         <SilhouetteControl isSilhouette setIsSilhouette />
+        <DotModeControl isDotMask setCanvasDotMask />
 
         <CanvasSizeControl
           resizeRowsInput

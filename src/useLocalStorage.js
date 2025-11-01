@@ -1,7 +1,7 @@
 import React from "react";
 import { hexToUint32 } from "./BoardColor.js";
 
-const CANVASES_KEY = "canvases-v2";
+const CANVASES_KEY = "canvases-v3";
 const CANVAS_STORAGE_VERSION = 1;
 const DEFERRED_KEYS = new Set([CANVASES_KEY]);
 const FLUSH_DELAY_MS = 500;

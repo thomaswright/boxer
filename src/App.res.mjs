@@ -15,6 +15,7 @@ import * as ExportControl from "./ExportControl.res.mjs";
 import * as Primitive_int from "rescript/lib/es6/Primitive_int.js";
 import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
 import * as CanvasViewport from "./CanvasViewport.res.mjs";
+import * as DotModeControl from "./DotModeControl.res.mjs";
 import * as ExportBoardJs from "./exportBoard.js";
 import * as CanvasThumbnails from "./CanvasThumbnails.res.mjs";
 import * as CanvasGridControl from "./CanvasGridControl.res.mjs";
@@ -34,12 +35,13 @@ function generateCanvasId() {
   return timestamp + "-" + random;
 }
 
-function makeCanvas(board, zoom, pan) {
+function makeCanvas(board, zoom, pan, isDotMask) {
   return {
     id: generateCanvasId(),
     board: board,
     zoom: zoom,
-    pan: pan
+    pan: pan,
+    isDotMask: isDotMask
   };
 }
 
@@ -250,12 +252,12 @@ function App(props) {
   let makeDefaultCanvas = () => {
     let defaultBoard = Board.make(12, 12);
     let match = computeFitViewForDimensions(12, 12);
-    return makeCanvas(defaultBoard, match[0], match[1]);
+    return makeCanvas(defaultBoard, match[0], match[1], false);
   };
   let match$1 = UseLocalStorageJs("brush-mode", "Color");
   let setBrushMode = match$1[1];
   let brushMode = match$1[0];
-  let match$2 = UseLocalStorageJs("canvases-v2", []);
+  let match$2 = UseLocalStorageJs("canvases-v3", []);
   let setCanvases = match$2[1];
   let canvases = match$2[0];
   let match$3 = UseLocalStorageJs("selected-canvas-id", "");
@@ -367,33 +369,10 @@ function App(props) {
     canvases,
     selectedCanvasId
   ]);
-  React.useEffect(() => {
-    let requiresMigration = Belt_Array.some(canvases, canvas => {
-      if (typeof canvas.id !== "string") {
-        return true;
-      } else {
-        return canvas.id === "";
-      }
-    });
-    if (requiresMigration) {
-      setCanvases(prev => prev.map((canvas, idx) => {
-        if (typeof canvas.id === "string" && canvas.id !== "") {
-          return canvas;
-        }
-        let uniqueSuffix = "-" + idx.toString();
-        return {
-          id: generateCanvasId() + uniqueSuffix,
-          board: canvas.board,
-          zoom: canvas.zoom,
-          pan: canvas.pan
-        };
-      }));
-    }
-    
-  }, [canvases]);
   let board = currentCanvas.board;
   let zoom = currentCanvas.zoom;
   let pan = currentCanvas.pan;
+  let isDotMask = currentCanvas.isDotMask;
   zoomRef.current = zoom;
   panRef.current = pan;
   let handlePickColor = (row, col) => {
@@ -422,7 +401,15 @@ function App(props) {
     id: canvas.id,
     board: updater(canvas.board),
     zoom: canvas.zoom,
-    pan: canvas.pan
+    pan: canvas.pan,
+    isDotMask: canvas.isDotMask
+  }));
+  let setCanvasDotMask = updater => updateCanvasById(currentCanvasIdRef.current, canvas => ({
+    id: canvas.id,
+    board: canvas.board,
+    zoom: canvas.zoom,
+    pan: canvas.pan,
+    isDotMask: updater(canvas.isDotMask)
   }));
   let updatePan = updater => updateCanvasById(currentCanvasIdRef.current, canvas => {
     let nextPan = updater(canvas.pan);
@@ -431,7 +418,8 @@ function App(props) {
       id: canvas.id,
       board: canvas.board,
       zoom: canvas.zoom,
-      pan: nextPan
+      pan: nextPan,
+      isDotMask: canvas.isDotMask
     };
   });
   let adjustPan = (deltaX, deltaY) => updatePan(param => [
@@ -460,7 +448,8 @@ function App(props) {
         id: canvas.id,
         board: canvas.board,
         zoom: nextZoom,
-        pan: nextPan
+        pan: nextPan,
+        isDotMask: canvas.isDotMask
       };
     }
     zoomRef.current = nextZoom;
@@ -527,7 +516,8 @@ function App(props) {
           pan: [
             nextPanX,
             nextPanY
-          ]
+          ],
+          isDotMask: canvas.isDotMask
         };
       });
     } else {
@@ -727,7 +717,7 @@ function App(props) {
     let match = computeFitViewForDimensions(boardDimI, boardDimJ);
     let newPan = match[1];
     let fittedZoom = match[0];
-    let newCanvas = makeCanvas(newBoard, fittedZoom, newPan);
+    let newCanvas = makeCanvas(newBoard, fittedZoom, newPan, false);
     setCanvases(prev => prev.concat([newCanvas]));
     setSelectedCanvasId(param => newCanvas.id);
     zoomRef.current = fittedZoom;
@@ -981,7 +971,8 @@ function App(props) {
               brushCenterDimJ: brushCenterDimJ,
               tileMask: tileMask,
               tileMaskDimI: tileMaskDimI,
-              tileMaskDimJ: tileMaskDimJ
+              tileMaskDimJ: tileMaskDimJ,
+              isDotMask: isDotMask
             }),
             className: "flex-1 pt-2"
           }),
@@ -1036,6 +1027,10 @@ function App(props) {
               JsxRuntime.jsx(SilhouetteControl.make, {
                 isSilhouette: isSilhouette,
                 setIsSilhouette: match$14[1]
+              }),
+              JsxRuntime.jsx(DotModeControl.make, {
+                isDotMask: isDotMask,
+                setCanvasDotMask: setCanvasDotMask
               }),
               JsxRuntime.jsx(CanvasSizeControl.make, {
                 resizeRowsInput: resizeRowsInput,

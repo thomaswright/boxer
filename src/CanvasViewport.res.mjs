@@ -229,6 +229,7 @@ function CanvasViewport(props) {
   let checkeredSvg = "<svg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'><rect width='1' height='1' fill='" + checkeredPrimaryColor + "'/><rect x='1' y='1' width='1' height='1' fill='" + checkeredPrimaryColor + "'/><rect x='1' width='1' height='1' fill='" + checkeredSecondaryColor + "'/><rect y='1' width='1' height='1' fill='" + checkeredSecondaryColor + "'/></svg>";
   let checkeredBackgroundImage = "url(\"data:image/svg+xml," + encodeURIComponent(checkeredSvg) + "\")";
   let checkeredBackgroundSize = doubleCellSizeString + " " + doubleCellSizeString;
+  let dotMaskImage = "url(\"data:image/svg+xml," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='1' height='1' shape-rendering='crispEdges'>\n    <defs>\n      <mask id='hole'>\n        <rect width='1' height='1' fill='white'/>\n        <circle cx='0.5' cy='0.5' r='0.5' fill='black'/>\n      </mask>\n    </defs>\n    <rect width='1' height='1' fill='white' mask='url(#hole)'/>\n  </svg>") + "\")";
   let isGridLinesOverlay = gridMode === "gridOverlay";
   let isGridLinesUnderlay = gridMode === "gridUnderlay";
   let isCheckeredOverlay = gridMode === "checkeredOverlay";
@@ -277,6 +278,17 @@ function CanvasViewport(props) {
           onMouseLeave: handleMouseLeave,
           onMouseMove: handleMouseMove
         }),
+        props.isDotMask ? JsxRuntime.jsx("div", {
+            className: "absolute top-0 left-0 pointer-events-none",
+            style: {
+              backgroundColor: canvasBackgroundColor,
+              backgroundSize: gridBackgroundSize,
+              height: heightString,
+              maskImage: dotMaskImage,
+              maskSize: gridBackgroundSize,
+              width: widthString
+            }
+          }) : null,
         isGridLinesOverlay ? JsxRuntime.jsx("div", {
             className: "absolute top-0 left-0 pointer-events-none",
             style: {

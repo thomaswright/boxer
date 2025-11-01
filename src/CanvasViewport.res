@@ -49,6 +49,7 @@ let make = (
   ~tileMask,
   ~tileMaskDimI,
   ~tileMaskDimJ,
+  ~isDotMask,
 ) => {
   let canvasRef = React.useRef((Js.Nullable.null: Js.Nullable.t<Dom.element>))
   let rendererRef = React.useRef((None: option<canvasRenderer>))
@@ -239,6 +240,19 @@ let make = (
   let checkeredBackgroundImage =
     "url(\"data:image/svg+xml," ++ Js.Global.encodeURIComponent(checkeredSvg) ++ "\")"
   let checkeredBackgroundSize = doubleCellSizeString ++ " " ++ doubleCellSizeString
+
+  let dotMaskSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='1' height='1' shape-rendering='crispEdges'>
+    <defs>
+      <mask id='hole'>
+        <rect width='1' height='1' fill='white'/>
+        <circle cx='0.5' cy='0.5' r='0.5' fill='black'/>
+      </mask>
+    </defs>
+    <rect width='1' height='1' fill='white' mask='url(#hole)'/>
+  </svg>`
+  let dotMaskImage =
+    "url(\"data:image/svg+xml," ++ Js.Global.encodeURIComponent(dotMaskSvg) ++ "\")"
+
   let isGridLinesOverlay = gridMode == GridLinesOverlay
   let isGridLinesUnderlay = gridMode == GridLinesUnderlay
   let isCheckeredOverlay = gridMode == CheckeredOverlay
@@ -264,6 +278,7 @@ let make = (
           backgroundColor: canvasBackgroundColor,
         }}
       />
+
       {isCheckeredUnderlay
         ? <div
             className="absolute top-0 left-0 pointer-events-none"
@@ -301,6 +316,20 @@ let make = (
         onMouseLeave={handleMouseLeave}
         onMouseDown={handleMouseDown}
       />
+      {isDotMask
+        ? <div
+            className="absolute top-0 left-0 pointer-events-none"
+            style={{
+              width: widthString,
+              height: heightString,
+              backgroundColor: canvasBackgroundColor,
+              backgroundSize: gridBackgroundSize,
+              maskImage: dotMaskImage,
+              maskSize: gridBackgroundSize,
+            }}
+          />
+        : React.null}
+
       {isGridLinesOverlay
         ? <div
             className="absolute top-0 left-0 pointer-events-none"
