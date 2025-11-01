@@ -256,6 +256,19 @@ let make = () => {
   }
 
   let currentCanvasId = currentCanvas.id
+  let (includeExportDotMask, setIncludeExportDotMask) =
+    React.useState(() => currentCanvas.isDotMask)
+
+  React.useEffect1(() => {
+    setIncludeExportDotMask(prev =>
+      if prev == currentCanvas.isDotMask {
+        prev
+      } else {
+        currentCanvas.isDotMask
+      }
+    )
+    None
+  }, [currentCanvasId])
   let currentCanvasIdRef = React.useRef(currentCanvasId)
   currentCanvasIdRef.current = currentCanvasId
 
@@ -544,7 +557,12 @@ let make = () => {
       exportBoardAsPng(
         board,
         scale,
-        {includeBackground: includeExportBackground, backgroundColor: canvasBackgroundColor},
+        {
+          includeBackground: includeExportBackground,
+          backgroundColor: canvasBackgroundColor,
+          includeDotMask: includeExportDotMask,
+          dotMaskColor: canvasBackgroundColor,
+        },
       )
     | None => ()
     }
@@ -925,6 +943,8 @@ let make = () => {
           setExportScaleInput
           includeExportBackground
           setIncludeExportBackground
+          includeExportDotMask
+          setIncludeExportDotMask
           canExport
           onExport={handleExportPng}
         />

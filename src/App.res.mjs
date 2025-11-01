@@ -350,6 +350,18 @@ function App(props) {
     currentCanvas = firstCanvas !== undefined ? firstCanvas : makeDefaultCanvas();
   }
   let currentCanvasId = currentCanvas.id;
+  let match$20 = React.useState(() => currentCanvas.isDotMask);
+  let setIncludeExportDotMask = match$20[1];
+  let includeExportDotMask = match$20[0];
+  React.useEffect(() => {
+    setIncludeExportDotMask(prev => {
+      if (prev === currentCanvas.isDotMask) {
+        return prev;
+      } else {
+        return currentCanvas.isDotMask;
+      }
+    });
+  }, [currentCanvasId]);
   let currentCanvasIdRef = React.useRef(currentCanvasId);
   currentCanvasIdRef.current = currentCanvasId;
   React.useEffect(() => {
@@ -474,22 +486,22 @@ function App(props) {
     let factor = 1 / Initials.zoom_factor;
     updateZoom(prev => prev * factor);
   };
-  let match$20 = Board.dims(board);
-  let boardDimJ = match$20[1];
-  let boardDimI = match$20[0];
+  let match$21 = Board.dims(board);
+  let boardDimJ = match$21[1];
+  let boardDimI = match$21[0];
   let fitZoom = computeZoomToFitForDimensions(boardDimI, boardDimJ);
   let zoomPercent = fitZoom !== undefined ? (
       fitZoom <= 0 ? zoom * 100 : zoom / fitZoom * 100
     ) : zoom * 100;
   let lastAutoCenteredDimsRef = React.useRef(undefined);
-  let match$21 = Array2D.dims(brush);
-  let brushDimJ = match$21[1];
-  let brushDimI = match$21[0];
+  let match$22 = Array2D.dims(brush);
+  let brushDimJ = match$22[1];
+  let brushDimI = match$22[0];
   let brushCenterDimI = brushDimI / 2 | 0;
   let brushCenterDimJ = brushDimJ / 2 | 0;
-  let match$22 = Array2D.dims(tileMask);
-  let tileMaskDimJ = match$22[1];
-  let tileMaskDimI = match$22[0];
+  let match$23 = Array2D.dims(tileMask);
+  let tileMaskDimJ = match$23[1];
+  let tileMaskDimI = match$23[0];
   let centerCanvasForDimensions = (dimI, dimJ) => {
     let match = computeCenteredPan(dimI, dimJ, zoomRef.current);
     let nextPanY = match[1];
@@ -540,12 +552,12 @@ function App(props) {
     }
   };
   let fitCanvasToViewport = () => fitCanvasToViewportForDimensions(boardDimI, boardDimJ);
-  let match$23 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$23[1];
-  let resizeRowsInput = match$23[0];
-  let match$24 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$24[1];
-  let resizeColsInput = match$24[0];
+  let match$24 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$24[1];
+  let resizeRowsInput = match$24[0];
+  let match$25 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$25[1];
+  let resizeColsInput = match$25[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -627,9 +639,9 @@ function App(props) {
       return mapped;
     }
   };
-  let match$25 = parsePositiveInt(resizeRowsInput);
-  let match$26 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$25 !== undefined && match$26 !== undefined ? match$25 !== boardDimI || match$26 !== boardDimJ : false;
+  let match$26 = parsePositiveInt(resizeRowsInput);
+  let match$27 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$26 !== undefined && match$27 !== undefined ? match$26 !== boardDimI || match$27 !== boardDimJ : false;
   let exportScaleValue = parsePositiveFloat(exportScaleInput);
   let canExport = Stdlib_Option.isSome(exportScaleValue);
   let handleResizeSubmit = () => {
@@ -678,7 +690,9 @@ function App(props) {
     if (exportScaleValue !== undefined) {
       let prim2 = {
         includeBackground: includeExportBackground,
-        backgroundColor: canvasBackgroundColor
+        backgroundColor: canvasBackgroundColor,
+        includeDotMask: includeExportDotMask,
+        dotMaskColor: canvasBackgroundColor
       };
       ExportBoardJs.exportBoardAsPng(board, exportScaleValue, prim2);
       return;
@@ -1062,6 +1076,8 @@ function App(props) {
                 setExportScaleInput: match$15[1],
                 includeExportBackground: includeExportBackground,
                 setIncludeExportBackground: match$16[1],
+                includeExportDotMask: includeExportDotMask,
+                setIncludeExportDotMask: setIncludeExportDotMask,
                 canExport: canExport,
                 onExport: handleExportPng
               })

@@ -5,6 +5,7 @@ import * as JsxRuntime from "react/jsx-runtime";
 function ExportControl(props) {
   let onExport = props.onExport;
   let canExport = props.canExport;
+  let setIncludeExportDotMask = props.setIncludeExportDotMask;
   let setIncludeExportBackground = props.setIncludeExportBackground;
   let setExportScaleInput = props.setExportScaleInput;
   return JsxRuntime.jsxs("div", {
@@ -59,6 +60,22 @@ function ExportControl(props) {
           }),
           JsxRuntime.jsx("span", {
             children: "Include Background"
+          })
+        ],
+        className: "flex flex-row items-center gap-2 text-sm"
+      }),
+      JsxRuntime.jsxs("label", {
+        children: [
+          JsxRuntime.jsx("input", {
+            checked: props.includeExportDotMask,
+            type: "checkbox",
+            onChange: event => {
+              let checked = event.target.checked;
+              setIncludeExportDotMask(param => checked);
+            }
+          }),
+          JsxRuntime.jsx("span", {
+            children: "Apply Dot Mask"
           })
         ],
         className: "flex flex-row items-center gap-2 text-sm"

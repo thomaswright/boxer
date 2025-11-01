@@ -10,6 +10,8 @@ type canvasState = {
 type exportOptions = {
   includeBackground: bool,
   backgroundColor: string,
+  includeDotMask: bool,
+  dotMaskColor: string,
 }
 
 type brushMode = | @as("Color") Color | @as("Erase") Erase

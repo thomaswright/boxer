@@ -67,6 +67,28 @@ function drawBoardToCanvas(ctx, board, cellSize, backgroundColor) {
   }
 }
 
+function applyDotMaskToBoard(boardCtx, rows, cols, cellSize) {
+  const radius = cellSize / 2;
+  if (!Number.isFinite(radius) || radius <= 0) {
+    return;
+  }
+  boardCtx.save();
+  boardCtx.globalCompositeOperation = "destination-in";
+  boardCtx.beginPath();
+  const centerOffset = radius;
+  for (let row = 0; row < rows; row += 1) {
+    const centerY = row * cellSize + centerOffset;
+    for (let col = 0; col < cols; col += 1) {
+      const centerX = col * cellSize + centerOffset;
+      boardCtx.moveTo(centerX + radius, centerY);
+      boardCtx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    }
+  }
+  boardCtx.fillStyle = "#fff";
+  boardCtx.fill();
+  boardCtx.restore();
+}
+
 export function exportBoardAsPng(board, scale, options = {}) {
   const [rows, cols] = getBoardDimensions(board);
   if (rows === 0 || cols === 0) {
@@ -88,17 +110,44 @@ export function exportBoardAsPng(board, scale, options = {}) {
 
   ctx.clearRect(0, 0, width, height);
 
-  if (options.includeBackground && options.backgroundColor) {
-    ctx.fillStyle = options.backgroundColor;
+  const includeBackground = Boolean(options.includeBackground);
+  const backgroundColor =
+    typeof options.backgroundColor === "string" && options.backgroundColor.length > 0
+      ? options.backgroundColor
+      : null;
+  const includeDotMask = Boolean(options.includeDotMask);
+  const dotMaskColor =
+    typeof options.dotMaskColor === "string" && options.dotMaskColor.length > 0
+      ? options.dotMaskColor
+      : backgroundColor;
+
+  const baseFillColor =
+    includeBackground && backgroundColor
+      ? backgroundColor
+      : includeDotMask && dotMaskColor
+      ? dotMaskColor
+      : null;
+
+  if (baseFillColor) {
+    ctx.fillStyle = baseFillColor;
     ctx.fillRect(0, 0, width, height);
   }
 
-  drawBoardToCanvas(
-    ctx,
-    board,
-    cellSize,
-    options.includeBackground ? options.backgroundColor ?? null : null
-  );
+  const boardCanvas = document.createElement("canvas");
+  boardCanvas.width = width;
+  boardCanvas.height = height;
+  const boardCtx = boardCanvas.getContext("2d");
+  if (!boardCtx) {
+    return;
+  }
+
+  drawBoardToCanvas(boardCtx, board, cellSize, null);
+
+  if (includeDotMask) {
+    applyDotMaskToBoard(boardCtx, rows, cols, cellSize);
+  }
+
+  ctx.drawImage(boardCanvas, 0, 0);
 
   const link = document.createElement("a");
   link.href = canvas.toDataURL("image/png");

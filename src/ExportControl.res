@@ -4,6 +4,8 @@ let make = (
   ~setExportScaleInput,
   ~includeExportBackground,
   ~setIncludeExportBackground,
+  ~includeExportDotMask,
+  ~setIncludeExportDotMask,
   ~canExport,
   ~onExport,
 ) => {
@@ -46,6 +48,17 @@ let make = (
         }}
       />
       <span> {"Include Background"->React.string} </span>
+    </label>
+    <label className="flex flex-row items-center gap-2 text-sm">
+      <input
+        type_="checkbox"
+        checked={includeExportDotMask}
+        onChange={event => {
+          let checked = ReactEvent.Form.target(event)["checked"]
+          setIncludeExportDotMask(_ => checked)
+        }}
+      />
+      <span> {"Apply Dot Mask"->React.string} </span>
     </label>
   </div>
 }
