@@ -1,5 +1,6 @@
 import React from "react";
 import { hexToUint32 } from "./BoardColor.js";
+import { canvasBackgroundColor as defaultCanvasBackgroundColor } from "./Initials.res.mjs";
 
 const CANVASES_KEY = "canvases-v3";
 const CANVAS_STORAGE_VERSION = 1;
@@ -314,12 +315,17 @@ function serializeCanvas(canvas) {
       : [0, 0];
   const boardValue = encodeBoard(canvas.board);
   const isDotMaskValue = typeof canvas.isDotMask === "boolean" ? canvas.isDotMask : false;
+  const canvasBackgroundColorValue =
+    typeof canvas.canvasBackgroundColor === "string"
+      ? canvas.canvasBackgroundColor
+      : defaultCanvasBackgroundColor;
   return {
     id: canvas.id,
     zoom: zoomValue,
     pan: panValue,
     board: boardValue,
     isDotMask: isDotMaskValue,
+    canvasBackgroundColor: canvasBackgroundColorValue,
   };
 }
 
@@ -336,6 +342,10 @@ function deserializeCanvas(entry) {
       : entry.isDotMask === 1
       ? true
       : false;
+  const canvasBackgroundColor =
+    typeof entry.canvasBackgroundColor === "string"
+      ? entry.canvasBackgroundColor
+      : defaultCanvasBackgroundColor;
 
   return {
     id,
@@ -343,6 +353,7 @@ function deserializeCanvas(entry) {
     pan: Array.isArray(pan) && pan.length === 2 ? pan : [0, 0],
     board,
     isDotMask,
+    canvasBackgroundColor,
   };
 }
 

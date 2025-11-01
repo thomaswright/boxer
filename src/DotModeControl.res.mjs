@@ -5,8 +5,6 @@ import * as JsxRuntime from "react/jsx-runtime";
 
 function DotModeControl(props) {
   let setCanvasDotMask = props.setCanvasDotMask;
-  let isDotMask = props.isDotMask;
-  console.log(isDotMask);
   return JsxRuntime.jsxs("div", {
     children: [
       JsxRuntime.jsx("div", {
@@ -14,7 +12,7 @@ function DotModeControl(props) {
         className: "font-medium"
       }),
       JsxRuntime.jsx(Switch.make, {
-        checked: isDotMask,
+        checked: props.isDotMask,
         onChange: value => setCanvasDotMask(param => value)
       })
     ],

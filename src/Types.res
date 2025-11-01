@@ -5,6 +5,7 @@ type canvasState = {
   zoom: float,
   pan: (float, float),
   isDotMask: bool,
+  canvasBackgroundColor: string,
 }
 type exportOptions = {
   includeBackground: bool,

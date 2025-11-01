@@ -19,8 +19,21 @@ let generateCanvasId = () => {
   timestamp ++ "-" ++ random
 }
 
-let makeCanvas = (~board, ~zoom, ~pan, ~isDotMask) => {
-  {id: generateCanvasId(), board, zoom, pan, isDotMask}
+let makeCanvas = (
+  ~board,
+  ~zoom,
+  ~pan,
+  ~isDotMask=false,
+  ~canvasBackgroundColor=Initials.canvasBackgroundColor,
+) => {
+  {
+    id: generateCanvasId(),
+    board,
+    zoom,
+    pan,
+    isDotMask,
+    canvasBackgroundColor,
+  }
 }
 
 @module("./exportBoard.js")
@@ -190,32 +203,11 @@ let make = () => {
   }
   let (gridMode, setGridMode, _) = useLocalStorage("grid-mode", GridNone)
   let (myColor, setMyColor, _) = useLocalStorage("my-color", Initials.myColor)
-  let (canvasBackgroundColor, setCanvasBackgroundColor, _) = useLocalStorage(
-    "canvas-background-color",
-    Initials.canvasBackgroundColor,
-  )
+  let (isSilhouette, setIsSilhouette, _) = useLocalStorage("canvas-silhouette", Initials.silhouette)
   let (viewportBackgroundColor, setViewportBackgroundColor, _) = useLocalStorage(
     "viewport-background-color",
     Initials.viewportBackgroundColor,
   )
-  let (isSilhouette, setIsSilhouette, _) = useLocalStorage("canvas-silhouette", Initials.silhouette)
-  let isCanvasBackgroundLight = _isLight(canvasBackgroundColor)
-  let gridLineColor = if isCanvasBackgroundLight {
-    "rgba(0, 0, 0, 0.25)"
-  } else {
-    "rgba(255, 255, 255, 0.25)"
-  }
-  let checkeredPrimaryColor = if isCanvasBackgroundLight {
-    "rgba(0, 0, 0, 0.15)"
-  } else {
-    "rgba(255, 255, 255, 0.15)"
-  }
-  let checkeredSecondaryColor = if isCanvasBackgroundLight {
-    "rgba(0, 0, 0, 0.00)"
-  } else {
-    "rgba(255, 255, 255, 0.00)"
-  }
-
   // Transient UI state
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
   let (exportScaleInput, setExportScaleInput) = React.useState(() => "1")
@@ -284,6 +276,23 @@ let make = () => {
   let zoom = currentCanvas.zoom
   let pan = currentCanvas.pan
   let isDotMask = currentCanvas.isDotMask
+  let canvasBackgroundColor = currentCanvas.canvasBackgroundColor
+  let isCanvasBackgroundLight = _isLight(canvasBackgroundColor)
+  let gridLineColor = if isCanvasBackgroundLight {
+    "rgba(0, 0, 0, 0.25)"
+  } else {
+    "rgba(255, 255, 255, 0.25)"
+  }
+  let checkeredPrimaryColor = if isCanvasBackgroundLight {
+    "rgba(0, 0, 0, 0.15)"
+  } else {
+    "rgba(255, 255, 255, 0.15)"
+  }
+  let checkeredSecondaryColor = if isCanvasBackgroundLight {
+    "rgba(0, 0, 0, 0.00)"
+  } else {
+    "rgba(255, 255, 255, 0.00)"
+  }
 
   zoomRef.current = zoom
   panRef.current = pan
@@ -318,6 +327,11 @@ let make = () => {
   let setCanvasDotMask = updater =>
     updateCanvasById(currentCanvasIdRef.current, canvas => {
       {...canvas, isDotMask: updater(canvas.isDotMask)}
+    })
+
+  let setCanvasBackgroundColor = updater =>
+    updateCanvasById(currentCanvasIdRef.current, canvas => {
+      {...canvas, canvasBackgroundColor: updater(canvas.canvasBackgroundColor)}
     })
 
   let updatePan = updater => {
@@ -593,7 +607,13 @@ let make = () => {
   let handleAddCanvas = () => {
     let newBoard = makeBoard(boardDimI, boardDimJ)
     let (fittedZoom, newPan) = computeFitViewForDimensions(boardDimI, boardDimJ)
-    let newCanvas = makeCanvas(~board=newBoard, ~zoom=fittedZoom, ~pan=newPan, ~isDotMask=false)
+    let newCanvas = makeCanvas(
+      ~board=newBoard,
+      ~zoom=fittedZoom,
+      ~pan=newPan,
+      ~isDotMask=false,
+      ~canvasBackgroundColor,
+    )
     setCanvases(prev => prev->Array.concat([newCanvas]))
     setSelectedCanvasId(_ => newCanvas.id)
     zoomRef.current = fittedZoom

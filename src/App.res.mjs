@@ -35,13 +35,16 @@ function generateCanvasId() {
   return timestamp + "-" + random;
 }
 
-function makeCanvas(board, zoom, pan, isDotMask) {
+function makeCanvas(board, zoom, pan, isDotMaskOpt, canvasBackgroundColorOpt) {
+  let isDotMask = isDotMaskOpt !== undefined ? isDotMaskOpt : false;
+  let canvasBackgroundColor = canvasBackgroundColorOpt !== undefined ? canvasBackgroundColorOpt : Initials.canvasBackgroundColor;
   return {
     id: generateCanvasId(),
     board: board,
     zoom: zoom,
     pan: pan,
-    isDotMask: isDotMask
+    isDotMask: isDotMask,
+    canvasBackgroundColor: canvasBackgroundColor
   };
 }
 
@@ -252,7 +255,7 @@ function App(props) {
   let makeDefaultCanvas = () => {
     let defaultBoard = Board.make(12, 12);
     let match = computeFitViewForDimensions(12, 12);
-    return makeCanvas(defaultBoard, match[0], match[1], false);
+    return makeCanvas(defaultBoard, match[0], match[1], false, undefined);
   };
   let match$1 = UseLocalStorageJs("brush-mode", "Color");
   let setBrushMode = match$1[1];
@@ -295,29 +298,23 @@ function App(props) {
   let match$11 = UseLocalStorageJs("my-color", Initials.myColor);
   let setMyColor = match$11[1];
   let myColor = match$11[0];
-  let match$12 = UseLocalStorageJs("canvas-background-color", Initials.canvasBackgroundColor);
-  let canvasBackgroundColor = match$12[0];
+  let match$12 = UseLocalStorageJs("canvas-silhouette", false);
+  let isSilhouette = match$12[0];
   let match$13 = UseLocalStorageJs("viewport-background-color", Initials.viewportBackgroundColor);
   let viewportBackgroundColor = match$13[0];
-  let match$14 = UseLocalStorageJs("canvas-silhouette", false);
-  let isSilhouette = match$14[0];
-  let isCanvasBackgroundLight = _isLight(canvasBackgroundColor);
-  let gridLineColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.25)" : "rgba(255, 255, 255, 0.25)";
-  let checkeredPrimaryColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.15)" : "rgba(255, 255, 255, 0.15)";
-  let checkeredSecondaryColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.00)" : "rgba(255, 255, 255, 0.00)";
-  let match$15 = React.useState(() => false);
-  let setCursorOverlayOff = match$15[1];
-  let match$16 = React.useState(() => "1");
-  let exportScaleInput = match$16[0];
-  let match$17 = React.useState(() => true);
-  let includeExportBackground = match$17[0];
-  let match$18 = React.useState(() => "Scale");
-  let resizeMode = match$18[0];
-  let match$19 = React.useState(() => false);
-  let setIsPickingColor = match$19[1];
-  let isPickingColor = match$19[0];
-  let match$20 = React.useState(() => {});
-  let setHoveredPickColor = match$20[1];
+  let match$14 = React.useState(() => false);
+  let setCursorOverlayOff = match$14[1];
+  let match$15 = React.useState(() => "1");
+  let exportScaleInput = match$15[0];
+  let match$16 = React.useState(() => true);
+  let includeExportBackground = match$16[0];
+  let match$17 = React.useState(() => "Scale");
+  let resizeMode = match$17[0];
+  let match$18 = React.useState(() => false);
+  let setIsPickingColor = match$18[1];
+  let isPickingColor = match$18[0];
+  let match$19 = React.useState(() => {});
+  let setHoveredPickColor = match$19[1];
   let clearHoverRef = React.useRef(() => {});
   let zoomRef = React.useRef(1);
   let panRef = React.useRef([
@@ -373,6 +370,11 @@ function App(props) {
   let zoom = currentCanvas.zoom;
   let pan = currentCanvas.pan;
   let isDotMask = currentCanvas.isDotMask;
+  let canvasBackgroundColor = currentCanvas.canvasBackgroundColor;
+  let isCanvasBackgroundLight = _isLight(canvasBackgroundColor);
+  let gridLineColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.25)" : "rgba(255, 255, 255, 0.25)";
+  let checkeredPrimaryColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.15)" : "rgba(255, 255, 255, 0.15)";
+  let checkeredSecondaryColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.00)" : "rgba(255, 255, 255, 0.00)";
   zoomRef.current = zoom;
   panRef.current = pan;
   let handlePickColor = (row, col) => {
@@ -402,14 +404,24 @@ function App(props) {
     board: updater(canvas.board),
     zoom: canvas.zoom,
     pan: canvas.pan,
-    isDotMask: canvas.isDotMask
+    isDotMask: canvas.isDotMask,
+    canvasBackgroundColor: canvas.canvasBackgroundColor
   }));
   let setCanvasDotMask = updater => updateCanvasById(currentCanvasIdRef.current, canvas => ({
     id: canvas.id,
     board: canvas.board,
     zoom: canvas.zoom,
     pan: canvas.pan,
-    isDotMask: updater(canvas.isDotMask)
+    isDotMask: updater(canvas.isDotMask),
+    canvasBackgroundColor: canvas.canvasBackgroundColor
+  }));
+  let setCanvasBackgroundColor = updater => updateCanvasById(currentCanvasIdRef.current, canvas => ({
+    id: canvas.id,
+    board: canvas.board,
+    zoom: canvas.zoom,
+    pan: canvas.pan,
+    isDotMask: canvas.isDotMask,
+    canvasBackgroundColor: updater(canvas.canvasBackgroundColor)
   }));
   let updatePan = updater => updateCanvasById(currentCanvasIdRef.current, canvas => {
     let nextPan = updater(canvas.pan);
@@ -419,7 +431,8 @@ function App(props) {
       board: canvas.board,
       zoom: canvas.zoom,
       pan: nextPan,
-      isDotMask: canvas.isDotMask
+      isDotMask: canvas.isDotMask,
+      canvasBackgroundColor: canvas.canvasBackgroundColor
     };
   });
   let adjustPan = (deltaX, deltaY) => updatePan(param => [
@@ -449,7 +462,8 @@ function App(props) {
         board: canvas.board,
         zoom: nextZoom,
         pan: nextPan,
-        isDotMask: canvas.isDotMask
+        isDotMask: canvas.isDotMask,
+        canvasBackgroundColor: canvas.canvasBackgroundColor
       };
     }
     zoomRef.current = nextZoom;
@@ -460,22 +474,22 @@ function App(props) {
     let factor = 1 / Initials.zoom_factor;
     updateZoom(prev => prev * factor);
   };
-  let match$21 = Board.dims(board);
-  let boardDimJ = match$21[1];
-  let boardDimI = match$21[0];
+  let match$20 = Board.dims(board);
+  let boardDimJ = match$20[1];
+  let boardDimI = match$20[0];
   let fitZoom = computeZoomToFitForDimensions(boardDimI, boardDimJ);
   let zoomPercent = fitZoom !== undefined ? (
       fitZoom <= 0 ? zoom * 100 : zoom / fitZoom * 100
     ) : zoom * 100;
   let lastAutoCenteredDimsRef = React.useRef(undefined);
-  let match$22 = Array2D.dims(brush);
-  let brushDimJ = match$22[1];
-  let brushDimI = match$22[0];
+  let match$21 = Array2D.dims(brush);
+  let brushDimJ = match$21[1];
+  let brushDimI = match$21[0];
   let brushCenterDimI = brushDimI / 2 | 0;
   let brushCenterDimJ = brushDimJ / 2 | 0;
-  let match$23 = Array2D.dims(tileMask);
-  let tileMaskDimJ = match$23[1];
-  let tileMaskDimI = match$23[0];
+  let match$22 = Array2D.dims(tileMask);
+  let tileMaskDimJ = match$22[1];
+  let tileMaskDimI = match$22[0];
   let centerCanvasForDimensions = (dimI, dimJ) => {
     let match = computeCenteredPan(dimI, dimJ, zoomRef.current);
     let nextPanY = match[1];
@@ -517,7 +531,8 @@ function App(props) {
             nextPanX,
             nextPanY
           ],
-          isDotMask: canvas.isDotMask
+          isDotMask: canvas.isDotMask,
+          canvasBackgroundColor: canvas.canvasBackgroundColor
         };
       });
     } else {
@@ -525,12 +540,12 @@ function App(props) {
     }
   };
   let fitCanvasToViewport = () => fitCanvasToViewportForDimensions(boardDimI, boardDimJ);
-  let match$24 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$24[1];
-  let resizeRowsInput = match$24[0];
-  let match$25 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$25[1];
-  let resizeColsInput = match$25[0];
+  let match$23 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$23[1];
+  let resizeRowsInput = match$23[0];
+  let match$24 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$24[1];
+  let resizeColsInput = match$24[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -612,9 +627,9 @@ function App(props) {
       return mapped;
     }
   };
-  let match$26 = parsePositiveInt(resizeRowsInput);
-  let match$27 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$26 !== undefined && match$27 !== undefined ? match$26 !== boardDimI || match$27 !== boardDimJ : false;
+  let match$25 = parsePositiveInt(resizeRowsInput);
+  let match$26 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$25 !== undefined && match$26 !== undefined ? match$25 !== boardDimI || match$26 !== boardDimJ : false;
   let exportScaleValue = parsePositiveFloat(exportScaleInput);
   let canExport = Stdlib_Option.isSome(exportScaleValue);
   let handleResizeSubmit = () => {
@@ -717,7 +732,7 @@ function App(props) {
     let match = computeFitViewForDimensions(boardDimI, boardDimJ);
     let newPan = match[1];
     let fittedZoom = match[0];
-    let newCanvas = makeCanvas(newBoard, fittedZoom, newPan, false);
+    let newCanvas = makeCanvas(newBoard, fittedZoom, newPan, false, canvasBackgroundColor);
     setCanvases(prev => prev.concat([newCanvas]));
     setSelectedCanvasId(param => newCanvas.id);
     zoomRef.current = fittedZoom;
@@ -946,7 +961,7 @@ function App(props) {
               transformValue: transformValue,
               zoom: zoom,
               pan: pan,
-              cursorOverlayOff: match$15[0],
+              cursorOverlayOff: match$14[0],
               setCursorOverlayOff: setCursorOverlayOff,
               isMouseDown: isMouseDown,
               applyBrush: applyBrush,
@@ -995,7 +1010,7 @@ function App(props) {
             setBrushMode: setBrushMode,
             myColor: myColor,
             setMyColor: setMyColor,
-            hoveredPickColor: match$20[0],
+            hoveredPickColor: match$19[0],
             isPickingColor: isPickingColor,
             onStartColorPick: onStartColorPick,
             canvasBackgroundColor: canvasBackgroundColor
@@ -1020,13 +1035,13 @@ function App(props) {
               JsxRuntime.jsx(CanvasColorsControl.make, {
                 myColor: myColor,
                 canvasBackgroundColor: canvasBackgroundColor,
-                setCanvasBackgroundColor: match$12[1],
+                setCanvasBackgroundColor: setCanvasBackgroundColor,
                 viewportBackgroundColor: viewportBackgroundColor,
                 setViewportBackgroundColor: match$13[1]
               }),
               JsxRuntime.jsx(SilhouetteControl.make, {
                 isSilhouette: isSilhouette,
-                setIsSilhouette: match$14[1]
+                setIsSilhouette: match$12[1]
               }),
               JsxRuntime.jsx(DotModeControl.make, {
                 isDotMask: isDotMask,
@@ -1038,15 +1053,15 @@ function App(props) {
                 resizeColsInput: resizeColsInput,
                 setResizeColsInput: setResizeColsInput,
                 resizeMode: resizeMode,
-                setResizeMode: match$18[1],
+                setResizeMode: match$17[1],
                 canSubmitResize: canSubmitResize,
                 handleResizeSubmit: handleResizeSubmit
               }),
               JsxRuntime.jsx(ExportControl.make, {
                 exportScaleInput: exportScaleInput,
-                setExportScaleInput: match$16[1],
+                setExportScaleInput: match$15[1],
                 includeExportBackground: includeExportBackground,
-                setIncludeExportBackground: match$17[1],
+                setIncludeExportBackground: match$16[1],
                 canExport: canExport,
                 onExport: handleExportPng
               })
