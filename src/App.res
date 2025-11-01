@@ -210,7 +210,7 @@ let make = () => {
   )
   // Transient UI state
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
-  let (exportScaleInput, setExportScaleInput) = React.useState(() => "1")
+  let (exportScaleInput, setExportScaleInput) = React.useState(() => "16")
   let (includeExportBackground, setIncludeExportBackground) = React.useState(() => true)
   let (resizeMode, setResizeMode) = React.useState(() => Scale)
   let (isPickingColor, setIsPickingColor) = React.useState(() => false)

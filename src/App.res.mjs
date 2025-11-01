@@ -304,7 +304,7 @@ function App(props) {
   let viewportBackgroundColor = match$13[0];
   let match$14 = React.useState(() => false);
   let setCursorOverlayOff = match$14[1];
-  let match$15 = React.useState(() => "1");
+  let match$15 = React.useState(() => "16");
   let exportScaleInput = match$15[0];
   let match$16 = React.useState(() => true);
   let includeExportBackground = match$16[0];

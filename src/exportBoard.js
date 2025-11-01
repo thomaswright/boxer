@@ -1,6 +1,6 @@
 import { uint32ToHex } from "./BoardColor.js";
 
-const CELL_BASE_SIZE = 16;
+const CELL_BASE_SIZE = 1;
 
 function isTypedBoard(board) {
   return (
