@@ -313,11 +313,13 @@ function serializeCanvas(canvas) {
       ? [Number(canvas.pan[0]) || 0, Number(canvas.pan[1]) || 0]
       : [0, 0];
   const boardValue = encodeBoard(canvas.board);
+  const isDotMaskValue = typeof canvas.isDotMask === "boolean" ? canvas.isDotMask : false;
   return {
     id: canvas.id,
     zoom: zoomValue,
     pan: panValue,
     board: boardValue,
+    isDotMask: isDotMaskValue,
   };
 }
 
@@ -328,12 +330,19 @@ function deserializeCanvas(entry) {
 
   const { id, zoom, pan } = entry;
   const board = decodeBoard(entry.board);
+  const isDotMask =
+    typeof entry.isDotMask === "boolean"
+      ? entry.isDotMask
+      : entry.isDotMask === 1
+      ? true
+      : false;
 
   return {
     id,
     zoom: typeof zoom === "number" ? zoom : 1,
     pan: Array.isArray(pan) && pan.length === 2 ? pan : [0, 0],
     board,
+    isDotMask,
   };
 }
 
