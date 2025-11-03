@@ -186,7 +186,7 @@ let make = () => {
 
   // Persistent tool state
   let (brushMode, setBrushMode, _) = useLocalStorage("brush-mode", Color)
-  let (canvases, setCanvases, _) = useLocalStorage("canvases-v3", [])
+  let (canvases, setCanvases, _) = useLocalStorage("canvases-v4", [])
   let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage("selected-canvas-id", "")
   let (brush, setBrush, _) = useLocalStorage("brush", makeBrush(3, 3))
   let (savedBrushes, setSavedBrushes, _) = useLocalStorage("saved-brushes", defaultBrushes)
@@ -256,8 +256,9 @@ let make = () => {
   }
 
   let currentCanvasId = currentCanvas.id
-  let (includeExportDotMask, setIncludeExportDotMask) =
-    React.useState(() => currentCanvas.isDotMask)
+  let (includeExportDotMask, setIncludeExportDotMask) = React.useState(() =>
+    currentCanvas.isDotMask
+  )
 
   React.useEffect1(() => {
     setIncludeExportDotMask(prev =>
