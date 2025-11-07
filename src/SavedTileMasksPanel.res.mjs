@@ -9,13 +9,12 @@ function SavedTileMasksPanel(props) {
   let handleDeleteSelectedTileMask = props.handleDeleteSelectedTileMask;
   let canDeleteSelectedTileMask = props.canDeleteSelectedTileMask;
   let handleAddTileMask = props.handleAddTileMask;
-  let setSelectedTileMaskIndex = props.setSelectedTileMaskIndex;
-  let selectedTileMaskIndex = props.selectedTileMaskIndex;
-  let setTileMask = props.setTileMask;
+  let setSelectedTileMaskId = props.setSelectedTileMaskId;
+  let selectedTileMaskId = props.selectedTileMaskId;
   return JsxRuntime.jsxs("div", {
     children: [
-      props.savedTileMasks.map((savedTileMask, savedTileMaskIndex) => {
-        let selected = savedTileMaskIndex === selectedTileMaskIndex;
+      props.savedTileMasks.map(savedTileMask => {
+        let selected = savedTileMask.id === selectedTileMaskId;
         let match = selected ? [
             "#f97316",
             "#fed7aa"
@@ -26,7 +25,7 @@ function SavedTileMasksPanel(props) {
         return JsxRuntime.jsx("button", {
           children: JsxRuntime.jsx("div", {
             children: JsxRuntime.jsx(BoolGridPreview.make, {
-              grid: savedTileMask,
+              grid: savedTileMask.mask,
               filledColor: match[0],
               emptyColor: match[1]
             }),
@@ -35,11 +34,8 @@ function SavedTileMasksPanel(props) {
               selected ? "bg-orange-100 " : "bg-gray-100"
             ].join(" ")
           }),
-          onClick: param => {
-            setSelectedTileMaskIndex(param => savedTileMaskIndex);
-            setTileMask(param => savedTileMask);
-          }
-        }, savedTileMaskIndex.toString());
+          onClick: param => setSelectedTileMaskId(param => savedTileMask.id)
+        }, savedTileMask.id);
       }),
       JsxRuntime.jsx("button", {
         children: JsxRuntime.jsx(Tb.TbPlus, {}),

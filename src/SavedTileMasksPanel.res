@@ -1,9 +1,8 @@
 @react.component
 let make = (
-  ~setTileMask,
-  ~savedTileMasks,
-  ~selectedTileMaskIndex,
-  ~setSelectedTileMaskIndex,
+  ~savedTileMasks: array<Types.tileMaskEntry>,
+  ~selectedTileMaskId: string,
+  ~setSelectedTileMaskId,
   ~handleAddTileMask,
   ~canDeleteSelectedTileMask,
   ~handleDeleteSelectedTileMask,
@@ -11,18 +10,17 @@ let make = (
 ) => {
   <div className={"flex flex-col gap-1 h-full overflow-y-scroll items-end"}>
     {savedTileMasks
-    ->Array.mapWithIndex((savedTileMask, savedTileMaskIndex) => {
-      let selected = savedTileMaskIndex == selectedTileMaskIndex
+    ->Array.map(savedTileMask => {
+      let selected = savedTileMask.id == selectedTileMaskId
       let (filledColor, emptyColor) = if selected {
         ("#f97316", "#fed7aa")
       } else {
         ("#9ca3af", "#e5e7eb")
       }
       <button
-        key={savedTileMaskIndex->Int.toString}
+        key={savedTileMask.id}
         onClick={_ => {
-          setSelectedTileMaskIndex(_ => savedTileMaskIndex)
-          setTileMask(_ => savedTileMask)
+          setSelectedTileMaskId(_ => savedTileMask.id)
         }}>
         <div
           className={[
@@ -30,7 +28,7 @@ let make = (
             selected ? "bg-orange-100 " : "bg-gray-100",
           ]->Array.join(" ")}>
           <BoolGridPreview
-            grid={savedTileMask} filledColor={Some(filledColor)} emptyColor={Some(emptyColor)}
+            grid={savedTileMask.mask} filledColor={Some(filledColor)} emptyColor={Some(emptyColor)}
           />
         </div>
       </button>

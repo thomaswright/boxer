@@ -10,6 +10,10 @@ type canvasBoardState = {
   id: string,
   board: board,
 }
+type tileMaskEntry = {
+  id: string,
+  mask: array<array<bool>>,
+}
 type exportOptions = {
   includeBackground: bool,
   backgroundColor: string,
