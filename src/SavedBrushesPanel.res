@@ -1,7 +1,7 @@
 @react.component
 let make = (
   ~savedBrushes: array<Types.brushEntry>,
-  ~selectedBrushId: string,
+  ~selectedBrushId: option<string>,
   ~setSelectedBrushId,
   ~handleAddBrush,
   ~canDeleteSelectedBrush,
@@ -13,7 +13,11 @@ let make = (
     ->Array.map(savedBrushEntry => {
       let savedBrush = savedBrushEntry.brush
       let (dimI, dimJ) = savedBrush->Array2D.dims
-      let selected = savedBrushEntry.id == selectedBrushId
+      let selected =
+        switch selectedBrushId {
+        | Some(id) => savedBrushEntry.id == id
+        | None => false
+        }
       let (filledColor, emptyColor) = if selected {
         ("#f97316", "#fed7aa")
       } else {
@@ -21,7 +25,7 @@ let make = (
       }
       <button
         key={savedBrushEntry.id}
-        onClick={_ => setSelectedBrushId(_ => savedBrushEntry.id)}
+        onClick={_ => setSelectedBrushId(_ => Some(savedBrushEntry.id))}
         className={["flex flex-row"]->Array.join(" ")}>
         <div
           className={[

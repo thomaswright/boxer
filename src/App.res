@@ -96,11 +96,10 @@ let generateTileMaskId = () => "tile-mask-" ++ generateCanvasId()
 
 let makeTileMaskEntry = mask => {id: generateTileMaskId(), mask}
 
-let defaultTileMaskEntries =
-  defaultTileMaskPatterns->Array.mapWithIndex((mask, index) => {
-    id: "default-tile-mask-" ++ index->Int.toString,
-    mask,
-  })
+let defaultTileMaskEntries = defaultTileMaskPatterns->Array.mapWithIndex((mask, index) => {
+  id: "default-tile-mask-" ++ index->Int.toString,
+  mask,
+})
 
 let defaultBrushPatterns = [
   makeBrush(1, 1),
@@ -116,11 +115,10 @@ let generateBrushId = () => "brush-" ++ generateCanvasId()
 
 let makeBrushEntry = (brush): brushEntry => {id: generateBrushId(), brush}
 
-let defaultBrushEntries =
-  defaultBrushPatterns->Array.mapWithIndex((brush, index) => {
-    id: "default-brush-" ++ index->Int.toString,
-    brush,
-  })
+let defaultBrushEntries = defaultBrushPatterns->Array.mapWithIndex((brush, index) => {
+  id: "default-brush-" ++ index->Int.toString,
+  brush,
+})
 
 @react.component
 let make = () => {
@@ -231,15 +229,10 @@ let make = () => {
   let (areBoardsLoaded, setBoardsLoaded) = React.useState(() => false)
 
   // Persistent Tool Selection
-  let defaultBrushId = defaultBrushEntries->Array.get(0)->Option.mapOr("", entry => entry.id)
-  let (selectedBrushId, setSelectedBrushId, _) = useLocalStorage(
-    "selected-brush-id",
-    defaultBrushId,
-  )
-  let defaultTileMaskId = defaultTileMaskEntries->Array.get(0)->Option.mapOr("", entry => entry.id)
+  let (selectedBrushId, setSelectedBrushId, _) = useLocalStorage("selected-brush-id", None)
   let (selectedTileMaskId, setSelectedTileMaskId, _) = useLocalStorage(
     "selected-tile-mask-id",
-    defaultTileMaskId,
+    None,
   )
   let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage("selected-canvas-id", "")
   let (myColor, setMyColor, _) = useLocalStorage("my-color", Initials.myColor)
@@ -504,8 +497,12 @@ let make = () => {
   let fallbackBrush = React.useMemo0(() => makeBrush(3, 3))
   let fallbackTileMask = React.useMemo0(() => makeTileMask(4, 4))
 
-  let brush = switch savedBrushes->Belt.Array.getBy(entry => entry.id == selectedBrushId) {
-  | Some(entry) => entry.brush
+  let brush = switch selectedBrushId {
+  | Some(id) =>
+    switch savedBrushes->Belt.Array.getBy(entry => entry.id == id) {
+    | Some(entry) => entry.brush
+    | None => fallbackBrush
+    }
   | None =>
     switch savedBrushes->Array.get(0) {
     | Some(entry) => entry.brush
@@ -513,8 +510,12 @@ let make = () => {
     }
   }
 
-  let tileMask = switch savedTileMasks->Belt.Array.getBy(entry => entry.id == selectedTileMaskId) {
-  | Some(entry) => entry.mask
+  let tileMask = switch selectedTileMaskId {
+  | Some(id) =>
+    switch savedTileMasks->Belt.Array.getBy(entry => entry.id == id) {
+    | Some(entry) => entry.mask
+    | None => fallbackTileMask
+    }
   | None =>
     switch savedTileMasks->Array.get(0) {
     | Some(entry) => entry.mask
@@ -594,14 +595,17 @@ let make = () => {
 
   React.useEffect2(() => {
     if savedBrushes->Array.length == 0 {
-      if selectedBrushId != "" {
-        setSelectedBrushId(_ => "")
+      if selectedBrushId != None {
+        setSelectedBrushId(_ => None)
       }
     } else {
-      let hasSelection = savedBrushes->Belt.Array.some(entry => entry.id == selectedBrushId)
+      let hasSelection =
+        selectedBrushId->Option.mapOr(false, selectedId =>
+          savedBrushes->Belt.Array.some(entry => entry.id == selectedId)
+        )
       if !hasSelection {
         switch savedBrushes->Array.get(0) {
-        | Some(entry) => setSelectedBrushId(_ => entry.id)
+        | Some(entry) => setSelectedBrushId(_ => Some(entry.id))
         | None => ()
         }
       }
@@ -611,14 +615,18 @@ let make = () => {
 
   React.useEffect2(() => {
     if savedTileMasks->Array.length == 0 {
-      if selectedTileMaskId != "" {
-        setSelectedTileMaskId(_ => "")
+      if selectedTileMaskId != None {
+        setSelectedTileMaskId(_ => None)
       }
     } else {
-      let hasSelection = savedTileMasks->Belt.Array.some(entry => entry.id == selectedTileMaskId)
+      let hasSelection =
+        selectedTileMaskId->Option.mapOr(false, selectedId =>
+          savedTileMasks->Belt.Array.some(entry => entry.id == selectedId)
+        )
+
       if !hasSelection {
         switch savedTileMasks->Array.get(0) {
-        | Some(entry) => setSelectedTileMaskId(_ => entry.id)
+        | Some(entry) => setSelectedTileMaskId(_ => Some(entry.id))
         | None => ()
         }
       }
@@ -728,27 +736,28 @@ let make = () => {
     let newBrush = Board.toBoolGrid(board)
     let newEntry = makeBrushEntry(newBrush)
     setSavedBrushes(v => v->Array.concat([newEntry]))
-    setSelectedBrushId(_ => newEntry.id)
+    setSelectedBrushId(_ => Some(newEntry.id))
   }
 
   let handleDeleteSelectedBrush = () => {
-    if canDeleteSelectedBrush && selectedBrushId != "" {
+    if canDeleteSelectedBrush {
       setSavedBrushes(prev => {
         let currentIndex =
-          prev
-          ->Belt.Array.getIndexBy(entry => entry.id == selectedBrushId)
+          selectedBrushId
+          ->Option.flatMap(id => prev->Belt.Array.getIndexBy(entry => entry.id == id))
           ->Belt.Option.getWithDefault(0)
-        let next = prev->Belt.Array.keep(entry => entry.id != selectedBrushId)
+        let next =
+          selectedBrushId->Option.mapOr(prev, id => prev->Belt.Array.keep(entry => entry.id != id))
         let nextSelectionId = switch next->Array.get(currentIndex) {
-        | Some(entry) => entry.id
+        | Some(entry) => Some(entry.id)
         | None =>
           if currentIndex > 0 {
             switch next->Array.get(currentIndex - 1) {
-            | Some(entry) => entry.id
-            | None => next->Array.get(0)->Option.mapOr("", entry => entry.id)
+            | Some(entry) => Some(entry.id)
+            | None => next->Array.get(0)->Option.map(entry => entry.id)
             }
           } else {
-            next->Array.get(0)->Option.mapOr("", entry => entry.id)
+            next->Array.get(0)->Option.map(entry => entry.id)
           }
         }
         setSelectedBrushId(_ => nextSelectionId)
@@ -761,27 +770,30 @@ let make = () => {
     let newTileMask = Board.toBoolGrid(board)
     let newEntry = makeTileMaskEntry(newTileMask)
     setSavedTileMasks(prev => prev->Array.concat([newEntry]))
-    setSelectedTileMaskId(_ => newEntry.id)
+    setSelectedTileMaskId(_ => Some(newEntry.id))
   }
 
   let handleDeleteSelectedTileMask = () => {
-    if canDeleteSelectedTileMask && selectedTileMaskId != "" {
+    if canDeleteSelectedTileMask {
       setSavedTileMasks(prev => {
         let currentIndex =
-          prev
-          ->Belt.Array.getIndexBy(entry => entry.id == selectedTileMaskId)
+          selectedTileMaskId
+          ->Option.flatMap(id => prev->Belt.Array.getIndexBy(entry => entry.id == id))
           ->Belt.Option.getWithDefault(0)
-        let next = prev->Belt.Array.keep(entry => entry.id != selectedTileMaskId)
+        let next =
+          selectedTileMaskId->Option.mapOr(prev, id =>
+            prev->Belt.Array.keep(entry => entry.id != id)
+          )
         let nextSelectionId = switch next->Array.get(currentIndex) {
-        | Some(entry) => entry.id
+        | Some(entry) => Some(entry.id)
         | None =>
           if currentIndex > 0 {
             switch next->Array.get(currentIndex - 1) {
-            | Some(entry) => entry.id
-            | None => next->Array.get(0)->Option.mapOr("", entry => entry.id)
+            | Some(entry) => Some(entry.id)
+            | None => next->Array.get(0)->Option.map(entry => entry.id)
             }
           } else {
-            next->Array.get(0)->Option.mapOr("", entry => entry.id)
+            next->Array.get(0)->Option.map(entry => entry.id)
           }
         }
         setSelectedTileMaskId(_ => nextSelectionId)

@@ -289,12 +289,10 @@ function App(props) {
   let match$6 = React.useState(() => false);
   let setBoardsLoaded = match$6[1];
   let areBoardsLoaded = match$6[0];
-  let defaultBrushId = Stdlib_Option.mapOr(defaultBrushEntries[0], "", entry => entry.id);
-  let match$7 = UseLocalStorageJs("selected-brush-id", defaultBrushId);
+  let match$7 = UseLocalStorageJs("selected-brush-id", undefined);
   let setSelectedBrushId = match$7[1];
   let selectedBrushId = match$7[0];
-  let defaultTileMaskId = Stdlib_Option.mapOr(defaultTileMaskEntries[0], "", entry => entry.id);
-  let match$8 = UseLocalStorageJs("selected-tile-mask-id", defaultTileMaskId);
+  let match$8 = UseLocalStorageJs("selected-tile-mask-id", undefined);
   let setSelectedTileMaskId = match$8[1];
   let selectedTileMaskId = match$8[0];
   let match$9 = UseLocalStorageJs("selected-canvas-id", "");
@@ -580,18 +578,18 @@ function App(props) {
   };
   let fallbackBrush = React.useMemo(() => Array2D.make(3, 3, () => true), []);
   let fallbackTileMask = React.useMemo(() => Array2D.make(4, 4, () => true), []);
-  let entry$1 = Belt_Array.getBy(savedBrushes, entry => entry.id === selectedBrushId);
   let brush;
-  if (entry$1 !== undefined) {
-    brush = entry$1.brush;
+  if (selectedBrushId !== undefined) {
+    let entry$1 = Belt_Array.getBy(savedBrushes, entry => entry.id === selectedBrushId);
+    brush = entry$1 !== undefined ? entry$1.brush : fallbackBrush;
   } else {
     let entry$2 = savedBrushes[0];
     brush = entry$2 !== undefined ? entry$2.brush : fallbackBrush;
   }
-  let entry$3 = Belt_Array.getBy(savedTileMasks, entry => entry.id === selectedTileMaskId);
   let tileMask;
-  if (entry$3 !== undefined) {
-    tileMask = entry$3.mask;
+  if (selectedTileMaskId !== undefined) {
+    let entry$3 = Belt_Array.getBy(savedTileMasks, entry => entry.id === selectedTileMaskId);
+    tileMask = entry$3 !== undefined ? entry$3.mask : fallbackTileMask;
   } else {
     let entry$4 = savedTileMasks[0];
     tileMask = entry$4 !== undefined ? entry$4.mask : fallbackTileMask;
@@ -703,12 +701,13 @@ function App(props) {
   ]);
   React.useEffect(() => {
     if (savedBrushes.length === 0) {
-      if (selectedBrushId !== "") {
-        setSelectedBrushId(param => "");
+      if (selectedBrushId !== undefined) {
+        setSelectedBrushId(param => {});
       }
       
     } else {
-      let hasSelection = Belt_Array.some(savedBrushes, entry => entry.id === selectedBrushId);
+      let selectedId = Stdlib_Option.getOr(selectedBrushId, "");
+      let hasSelection = Belt_Array.some(savedBrushes, entry => entry.id === selectedId);
       if (!hasSelection) {
         let entry = savedBrushes[0];
         if (entry !== undefined) {
@@ -724,12 +723,13 @@ function App(props) {
   ]);
   React.useEffect(() => {
     if (savedTileMasks.length === 0) {
-      if (selectedTileMaskId !== "") {
-        setSelectedTileMaskId(param => "");
+      if (selectedTileMaskId !== undefined) {
+        setSelectedTileMaskId(param => {});
       }
       
     } else {
-      let hasSelection = Belt_Array.some(savedTileMasks, entry => entry.id === selectedTileMaskId);
+      let selectedId = Stdlib_Option.getOr(selectedTileMaskId, "");
+      let hasSelection = Belt_Array.some(savedTileMasks, entry => entry.id === selectedId);
       if (!hasSelection) {
         let entry = savedTileMasks[0];
         if (entry !== undefined) {
@@ -846,19 +846,19 @@ function App(props) {
     setSelectedBrushId(param => newEntry_id);
   };
   let handleDeleteSelectedBrush = () => {
-    if (canDeleteSelectedBrush && selectedBrushId !== "") {
+    if (canDeleteSelectedBrush) {
       return setSavedBrushes(prev => {
-        let currentIndex = Belt_Option.getWithDefault(Belt_Array.getIndexBy(prev, entry => entry.id === selectedBrushId), 0);
-        let next = Belt_Array.keep(prev, entry => entry.id !== selectedBrushId);
+        let currentIndex = Belt_Option.getWithDefault(Stdlib_Option.flatMap(selectedBrushId, id => Belt_Array.getIndexBy(prev, entry => entry.id === id)), 0);
+        let next = Stdlib_Option.mapOr(selectedBrushId, prev, id => Belt_Array.keep(prev, entry => entry.id !== id));
         let entry = next[currentIndex];
         let nextSelectionId;
         if (entry !== undefined) {
           nextSelectionId = entry.id;
         } else if (currentIndex > 0) {
           let entry$1 = next[currentIndex - 1 | 0];
-          nextSelectionId = entry$1 !== undefined ? entry$1.id : Stdlib_Option.mapOr(next[0], "", entry => entry.id);
+          nextSelectionId = entry$1 !== undefined ? entry$1.id : Stdlib_Option.map(next[0], entry => entry.id);
         } else {
-          nextSelectionId = Stdlib_Option.mapOr(next[0], "", entry => entry.id);
+          nextSelectionId = Stdlib_Option.map(next[0], entry => entry.id);
         }
         setSelectedBrushId(param => nextSelectionId);
         return next;
@@ -877,19 +877,19 @@ function App(props) {
     setSelectedTileMaskId(param => newEntry_id);
   };
   let handleDeleteSelectedTileMask = () => {
-    if (canDeleteSelectedTileMask && selectedTileMaskId !== "") {
+    if (canDeleteSelectedTileMask) {
       return setSavedTileMasks(prev => {
-        let currentIndex = Belt_Option.getWithDefault(Belt_Array.getIndexBy(prev, entry => entry.id === selectedTileMaskId), 0);
-        let next = Belt_Array.keep(prev, entry => entry.id !== selectedTileMaskId);
+        let currentIndex = Belt_Option.getWithDefault(Stdlib_Option.flatMap(selectedTileMaskId, id => Belt_Array.getIndexBy(prev, entry => entry.id === id)), 0);
+        let next = Stdlib_Option.mapOr(selectedTileMaskId, prev, id => Belt_Array.keep(prev, entry => entry.id !== id));
         let entry = next[currentIndex];
         let nextSelectionId;
         if (entry !== undefined) {
           nextSelectionId = entry.id;
         } else if (currentIndex > 0) {
           let entry$1 = next[currentIndex - 1 | 0];
-          nextSelectionId = entry$1 !== undefined ? entry$1.id : Stdlib_Option.mapOr(next[0], "", entry => entry.id);
+          nextSelectionId = entry$1 !== undefined ? entry$1.id : Stdlib_Option.map(next[0], entry => entry.id);
         } else {
-          nextSelectionId = Stdlib_Option.mapOr(next[0], "", entry => entry.id);
+          nextSelectionId = Stdlib_Option.map(next[0], entry => entry.id);
         }
         setSelectedTileMaskId(param => nextSelectionId);
         return next;

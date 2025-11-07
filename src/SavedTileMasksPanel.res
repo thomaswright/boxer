@@ -1,7 +1,7 @@
 @react.component
 let make = (
   ~savedTileMasks: array<Types.tileMaskEntry>,
-  ~selectedTileMaskId: string,
+  ~selectedTileMaskId: option<string>,
   ~setSelectedTileMaskId,
   ~handleAddTileMask,
   ~canDeleteSelectedTileMask,
@@ -11,7 +11,11 @@ let make = (
   <div className={"flex flex-col gap-1 h-full overflow-y-scroll items-end"}>
     {savedTileMasks
     ->Array.map(savedTileMask => {
-      let selected = savedTileMask.id == selectedTileMaskId
+      let selected =
+        switch selectedTileMaskId {
+        | Some(id) => savedTileMask.id == id
+        | None => false
+        }
       let (filledColor, emptyColor) = if selected {
         ("#f97316", "#fed7aa")
       } else {
@@ -20,7 +24,7 @@ let make = (
       <button
         key={savedTileMask.id}
         onClick={_ => {
-          setSelectedTileMaskId(_ => savedTileMask.id)
+          setSelectedTileMaskId(_ => Some(savedTileMask.id))
         }}>
         <div
           className={[

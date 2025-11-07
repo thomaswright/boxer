@@ -17,7 +17,7 @@ function SavedBrushesPanel(props) {
       props.savedBrushes.map(savedBrushEntry => {
         let savedBrush = savedBrushEntry.brush;
         let match = Array2D.dims(savedBrush);
-        let selected = savedBrushEntry.id === selectedBrushId;
+        let selected = selectedBrushId !== undefined ? savedBrushEntry.id === selectedBrushId : false;
         let match$1 = selected ? [
             "#f97316",
             "#fed7aa"
