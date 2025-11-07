@@ -97,10 +97,12 @@ let generateTileMaskId = () => "tile-mask-" ++ generateCanvasId()
 let makeTileMaskEntry = mask => {id: generateTileMaskId(), mask}
 
 let defaultTileMaskEntries =
-  defaultTileMaskPatterns
-  ->Array.mapWithIndex((mask, index) => {id: "default-tile-mask-" ++ index->Int.toString, mask})
+  defaultTileMaskPatterns->Array.mapWithIndex((mask, index) => {
+    id: "default-tile-mask-" ++ index->Int.toString,
+    mask,
+  })
 
-let defaultBrushes = [
+let defaultBrushPatterns = [
   makeBrush(1, 1),
   makeBrush(2, 2),
   makeBrush(3, 3),
@@ -109,6 +111,16 @@ let defaultBrushes = [
   makeBrush(12, 12),
   makeBrush(16, 16),
 ]
+
+let generateBrushId = () => "brush-" ++ generateCanvasId()
+
+let makeBrushEntry = (brush): brushEntry => {id: generateBrushId(), brush}
+
+let defaultBrushEntries =
+  defaultBrushPatterns->Array.mapWithIndex((brush, index) => {
+    id: "default-brush-" ++ index->Int.toString,
+    brush,
+  })
 
 @react.component
 let make = () => {
@@ -205,9 +217,11 @@ let make = () => {
   // Persistent Data
   let (canvases, setCanvases, _) = useLocalStorage("canvas-metadata-v1", [])
   let (canvasBoards, setCanvasBoards) = React.useState((): array<Types.canvasBoardState> => [])
-  let (savedBrushes, setSavedBrushes, _) = useLocalStorage("saved-brushes", defaultBrushes)
-  let (savedTileMasks, setSavedTileMasks, _) =
-    useLocalStorage("saved-tile-masks", defaultTileMaskEntries)
+  let (savedBrushes, setSavedBrushes, _) = useLocalStorage("saved-brushes", defaultBrushEntries)
+  let (savedTileMasks, setSavedTileMasks, _) = useLocalStorage(
+    "saved-tile-masks",
+    defaultTileMaskEntries,
+  )
   let (viewportBackgroundColor, setViewportBackgroundColor, _) = useLocalStorage(
     "viewport-background-color",
     Initials.viewportBackgroundColor,
@@ -217,11 +231,16 @@ let make = () => {
   let (areBoardsLoaded, setBoardsLoaded) = React.useState(() => false)
 
   // Persistent Tool Selection
-  let defaultTileMaskId =
-    defaultTileMaskEntries->Array.get(0)->Option.mapOr("", entry => entry.id)
-  let (selectedTileMaskId, setSelectedTileMaskId, _) =
-    useLocalStorage("selected-tile-mask-id", defaultTileMaskId)
-  let (brush, setBrush, _) = useLocalStorage("brush", makeBrush(3, 3))
+  let defaultBrushId = defaultBrushEntries->Array.get(0)->Option.mapOr("", entry => entry.id)
+  let (selectedBrushId, setSelectedBrushId, _) = useLocalStorage(
+    "selected-brush-id",
+    defaultBrushId,
+  )
+  let defaultTileMaskId = defaultTileMaskEntries->Array.get(0)->Option.mapOr("", entry => entry.id)
+  let (selectedTileMaskId, setSelectedTileMaskId, _) = useLocalStorage(
+    "selected-tile-mask-id",
+    defaultTileMaskId,
+  )
   let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage("selected-canvas-id", "")
   let (myColor, setMyColor, _) = useLocalStorage("my-color", Initials.myColor)
 
@@ -482,17 +501,26 @@ let make = () => {
   let zoomIn = () => adjustZoomByFactor(Initials.zoom_factor)
   let zoomOut = () => adjustZoomByFactor(1. /. Initials.zoom_factor)
 
+  let fallbackBrush = React.useMemo0(() => makeBrush(3, 3))
   let fallbackTileMask = React.useMemo0(() => makeTileMask(4, 4))
 
-  let tileMask =
-    switch savedTileMasks->Belt.Array.getBy(entry => entry.id == selectedTileMaskId) {
-    | Some(entry) => entry.mask
-    | None =>
-      switch savedTileMasks->Array.get(0) {
-      | Some(entry) => entry.mask
-      | None => fallbackTileMask
-      }
+  let brush = switch savedBrushes->Belt.Array.getBy(entry => entry.id == selectedBrushId) {
+  | Some(entry) => entry.brush
+  | None =>
+    switch savedBrushes->Array.get(0) {
+    | Some(entry) => entry.brush
+    | None => fallbackBrush
     }
+  }
+
+  let tileMask = switch savedTileMasks->Belt.Array.getBy(entry => entry.id == selectedTileMaskId) {
+  | Some(entry) => entry.mask
+  | None =>
+    switch savedTileMasks->Array.get(0) {
+    | Some(entry) => entry.mask
+    | None => fallbackTileMask
+    }
+  }
 
   let (boardDimI, boardDimJ) = Board.dims(board)
   let zoomPercent = switch computeZoomToFitForDimensions(boardDimI, boardDimJ) {
@@ -563,6 +591,23 @@ let make = () => {
     }
     None
   }, (boardDimI, boardDimJ, viewportCenter))
+
+  React.useEffect2(() => {
+    if savedBrushes->Array.length == 0 {
+      if selectedBrushId != "" {
+        setSelectedBrushId(_ => "")
+      }
+    } else {
+      let hasSelection = savedBrushes->Belt.Array.some(entry => entry.id == selectedBrushId)
+      if !hasSelection {
+        switch savedBrushes->Array.get(0) {
+        | Some(entry) => setSelectedBrushId(_ => entry.id)
+        | None => ()
+        }
+      }
+    }
+    None
+  }, (savedBrushes, selectedBrushId))
 
   React.useEffect2(() => {
     if savedTileMasks->Array.length == 0 {
@@ -676,24 +721,41 @@ let make = () => {
     }
 
   // Saved asset helpers
-  let selectedSavedBrushIndex =
-    savedBrushes->Belt.Array.getIndexBy(savedBrush => Array2D.isEqual(savedBrush, brush))
-
-  let canDeleteSelectedBrush = selectedSavedBrushIndex->Option.isSome
+  let canDeleteSelectedBrush = savedBrushes->Array.length > 1
   let canDeleteSelectedTileMask = savedTileMasks->Array.length > 1
 
   let handleAddBrush = () => {
     let newBrush = Board.toBoolGrid(board)
-    setSavedBrushes(v => v->Array.concat([newBrush]))
-    setBrush(_ => newBrush)
+    let newEntry = makeBrushEntry(newBrush)
+    setSavedBrushes(v => v->Array.concat([newEntry]))
+    setSelectedBrushId(_ => newEntry.id)
   }
 
-  let handleDeleteSelectedBrush = () =>
-    switch selectedSavedBrushIndex {
-    | Some(selectedIndex) =>
-      setSavedBrushes(prev => prev->Belt.Array.keepWithIndex((_, idx) => idx != selectedIndex))
-    | None => ()
+  let handleDeleteSelectedBrush = () => {
+    if canDeleteSelectedBrush && selectedBrushId != "" {
+      setSavedBrushes(prev => {
+        let currentIndex =
+          prev
+          ->Belt.Array.getIndexBy(entry => entry.id == selectedBrushId)
+          ->Belt.Option.getWithDefault(0)
+        let next = prev->Belt.Array.keep(entry => entry.id != selectedBrushId)
+        let nextSelectionId = switch next->Array.get(currentIndex) {
+        | Some(entry) => entry.id
+        | None =>
+          if currentIndex > 0 {
+            switch next->Array.get(currentIndex - 1) {
+            | Some(entry) => entry.id
+            | None => next->Array.get(0)->Option.mapOr("", entry => entry.id)
+            }
+          } else {
+            next->Array.get(0)->Option.mapOr("", entry => entry.id)
+          }
+        }
+        setSelectedBrushId(_ => nextSelectionId)
+        next
+      })
     }
+  }
 
   let handleAddTileMask = () => {
     let newTileMask = Board.toBoolGrid(board)
@@ -706,22 +768,22 @@ let make = () => {
     if canDeleteSelectedTileMask && selectedTileMaskId != "" {
       setSavedTileMasks(prev => {
         let currentIndex =
-          prev->Belt.Array.getIndexBy(entry => entry.id == selectedTileMaskId)
+          prev
+          ->Belt.Array.getIndexBy(entry => entry.id == selectedTileMaskId)
           ->Belt.Option.getWithDefault(0)
         let next = prev->Belt.Array.keep(entry => entry.id != selectedTileMaskId)
-        let nextSelectionId =
-          switch next->Array.get(currentIndex) {
-          | Some(entry) => entry.id
-          | None =>
-            if currentIndex > 0 {
-              switch next->Array.get(currentIndex - 1) {
-              | Some(entry) => entry.id
-              | None => next->Array.get(0)->Option.mapOr("", entry => entry.id)
-              }
-            } else {
-              next->Array.get(0)->Option.mapOr("", entry => entry.id)
+        let nextSelectionId = switch next->Array.get(currentIndex) {
+        | Some(entry) => entry.id
+        | None =>
+          if currentIndex > 0 {
+            switch next->Array.get(currentIndex - 1) {
+            | Some(entry) => entry.id
+            | None => next->Array.get(0)->Option.mapOr("", entry => entry.id)
             }
+          } else {
+            next->Array.get(0)->Option.mapOr("", entry => entry.id)
           }
+        }
         setSelectedTileMaskId(_ => nextSelectionId)
         next
       })
@@ -945,23 +1007,23 @@ let make = () => {
 
         <div className="flex flex-row gap-2 h-full flex-none p-2">
           <SavedBrushesPanel
-            brush
-            setBrush
             savedBrushes
+            selectedBrushId
+            setSelectedBrushId
             handleAddBrush
             handleDeleteSelectedBrush
             canDeleteSelectedBrush
             canSaveBrush={boardDimI <= 32 && boardDimJ <= 32}
           />
-        <SavedTileMasksPanel
-          savedTileMasks
-          selectedTileMaskId
-          setSelectedTileMaskId
-          handleAddTileMask
-          handleDeleteSelectedTileMask
-          canDeleteSelectedTileMask
-          canSaveTileMask={boardDimI <= 32 && boardDimJ <= 32}
-        />
+          <SavedTileMasksPanel
+            savedTileMasks
+            selectedTileMaskId
+            setSelectedTileMaskId
+            handleAddTileMask
+            handleDeleteSelectedTileMask
+            canDeleteSelectedTileMask
+            canSaveTileMask={boardDimI <= 32 && boardDimJ <= 32}
+          />
         </div>
       </div>
 

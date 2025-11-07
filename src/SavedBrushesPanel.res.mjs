@@ -10,13 +10,14 @@ function SavedBrushesPanel(props) {
   let handleDeleteSelectedBrush = props.handleDeleteSelectedBrush;
   let canDeleteSelectedBrush = props.canDeleteSelectedBrush;
   let handleAddBrush = props.handleAddBrush;
-  let setBrush = props.setBrush;
-  let brush = props.brush;
+  let setSelectedBrushId = props.setSelectedBrushId;
+  let selectedBrushId = props.selectedBrushId;
   return JsxRuntime.jsxs("div", {
     children: [
-      props.savedBrushes.map((savedBrush, savedBrushIndex) => {
+      props.savedBrushes.map(savedBrushEntry => {
+        let savedBrush = savedBrushEntry.brush;
         let match = Array2D.dims(savedBrush);
-        let selected = Array2D.isEqual(brush, savedBrush);
+        let selected = savedBrushEntry.id === selectedBrushId;
         let match$1 = selected ? [
             "#f97316",
             "#fed7aa"
@@ -49,8 +50,8 @@ function SavedBrushesPanel(props) {
             })
           ],
           className: ["flex flex-row"].join(" "),
-          onClick: param => setBrush(param => savedBrush)
-        }, savedBrushIndex.toString());
+          onClick: param => setSelectedBrushId(param => savedBrushEntry.id)
+        }, savedBrushEntry.id);
       }),
       JsxRuntime.jsx("button", {
         children: JsxRuntime.jsx(Tb.TbPlus, {}),

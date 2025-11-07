@@ -1,8 +1,8 @@
 @react.component
 let make = (
-  ~brush,
-  ~setBrush,
-  ~savedBrushes,
+  ~savedBrushes: array<Types.brushEntry>,
+  ~selectedBrushId: string,
+  ~setSelectedBrushId,
   ~handleAddBrush,
   ~canDeleteSelectedBrush,
   ~handleDeleteSelectedBrush,
@@ -10,17 +10,18 @@ let make = (
 ) => {
   <div className={"flex flex-col gap-1 h-full overflow-y-scroll items-end"}>
     {savedBrushes
-    ->Array.mapWithIndex((savedBrush, savedBrushIndex) => {
+    ->Array.map(savedBrushEntry => {
+      let savedBrush = savedBrushEntry.brush
       let (dimI, dimJ) = savedBrush->Array2D.dims
-      let selected = Array2D.isEqual(brush, savedBrush)
+      let selected = savedBrushEntry.id == selectedBrushId
       let (filledColor, emptyColor) = if selected {
         ("#f97316", "#fed7aa")
       } else {
         ("#9ca3af", "#e5e7eb")
       }
       <button
-        key={savedBrushIndex->Int.toString}
-        onClick={_ => setBrush(_ => savedBrush)}
+        key={savedBrushEntry.id}
+        onClick={_ => setSelectedBrushId(_ => savedBrushEntry.id)}
         className={["flex flex-row"]->Array.join(" ")}>
         <div
           className={[

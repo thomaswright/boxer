@@ -164,7 +164,7 @@ let defaultTileMaskEntries = defaultTileMaskPatterns.map((mask, index) => ({
   mask: mask
 }));
 
-let defaultBrushes = [
+let defaultBrushPatterns = [
   Array2D.make(1, 1, () => true),
   Array2D.make(2, 2, () => true),
   Array2D.make(3, 3, () => true),
@@ -173,6 +173,11 @@ let defaultBrushes = [
   Array2D.make(12, 12, () => true),
   Array2D.make(16, 16, () => true)
 ];
+
+let defaultBrushEntries = defaultBrushPatterns.map((brush, index) => ({
+  id: "default-brush-" + index.toString(),
+  brush: brush
+}));
 
 function App(props) {
   let canvasContainerRef = React.useRef(null);
@@ -273,7 +278,7 @@ function App(props) {
   let match$2 = React.useState(() => []);
   let setCanvasBoards = match$2[1];
   let canvasBoards = match$2[0];
-  let match$3 = UseLocalStorageJs("saved-brushes", defaultBrushes);
+  let match$3 = UseLocalStorageJs("saved-brushes", defaultBrushEntries);
   let setSavedBrushes = match$3[1];
   let savedBrushes = match$3[0];
   let match$4 = UseLocalStorageJs("saved-tile-masks", defaultTileMaskEntries);
@@ -284,13 +289,14 @@ function App(props) {
   let match$6 = React.useState(() => false);
   let setBoardsLoaded = match$6[1];
   let areBoardsLoaded = match$6[0];
+  let defaultBrushId = Stdlib_Option.mapOr(defaultBrushEntries[0], "", entry => entry.id);
+  let match$7 = UseLocalStorageJs("selected-brush-id", defaultBrushId);
+  let setSelectedBrushId = match$7[1];
+  let selectedBrushId = match$7[0];
   let defaultTileMaskId = Stdlib_Option.mapOr(defaultTileMaskEntries[0], "", entry => entry.id);
-  let match$7 = UseLocalStorageJs("selected-tile-mask-id", defaultTileMaskId);
-  let setSelectedTileMaskId = match$7[1];
-  let selectedTileMaskId = match$7[0];
-  let match$8 = UseLocalStorageJs("brush", Array2D.make(3, 3, () => true));
-  let setBrush = match$8[1];
-  let brush = match$8[0];
+  let match$8 = UseLocalStorageJs("selected-tile-mask-id", defaultTileMaskId);
+  let setSelectedTileMaskId = match$8[1];
+  let selectedTileMaskId = match$8[0];
   let match$9 = UseLocalStorageJs("selected-canvas-id", "");
   let setSelectedCanvasId = match$9[1];
   let selectedCanvasId = match$9[0];
@@ -572,14 +578,23 @@ function App(props) {
     let factor = 1 / Initials.zoom_factor;
     updateZoom(prev => prev * factor);
   };
+  let fallbackBrush = React.useMemo(() => Array2D.make(3, 3, () => true), []);
   let fallbackTileMask = React.useMemo(() => Array2D.make(4, 4, () => true), []);
-  let entry$1 = Belt_Array.getBy(savedTileMasks, entry => entry.id === selectedTileMaskId);
-  let tileMask;
+  let entry$1 = Belt_Array.getBy(savedBrushes, entry => entry.id === selectedBrushId);
+  let brush;
   if (entry$1 !== undefined) {
-    tileMask = entry$1.mask;
+    brush = entry$1.brush;
   } else {
-    let entry$2 = savedTileMasks[0];
-    tileMask = entry$2 !== undefined ? entry$2.mask : fallbackTileMask;
+    let entry$2 = savedBrushes[0];
+    brush = entry$2 !== undefined ? entry$2.brush : fallbackBrush;
+  }
+  let entry$3 = Belt_Array.getBy(savedTileMasks, entry => entry.id === selectedTileMaskId);
+  let tileMask;
+  if (entry$3 !== undefined) {
+    tileMask = entry$3.mask;
+  } else {
+    let entry$4 = savedTileMasks[0];
+    tileMask = entry$4 !== undefined ? entry$4.mask : fallbackTileMask;
   }
   let match$22 = Board.dims(board);
   let boardDimJ = match$22[1];
@@ -685,6 +700,27 @@ function App(props) {
     boardDimI,
     boardDimJ,
     viewportCenter
+  ]);
+  React.useEffect(() => {
+    if (savedBrushes.length === 0) {
+      if (selectedBrushId !== "") {
+        setSelectedBrushId(param => "");
+      }
+      
+    } else {
+      let hasSelection = Belt_Array.some(savedBrushes, entry => entry.id === selectedBrushId);
+      if (!hasSelection) {
+        let entry = savedBrushes[0];
+        if (entry !== undefined) {
+          setSelectedBrushId(param => entry.id);
+        }
+        
+      }
+      
+    }
+  }, [
+    savedBrushes,
+    selectedBrushId
   ]);
   React.useEffect(() => {
     if (savedTileMasks.length === 0) {
@@ -797,17 +833,36 @@ function App(props) {
     }
     
   };
-  let selectedSavedBrushIndex = Belt_Array.getIndexBy(savedBrushes, savedBrush => Array2D.isEqual(savedBrush, brush));
-  let canDeleteSelectedBrush = Stdlib_Option.isSome(selectedSavedBrushIndex);
+  let canDeleteSelectedBrush = savedBrushes.length > 1;
   let canDeleteSelectedTileMask = savedTileMasks.length > 1;
   let handleAddBrush = () => {
     let newBrush = Board.toBoolGrid(board);
-    setSavedBrushes(v => v.concat([newBrush]));
-    setBrush(param => newBrush);
+    let newEntry_id = "brush-" + generateCanvasId();
+    let newEntry = {
+      id: newEntry_id,
+      brush: newBrush
+    };
+    setSavedBrushes(v => v.concat([newEntry]));
+    setSelectedBrushId(param => newEntry_id);
   };
   let handleDeleteSelectedBrush = () => {
-    if (selectedSavedBrushIndex !== undefined) {
-      return setSavedBrushes(prev => Belt_Array.keepWithIndex(prev, (param, idx) => idx !== selectedSavedBrushIndex));
+    if (canDeleteSelectedBrush && selectedBrushId !== "") {
+      return setSavedBrushes(prev => {
+        let currentIndex = Belt_Option.getWithDefault(Belt_Array.getIndexBy(prev, entry => entry.id === selectedBrushId), 0);
+        let next = Belt_Array.keep(prev, entry => entry.id !== selectedBrushId);
+        let entry = next[currentIndex];
+        let nextSelectionId;
+        if (entry !== undefined) {
+          nextSelectionId = entry.id;
+        } else if (currentIndex > 0) {
+          let entry$1 = next[currentIndex - 1 | 0];
+          nextSelectionId = entry$1 !== undefined ? entry$1.id : Stdlib_Option.mapOr(next[0], "", entry => entry.id);
+        } else {
+          nextSelectionId = Stdlib_Option.mapOr(next[0], "", entry => entry.id);
+        }
+        setSelectedBrushId(param => nextSelectionId);
+        return next;
+      });
     }
     
   };
@@ -1046,9 +1101,9 @@ function App(props) {
             JsxRuntime.jsxs("div", {
               children: [
                 JsxRuntime.jsx(SavedBrushesPanel.make, {
-                  brush: brush,
-                  setBrush: setBrush,
                   savedBrushes: savedBrushes,
+                  selectedBrushId: selectedBrushId,
+                  setSelectedBrushId: setSelectedBrushId,
                   handleAddBrush: handleAddBrush,
                   canDeleteSelectedBrush: canDeleteSelectedBrush,
                   handleDeleteSelectedBrush: handleDeleteSelectedBrush,
