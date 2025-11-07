@@ -194,34 +194,40 @@ let make = () => {
     (makeCanvas(~zoom=defaultZoom, ~pan=defaultPan, ~isDotMask=false), defaultBoard)
   }
 
-  // Persistent tool state
-  let (brushMode, setBrushMode, _) = useLocalStorage("brush-mode", Color)
+  // Persistent Data
   let (canvases, setCanvases, _) = useLocalStorage("canvas-metadata-v1", [])
-  let (canvasBoards, setCanvasBoards) =
-    React.useState((): array<Types.canvasBoardState> => [])
-  let (areBoardsLoaded, setBoardsLoaded) = React.useState(() => false)
-  let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage("selected-canvas-id", "")
-  let (brush, setBrush, _) = useLocalStorage("brush", makeBrush(3, 3))
+  let (canvasBoards, setCanvasBoards) = React.useState((): array<Types.canvasBoardState> => [])
   let (savedBrushes, setSavedBrushes, _) = useLocalStorage("saved-brushes", defaultBrushes)
   let (savedTileMasks, setSavedTileMasks, _) = useLocalStorage("saved-tile-masks", defaultTileMasks)
+  let (viewportBackgroundColor, setViewportBackgroundColor, _) = useLocalStorage(
+    "viewport-background-color",
+    Initials.viewportBackgroundColor,
+  )
+
+  // Lifecycle Helper
+  let (areBoardsLoaded, setBoardsLoaded) = React.useState(() => false)
+
+  // Persistent Tool Selection
+  let (tileMask, setTileMask, _) = useLocalStorage("tile-mask", makeTileMask(4, 4))
+  let (brush, setBrush, _) = useLocalStorage("brush", makeBrush(3, 3))
   let (selectedTileMaskIndex, setSelectedTileMaskIndex, _) = useLocalStorage(
     "selected-tile-mask-index",
     0,
   )
-  let (tileMask, setTileMask, _) = useLocalStorage("tile-mask", makeTileMask(4, 4))
+  let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage("selected-canvas-id", "")
+  let (myColor, setMyColor, _) = useLocalStorage("my-color", Initials.myColor)
+
+  // Persistent UI Selection
+  let (brushMode, setBrushMode, _) = useLocalStorage("brush-mode", Color)
   let (overlayMode, setOverlayMode, _) = useLocalStorage("brush-overlay-mode", OverlayDefault)
   let showCursorOverlay = switch overlayMode {
   | OverlayNone => false
   | _ => true
   }
   let (gridMode, setGridMode, _) = useLocalStorage("grid-mode", GridNone)
-  let (myColor, setMyColor, _) = useLocalStorage("my-color", Initials.myColor)
+
+  // Transient UI
   let (isSilhouette, setIsSilhouette, _) = useLocalStorage("canvas-silhouette", Initials.silhouette)
-  let (viewportBackgroundColor, setViewportBackgroundColor, _) = useLocalStorage(
-    "viewport-background-color",
-    Initials.viewportBackgroundColor,
-  )
-  // Transient UI state
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
   let (exportScaleInput, setExportScaleInput) = React.useState(() => "16")
   let (includeExportBackground, setIncludeExportBackground) = React.useState(() => true)
@@ -229,6 +235,7 @@ let make = () => {
   let (isPickingColor, setIsPickingColor) = React.useState(() => false)
   let (hoveredPickColor, setHoveredPickColor) = React.useState(() => None)
   let clearHoverRef = React.useRef(() => ())
+
   // Camera positioning
   let zoomRef = React.useRef(1.)
   let panRef = React.useRef((0., 0.))
@@ -249,23 +256,21 @@ let make = () => {
   // Canvas selection & derived state
   let canvasCount = canvases->Array.length
 
-  let persistBoardValue = (id, boardValue) =>
-    runBoardStoragePromise(saveBoardEntry(id, boardValue))
+  let persistBoardValue = (id, boardValue) => runBoardStoragePromise(saveBoardEntry(id, boardValue))
 
   let removePersistedBoard = id => runBoardStoragePromise(deleteBoardEntry(id))
 
   let storeBoardValue = (id, boardValue) => {
     setCanvasBoards(prev => {
       let replaced = ref(false)
-      let next =
-        prev->Array.map(entry =>
-          if entry.id == id {
-            replaced := true
-            {id: entry.id, board: boardValue}
-          } else {
-            entry
-          }
-        )
+      let next = prev->Array.map(entry =>
+        if entry.id == id {
+          replaced := true
+          {id: entry.id, board: boardValue}
+        } else {
+          entry
+        }
+      )
       if replaced.contents {
         next
       } else {
@@ -278,16 +283,15 @@ let make = () => {
   let modifyBoardEntry = (id, updater) => {
     let updatedBoardRef = ref(None)
     setCanvasBoards(prev => {
-      let next =
-        prev->Array.map(entry =>
-          if entry.id == id {
-            let nextBoard = updater(entry.board)
-            updatedBoardRef := Some(nextBoard)
-            {id: entry.id, board: nextBoard}
-          } else {
-            entry
-          }
-        )
+      let next = prev->Array.map(entry =>
+        if entry.id == id {
+          let nextBoard = updater(entry.board)
+          updatedBoardRef := Some(nextBoard)
+          {id: entry.id, board: nextBoard}
+        } else {
+          entry
+        }
+      )
       switch updatedBoardRef.contents {
       | Some(_) => next
       | None =>
@@ -303,13 +307,11 @@ let make = () => {
   }
 
   React.useEffect0(() => {
-    ignore(
-      Js.Promise.then_(entries => {
+    ignore(Js.Promise.then_(entries => {
         setCanvasBoards(_ => entries)
         setBoardsLoaded(_ => true)
-        Js.Promise.resolve(())
-      }, loadAllBoards())
-    )
+        Js.Promise.resolve()
+      }, loadAllBoards()))
     None
   })
 
@@ -379,11 +381,10 @@ let make = () => {
     }
     None
   }, (canvases, selectedCanvasId))
-  let board =
-    switch canvasBoards->Belt.Array.getBy(entry => entry.id == currentCanvasId) {
-    | Some(entry) => entry.board
-    | None => makeBoard(defaultBoardDimI, defaultBoardDimJ)
-    }
+  let board = switch canvasBoards->Belt.Array.getBy(entry => entry.id == currentCanvasId) {
+  | Some(entry) => entry.board
+  | None => makeBoard(defaultBoardDimI, defaultBoardDimJ)
+  }
   let zoom = currentCanvas.zoom
   let pan = currentCanvas.pan
   let isDotMask = currentCanvas.isDotMask
@@ -421,9 +422,7 @@ let make = () => {
   }
 
   let updateCanvasById = (targetId, updater) =>
-    setCanvases(prev =>
-      prev->Array.map(canvas => canvas.id == targetId ? updater(canvas) : canvas)
-    )
+    setCanvases(prev => prev->Array.map(canvas => canvas.id == targetId ? updater(canvas) : canvas))
 
   let updateCanvasBoardById = (targetId, updater) => modifyBoardEntry(targetId, updater)
 
