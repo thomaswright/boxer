@@ -706,48 +706,6 @@ function App(props) {
     boardDimJ,
     viewportCenter
   ]);
-  React.useEffect(() => {
-    if (savedBrushes.length === 0) {
-      if (selectedBrushId !== undefined) {
-        setSelectedBrushId(param => {});
-      }
-      
-    } else {
-      let hasSelection = Stdlib_Option.mapOr(selectedBrushId, false, selectedId => Belt_Array.some(savedBrushes, entry => entry.id === selectedId));
-      if (!hasSelection) {
-        let entry = savedBrushes[0];
-        if (entry !== undefined) {
-          setSelectedBrushId(param => entry.id);
-        }
-        
-      }
-      
-    }
-  }, [
-    savedBrushes,
-    selectedBrushId
-  ]);
-  React.useEffect(() => {
-    if (savedTileMasks.length === 0) {
-      if (selectedTileMaskId !== undefined) {
-        setSelectedTileMaskId(param => {});
-      }
-      
-    } else {
-      let hasSelection = Stdlib_Option.mapOr(selectedTileMaskId, false, selectedId => Belt_Array.some(savedTileMasks, entry => entry.id === selectedId));
-      if (!hasSelection) {
-        let entry = savedTileMasks[0];
-        if (entry !== undefined) {
-          setSelectedTileMaskId(param => entry.id);
-        }
-        
-      }
-      
-    }
-  }, [
-    savedTileMasks,
-    selectedTileMaskId
-  ]);
   let parsePositiveInt = value => {
     let parsed = Stdlib_Int.fromString(value, undefined);
     if (parsed !== undefined && parsed > 0) {

@@ -359,23 +359,21 @@ let make = () => {
     None
   }, (areBoardsLoaded, canvases, canvasBoards))
 
-  let selectedCanvas =
-    switch selectedCanvasId {
-    | Some(id) => canvases->Belt.Array.getBy(canvas => canvas.id == id)
-    | None => None
-    }
+  let selectedCanvas = switch selectedCanvasId {
+  | Some(id) => canvases->Belt.Array.getBy(canvas => canvas.id == id)
+  | None => None
+  }
 
-  let currentCanvas =
-    switch selectedCanvas {
-    | Some(canvas) => canvas
+  let currentCanvas = switch selectedCanvas {
+  | Some(canvas) => canvas
+  | None =>
+    switch canvases->Array.get(0) {
+    | Some(firstCanvas) => firstCanvas
     | None =>
-      switch canvases->Array.get(0) {
-      | Some(firstCanvas) => firstCanvas
-      | None =>
-        let (defaultCanvas, _) = makeDefaultCanvas()
-        defaultCanvas
-      }
+      let (defaultCanvas, _) = makeDefaultCanvas()
+      defaultCanvas
     }
+  }
 
   let currentCanvasId = currentCanvas.id
   let (includeExportDotMask, setIncludeExportDotMask) = React.useState(() =>
@@ -401,11 +399,10 @@ let make = () => {
         setSelectedCanvasId(_ => None)
       }
     } else {
-      let hasValidSelection =
-        switch selectedCanvasId {
-        | Some(id) => canvases->Belt.Array.some(canvas => canvas.id == id)
-        | None => false
-        }
+      let hasValidSelection = switch selectedCanvasId {
+      | Some(id) => canvases->Belt.Array.some(canvas => canvas.id == id)
+      | None => false
+      }
       if !hasValidSelection {
         switch canvases->Array.get(0) {
         | Some(firstCanvas) => setSelectedCanvasId(_ => Some(firstCanvas.id))
@@ -415,6 +412,7 @@ let make = () => {
     }
     None
   }, (canvases, selectedCanvasId))
+
   let board = switch canvasBoards->Belt.Array.getBy(entry => entry.id == currentCanvasId) {
   | Some(entry) => entry.board
   | None => makeBoard(defaultBoardDimI, defaultBoardDimJ)
@@ -606,47 +604,6 @@ let make = () => {
     }
     None
   }, (boardDimI, boardDimJ, viewportCenter))
-
-  React.useEffect2(() => {
-    if savedBrushes->Array.length == 0 {
-      if selectedBrushId != None {
-        setSelectedBrushId(_ => None)
-      }
-    } else {
-      let hasSelection =
-        selectedBrushId->Option.mapOr(false, selectedId =>
-          savedBrushes->Belt.Array.some(entry => entry.id == selectedId)
-        )
-      if !hasSelection {
-        switch savedBrushes->Array.get(0) {
-        | Some(entry) => setSelectedBrushId(_ => Some(entry.id))
-        | None => ()
-        }
-      }
-    }
-    None
-  }, (savedBrushes, selectedBrushId))
-
-  React.useEffect2(() => {
-    if savedTileMasks->Array.length == 0 {
-      if selectedTileMaskId != None {
-        setSelectedTileMaskId(_ => None)
-      }
-    } else {
-      let hasSelection =
-        selectedTileMaskId->Option.mapOr(false, selectedId =>
-          savedTileMasks->Belt.Array.some(entry => entry.id == selectedId)
-        )
-
-      if !hasSelection {
-        switch savedTileMasks->Array.get(0) {
-        | Some(entry) => setSelectedTileMaskId(_ => Some(entry.id))
-        | None => ()
-        }
-      }
-    }
-    None
-  }, (savedTileMasks, selectedTileMaskId))
 
   let parsePositiveInt = value =>
     switch value->Int.fromString {
@@ -873,11 +830,10 @@ let make = () => {
   }
 
   let handleSelectCanvas = canvasId => {
-    let isAlreadySelected =
-      switch selectedCanvasId {
-      | Some(id) => id == canvasId
-      | None => false
-      }
+    let isAlreadySelected = switch selectedCanvasId {
+    | Some(id) => id == canvasId
+    | None => false
+    }
     if !isAlreadySelected {
       setSelectedCanvasId(_ => Some(canvasId))
     }
