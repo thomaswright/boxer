@@ -20,7 +20,6 @@ let generateCanvasId = () => {
 }
 
 let makeCanvas = (
-  ~board,
   ~zoom,
   ~pan,
   ~isDotMask=false,
@@ -28,7 +27,6 @@ let makeCanvas = (
 ) => {
   {
     id: generateCanvasId(),
-    board,
     zoom,
     pan,
     isDotMask,
@@ -176,17 +174,19 @@ let make = () => {
     }
   }
 
+  let defaultBoardDimI = 12
+  let defaultBoardDimJ = 12
+
   let makeDefaultCanvas = () => {
-    let defaultDimI = 12
-    let defaultDimJ = 12
-    let defaultBoard = makeBoard(defaultDimI, defaultDimJ)
-    let (defaultZoom, defaultPan) = computeFitViewForDimensions(defaultDimI, defaultDimJ)
-    makeCanvas(~board=defaultBoard, ~zoom=defaultZoom, ~pan=defaultPan, ~isDotMask=false)
+    let defaultBoard = makeBoard(defaultBoardDimI, defaultBoardDimJ)
+    let (defaultZoom, defaultPan) = computeFitViewForDimensions(defaultBoardDimI, defaultBoardDimJ)
+    (makeCanvas(~zoom=defaultZoom, ~pan=defaultPan, ~isDotMask=false), defaultBoard)
   }
 
   // Persistent tool state
   let (brushMode, setBrushMode, _) = useLocalStorage("brush-mode", Color)
-  let (canvases, setCanvases, _) = useLocalStorage("canvases-v4", [])
+  let (canvases, setCanvases, _) = useLocalStorage("canvas-metadata-v1", [])
+  let (canvasBoards, setCanvasBoards, _) = useLocalStorage("canvas-boards-v1", [])
   let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage("selected-canvas-id", "")
   let (brush, setBrush, _) = useLocalStorage("brush", makeBrush(3, 3))
   let (savedBrushes, setSavedBrushes, _) = useLocalStorage("saved-brushes", defaultBrushes)
@@ -239,8 +239,9 @@ let make = () => {
   React.useEffect0(() => {
     if canvasCount == 0 {
       updateViewportCenter()
-      let defaultCanvas = makeDefaultCanvas()
+      let (defaultCanvas, defaultBoard) = makeDefaultCanvas()
       setCanvases(_ => [defaultCanvas])
+      setCanvasBoards(_ => [{id: defaultCanvas.id, board: defaultBoard}])
       setSelectedCanvasId(_ => defaultCanvas.id)
     }
     None
@@ -251,7 +252,9 @@ let make = () => {
   | None =>
     switch canvases->Array.get(0) {
     | Some(firstCanvas) => firstCanvas
-    | None => makeDefaultCanvas()
+    | None =>
+      let (defaultCanvas, _) = makeDefaultCanvas()
+      defaultCanvas
     }
   }
 
@@ -286,7 +289,11 @@ let make = () => {
     }
     None
   }, (canvases, selectedCanvasId))
-  let board = currentCanvas.board
+  let board =
+    switch canvasBoards->Belt.Array.getBy(entry => entry.id == currentCanvasId) {
+    | Some(entry) => entry.board
+    | None => makeBoard(defaultBoardDimI, defaultBoardDimJ)
+    }
   let zoom = currentCanvas.zoom
   let pan = currentCanvas.pan
   let isDotMask = currentCanvas.isDotMask
@@ -325,18 +332,29 @@ let make = () => {
 
   let updateCanvasById = (targetId, updater) =>
     setCanvases(prev =>
-      if prev->Array.length == 0 {
-        [updater(makeDefaultCanvas())]
-      } else {
-        prev->Array.map(canvas => canvas.id == targetId ? updater(canvas) : canvas)
-      }
+      prev->Array.map(canvas => canvas.id == targetId ? updater(canvas) : canvas)
     )
 
-  let setBoard = updater =>
-    updateCanvasById(currentCanvasIdRef.current, canvas => {
-      ...canvas,
-      board: updater(canvas.board),
+  let updateCanvasBoardById = (targetId, updater) =>
+    setCanvasBoards(prev => {
+      let updatedRef = ref(false)
+      let mapped =
+        prev->Array.map(entry =>
+          if entry.id == targetId {
+            updatedRef := true
+            {id: entry.id, board: updater(entry.board)}
+          } else {
+            entry
+          }
+        )
+      if updatedRef.contents {
+        mapped
+      } else {
+        mapped->Array.concat([{id: targetId, board: updater(makeBoard(defaultBoardDimI, defaultBoardDimJ))}])
+      }
     })
+
+  let setBoard = updater => updateCanvasBoardById(currentCanvasIdRef.current, updater)
 
   let setCanvasDotMask = updater =>
     updateCanvasById(currentCanvasIdRef.current, canvas => {
@@ -627,13 +645,13 @@ let make = () => {
     let newBoard = makeBoard(boardDimI, boardDimJ)
     let (fittedZoom, newPan) = computeFitViewForDimensions(boardDimI, boardDimJ)
     let newCanvas = makeCanvas(
-      ~board=newBoard,
       ~zoom=fittedZoom,
       ~pan=newPan,
       ~isDotMask=false,
       ~canvasBackgroundColor,
     )
     setCanvases(prev => prev->Array.concat([newCanvas]))
+    setCanvasBoards(prev => prev->Array.concat([{id: newCanvas.id, board: newBoard}]))
     setSelectedCanvasId(_ => newCanvas.id)
     zoomRef.current = fittedZoom
     panRef.current = newPan
@@ -667,6 +685,7 @@ let make = () => {
       }
 
       setCanvases(prev => prev->Belt.Array.keep(canvas => canvas.id != currentCanvasId))
+      setCanvasBoards(prev => prev->Belt.Array.keep(entry => entry.id != currentCanvasId))
 
       switch nextSelectionId {
       | Some(nextId) => setSelectedCanvasId(_ => nextId)
@@ -893,6 +912,7 @@ let make = () => {
 
       <CanvasThumbnails
         canvases
+        canvasBoards
         currentCanvasId
         canDeleteCanvas
         handleDeleteCanvas

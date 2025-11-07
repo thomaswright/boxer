@@ -2,14 +2,37 @@ import React from "react";
 import { hexToUint32 } from "./BoardColor.js";
 import { canvasBackgroundColor as defaultCanvasBackgroundColor } from "./Initials.res.mjs";
 
-const CANVASES_KEY = "canvases-v4";
-const CANVAS_STORAGE_VERSION = 1;
-const DEFERRED_KEYS = new Set([CANVASES_KEY]);
+const CANVAS_METADATA_KEY = "canvas-metadata-v1";
+const CANVAS_METADATA_VERSION = 1;
+const CANVAS_BOARDS_KEY = "canvas-boards-v1";
+const CANVAS_BOARDS_VERSION = 1;
+const DEFERRED_KEYS = new Set([CANVAS_BOARDS_KEY]);
 const FLUSH_DELAY_MS = 500;
 const pendingWrites = new Map();
+const SNAPSHOT_SOURCE_MEMORY = "memory";
+const SNAPSHOT_SOURCE_STORAGE = "storage";
+const snapshotCache = new Map();
 let flushHandlersRegistered = false;
 let persistencePaused = false;
 let listenersAttached = false;
+
+function createSnapshot(source, serializedValue, value) {
+  return { source, serialized: serializedValue, value };
+}
+
+function cacheSnapshot(key, snapshot) {
+  const previous = snapshotCache.get(key);
+  if (
+    previous &&
+    previous.source === snapshot.source &&
+    previous.serialized === snapshot.serialized &&
+    previous.value === snapshot.value
+  ) {
+    return previous;
+  }
+  snapshotCache.set(key, snapshot);
+  return snapshot;
+}
 
 function isTypedBoard(board) {
   return (
@@ -304,7 +327,7 @@ function decodeBoard(encoded) {
   return { rows, cols, data };
 }
 
-function serializeCanvas(canvas) {
+function serializeCanvasMetadata(canvas) {
   if (!canvas) {
     return canvas;
   }
@@ -313,7 +336,6 @@ function serializeCanvas(canvas) {
     Array.isArray(canvas.pan) && canvas.pan.length === 2
       ? [Number(canvas.pan[0]) || 0, Number(canvas.pan[1]) || 0]
       : [0, 0];
-  const boardValue = encodeBoard(canvas.board);
   const isDotMaskValue =
     typeof canvas.isDotMask === "boolean" ? canvas.isDotMask : false;
   const canvasBackgroundColorValue =
@@ -324,19 +346,17 @@ function serializeCanvas(canvas) {
     id: canvas.id,
     zoom: zoomValue,
     pan: panValue,
-    board: boardValue,
     isDotMask: isDotMaskValue,
     canvasBackgroundColor: canvasBackgroundColorValue,
   };
 }
 
-function deserializeCanvas(entry) {
+function deserializeCanvasMetadata(entry) {
   if (!entry) {
     return null;
   }
 
   const { id, zoom, pan } = entry;
-  const board = decodeBoard(entry.board);
   const isDotMask =
     typeof entry.isDotMask === "boolean"
       ? entry.isDotMask
@@ -352,46 +372,95 @@ function deserializeCanvas(entry) {
     id,
     zoom: typeof zoom === "number" ? zoom : 1,
     pan: Array.isArray(pan) && pan.length === 2 ? pan : [0, 0],
-    board,
     isDotMask,
     canvasBackgroundColor,
   };
 }
 
-function serializeCanvases(canvases) {
-  const payload = Array.isArray(canvases) ? canvases.map(serializeCanvas) : [];
+function serializeCanvasMetadatas(canvases) {
+  const payload = Array.isArray(canvases)
+    ? canvases.map(serializeCanvasMetadata)
+    : [];
   return JSON.stringify({
-    version: CANVAS_STORAGE_VERSION,
+    version: CANVAS_METADATA_VERSION,
     canvases: payload,
   });
 }
 
-function deserializeCanvases(rawValue, fallback) {
+function normalizeCanvasMetadataPayload(rawValue, fallback) {
   if (Array.isArray(rawValue)) {
-    return rawValue;
+    return rawValue.map(deserializeCanvasMetadata).filter(Boolean);
   }
   if (
     rawValue &&
     typeof rawValue === "object" &&
     Array.isArray(rawValue.canvases)
   ) {
-    return rawValue.canvases.map(deserializeCanvas).filter(Boolean);
+    return rawValue.canvases.map(deserializeCanvasMetadata).filter(Boolean);
+  }
+  return fallback;
+}
+
+function deserializeCanvasMetadatasSerialized(serializedValue, fallback) {
+  if (typeof serializedValue !== "string") {
+    return fallback;
   }
   try {
-    if (typeof rawValue !== "string") {
-      return fallback;
-    }
-    const parsed = JSON.parse(rawValue);
-
-    if (Array.isArray(parsed)) {
-      return parsed;
-    }
-
-    if (parsed && Array.isArray(parsed.canvases)) {
-      return parsed.canvases.map(deserializeCanvas).filter(Boolean);
-    }
-
+    const parsed = JSON.parse(serializedValue);
+    return normalizeCanvasMetadataPayload(parsed, fallback);
+  } catch (error) {
+    console.warn(error);
     return fallback;
+  }
+}
+
+function serializeCanvasBoardEntry(entry) {
+  if (!entry || typeof entry.id !== "string") {
+    return null;
+  }
+  return {
+    id: entry.id,
+    board: encodeBoard(entry.board),
+  };
+}
+
+function deserializeCanvasBoardEntry(entry) {
+  if (!entry || typeof entry.id !== "string") {
+    return null;
+  }
+  return {
+    id: entry.id,
+    board: decodeBoard(entry.board),
+  };
+}
+
+function serializeCanvasBoards(entries) {
+  const payload = Array.isArray(entries)
+    ? entries.map(serializeCanvasBoardEntry).filter(Boolean)
+    : [];
+  return JSON.stringify({
+    version: CANVAS_BOARDS_VERSION,
+    boards: payload,
+  });
+}
+
+function normalizeCanvasBoardsPayload(rawValue, fallback) {
+  if (Array.isArray(rawValue)) {
+    return rawValue.map(deserializeCanvasBoardEntry).filter(Boolean);
+  }
+  if (rawValue && typeof rawValue === "object" && Array.isArray(rawValue.boards)) {
+    return rawValue.boards.map(deserializeCanvasBoardEntry).filter(Boolean);
+  }
+  return fallback;
+}
+
+function deserializeCanvasBoardsSerialized(serializedValue, fallback) {
+  if (typeof serializedValue !== "string") {
+    return fallback;
+  }
+  try {
+    const parsed = JSON.parse(serializedValue);
+    return normalizeCanvasBoardsPayload(parsed, fallback);
   } catch (error) {
     console.warn(error);
     return fallback;
@@ -399,31 +468,61 @@ function deserializeCanvases(rawValue, fallback) {
 }
 
 function serializeForKey(key, value) {
-  if (key === CANVASES_KEY) {
-    return serializeCanvases(value);
+  if (key === CANVAS_METADATA_KEY) {
+    return serializeCanvasMetadatas(value);
+  }
+  if (key === CANVAS_BOARDS_KEY) {
+    return serializeCanvasBoards(value);
   }
   return JSON.stringify(value);
 }
 
-function deserializeForKey(key, rawValue, fallback) {
-  if (rawValue === null || rawValue === undefined) {
+function deserializeStoredValue(key, serializedValue, fallback) {
+  if (serializedValue === null || serializedValue === undefined) {
     return fallback;
   }
 
-  if (key === CANVASES_KEY) {
-    return deserializeCanvases(rawValue, fallback);
+  if (key === CANVAS_METADATA_KEY) {
+    return deserializeCanvasMetadatasSerialized(serializedValue, fallback);
   }
 
-  if (typeof rawValue !== "string") {
-    return rawValue;
+  if (key === CANVAS_BOARDS_KEY) {
+    return deserializeCanvasBoardsSerialized(serializedValue, fallback);
+  }
+
+  if (typeof serializedValue !== "string") {
+    return fallback;
   }
 
   try {
-    return JSON.parse(rawValue);
+    return JSON.parse(serializedValue);
   } catch (error) {
     console.warn(error);
     return fallback;
   }
+}
+
+function resolveSnapshotValue(key, snapshot, fallback) {
+  if (!snapshot) {
+    return fallback;
+  }
+  if (
+    snapshot.source === SNAPSHOT_SOURCE_MEMORY &&
+    snapshot.value !== undefined
+  ) {
+    return snapshot.value;
+  }
+  return deserializeStoredValue(key, snapshot.serialized, fallback);
+}
+
+function snapshotHasPersistedValue(snapshot) {
+  if (!snapshot) {
+    return false;
+  }
+  if (snapshot.source === SNAPSHOT_SOURCE_MEMORY) {
+    return true;
+  }
+  return snapshot.serialized !== null && snapshot.serialized !== undefined;
 }
 
 function isQuotaExceededError(error) {
@@ -464,18 +563,23 @@ const removeLocalStorageItem = (key) => {
   dispatchStorageEvent(key, null);
 };
 
-const getLocalStorageItem = (key) => {
+const getLocalStorageSnapshot = (key) => {
   const pending = getPendingEntry(key);
   if (pending) {
-    if (pending.serializedValue != null) {
-      return pending.serializedValue;
+    if (pending.serializedValue == null) {
+      pending.serializedValue = pending.serialize();
     }
-    return pending.value;
+    return cacheSnapshot(
+      key,
+      createSnapshot(SNAPSHOT_SOURCE_MEMORY, pending.serializedValue, pending.value)
+    );
   }
-  if (typeof window === "undefined") {
-    return null;
-  }
-  return window.localStorage.getItem(key);
+  const serialized =
+    typeof window === "undefined" ? null : window.localStorage.getItem(key);
+  return cacheSnapshot(
+    key,
+    createSnapshot(SNAPSHOT_SOURCE_STORAGE, serialized, null)
+  );
 };
 
 const useLocalStorageSubscribe = (callback) => {
@@ -511,14 +615,11 @@ export function setLocalStoragePersistencePaused(paused) {
 }
 
 export default function useLocalStorage(key, initialValue) {
-  const getSnapshot = React.useCallback(() => getLocalStorageItem(key), [key]);
+  const getSnapshot = React.useCallback(() => getLocalStorageSnapshot(key), [key]);
 
   const getCurrentValue = React.useCallback(() => {
-    const raw = getLocalStorageItem(key);
-    if (raw === null || raw === undefined) {
-      return initialValue;
-    }
-    return deserializeForKey(key, raw, initialValue);
+    const snapshot = getLocalStorageSnapshot(key);
+    return resolveSnapshotValue(key, snapshot, initialValue);
   }, [key, initialValue]);
 
   const store = React.useSyncExternalStore(
@@ -531,16 +632,13 @@ export default function useLocalStorage(key, initialValue) {
     if (store === null || store === undefined) {
       return initialValue;
     }
-    return deserializeForKey(key, store, initialValue);
+    return resolveSnapshotValue(key, store, initialValue);
   }, [store, key, initialValue]);
 
   const setState = React.useCallback(
     (updater) => {
-      const rawPrevious = getSnapshot();
-      const previousValue =
-        rawPrevious === null || rawPrevious === undefined
-          ? initialValue
-          : deserializeForKey(key, rawPrevious, initialValue);
+      const previousSnapshot = getSnapshot();
+      const previousValue = resolveSnapshotValue(key, previousSnapshot, initialValue);
 
       const nextState =
         typeof updater === "function" ? updater(previousValue) : updater;
@@ -566,10 +664,8 @@ export default function useLocalStorage(key, initialValue) {
   );
 
   React.useEffect(() => {
-    if (
-      getLocalStorageItem(key) === null &&
-      typeof initialValue !== "undefined"
-    ) {
+    const snapshot = getLocalStorageSnapshot(key);
+    if (!snapshotHasPersistedValue(snapshot) && typeof initialValue !== "undefined") {
       try {
         setLocalStorageItem(key, initialValue);
       } catch (error) {
@@ -588,7 +684,7 @@ export default function useLocalStorage(key, initialValue) {
 }
 
 export function useLocalStorageListener(key, defaultValue) {
-  const getSnapshot = React.useCallback(() => getLocalStorageItem(key), [key]);
+  const getSnapshot = React.useCallback(() => getLocalStorageSnapshot(key), [key]);
 
   const store = React.useSyncExternalStore(
     useLocalStorageSubscribe,
@@ -600,7 +696,7 @@ export function useLocalStorageListener(key, defaultValue) {
     if (store === null || store === undefined) {
       return defaultValue;
     }
-    return deserializeForKey(key, store, defaultValue);
+    return resolveSnapshotValue(key, store, defaultValue);
   }, [store, key, defaultValue]);
 
   return currentValue;

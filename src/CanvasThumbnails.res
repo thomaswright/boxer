@@ -2,7 +2,8 @@ open Types
 
 @react.component
 let make = (
-  ~canvases,
+  ~canvases: array<Types.canvasState>,
+  ~canvasBoards: array<Types.canvasBoardState>,
   ~currentCanvasId,
   ~canDeleteCanvas,
   ~handleDeleteCanvas,
@@ -10,22 +11,31 @@ let make = (
   ~handleSelectCanvas,
   ~isMouseDown,
 ) => {
+  let findCanvasMetadata = id =>
+    canvases->Belt.Array.getBy(canvas => canvas.id == id)->Option.getOr({
+      id,
+      zoom: 1.,
+      pan: (0., 0.),
+      isDotMask: false,
+      canvasBackgroundColor: Initials.canvasBackgroundColor,
+    })
+
   <div className="flex flex-row items-start gap-3 overflow-x-scroll p-2 pl-0">
-    {canvases
-    ->Array.map(canvas => {
-      let canvasBoard = canvas.board
-      let isSelectedCanvas = canvas.id == currentCanvasId
+    {canvasBoards
+    ->Array.map(({id, board}) => {
+      let _canvas = findCanvasMetadata(id)
+      let isSelectedCanvas = id == currentCanvasId
       <div
-        key={canvas.id}
+        key={id}
         className={[
           "relative flex-shrink-0 border-2 w-fit h-fit",
           isSelectedCanvas ? "border-blue-500" : "border-gray-200",
         ]->Array.join(" ")}>
         <button
-          onClick={_ => handleSelectCanvas(canvas.id)}
+          onClick={_ => handleSelectCanvas(id)}
           className={[" w-fit h-fit block"]->Array.join(" ")}>
           <div className="h-16 w-16 rounded-xs overflow-hidden">
-            <BoardPreview board={canvasBoard} emptyColor={None} isMouseDown />
+            <BoardPreview board={board} emptyColor={None} isMouseDown />
           </div>
         </button>
         {isSelectedCanvas

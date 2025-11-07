@@ -1,11 +1,14 @@
 type board = Board.t
 type canvasState = {
   id: string,
-  board: board,
   zoom: float,
   pan: (float, float),
   isDotMask: bool,
   canvasBackgroundColor: string,
+}
+type canvasBoardState = {
+  id: string,
+  board: board,
 }
 type exportOptions = {
   includeBackground: bool,
