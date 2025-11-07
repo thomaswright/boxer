@@ -18,9 +18,6 @@ external saveBoardEntry: (string, board) => Js.Promise.t<unit> = "saveBoard"
 @module("./boardStorage.js")
 external deleteBoardEntry: string => Js.Promise.t<unit> = "deleteBoard"
 
-@module("./boardStorage.js")
-external loadLegacyBoardsFromLocalStorage: unit => array<canvasBoardState> = "loadLegacyBoardsFromLocalStorage"
-
 let makeBoard = (i, j) => Board.make(i, j)
 let makeBrush = (i, j) => Array2D.make(i, j, () => true)
 let makeTileMask = (i, j) => Array2D.make(i, j, () => true)
@@ -309,8 +306,6 @@ let make = () => {
     ignore(
       Js.Promise.then_(entries => {
         setCanvasBoards(_ => entries)
-        loadLegacyBoardsFromLocalStorage()
-        ->Array.forEach(entry => storeBoardValue(entry.id, entry.board))
         setBoardsLoaded(_ => true)
         Js.Promise.resolve(())
       }, loadAllBoards())

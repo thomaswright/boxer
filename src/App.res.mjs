@@ -405,7 +405,6 @@ function App(props) {
   React.useEffect(() => {
     Js_promise.then_(entries => {
       setCanvasBoards(param => entries);
-      BoardStorageJs.loadLegacyBoardsFromLocalStorage().forEach(entry => storeBoardValue(entry.id, entry.board));
       setBoardsLoaded(param => true);
       return Promise.resolve();
     }, BoardStorageJs.loadAllBoards());
