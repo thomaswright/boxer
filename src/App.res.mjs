@@ -295,7 +295,7 @@ function App(props) {
   let match$8 = UseLocalStorageJs("selected-tile-mask-id", undefined);
   let setSelectedTileMaskId = match$8[1];
   let selectedTileMaskId = match$8[0];
-  let match$9 = UseLocalStorageJs("selected-canvas-id", "");
+  let match$9 = UseLocalStorageJs("selected-canvas-id", undefined);
   let setSelectedCanvasId = match$9[1];
   let selectedCanvasId = match$9[0];
   let match$10 = UseLocalStorageJs("my-color", Initials.myColor);
@@ -448,10 +448,10 @@ function App(props) {
     canvases,
     canvasBoards
   ]);
-  let canvas = Belt_Array.getBy(canvases, canvas => canvas.id === selectedCanvasId);
+  let selectedCanvas = selectedCanvasId !== undefined ? Belt_Array.getBy(canvases, canvas => canvas.id === selectedCanvasId) : undefined;
   let currentCanvas;
-  if (canvas !== undefined) {
-    currentCanvas = canvas;
+  if (selectedCanvas !== undefined) {
+    currentCanvas = selectedCanvas;
   } else {
     let firstCanvas = canvases[0];
     currentCanvas = firstCanvas !== undefined ? firstCanvas : makeDefaultCanvas()[0];
@@ -472,15 +472,22 @@ function App(props) {
   let currentCanvasIdRef = React.useRef(currentCanvasId);
   currentCanvasIdRef.current = currentCanvasId;
   React.useEffect(() => {
-    let hasValidSelection = Belt_Array.some(canvases, canvas => canvas.id === selectedCanvasId);
-    if (!hasValidSelection) {
-      let firstCanvas = canvases[0];
-      if (firstCanvas !== undefined && firstCanvas.id !== selectedCanvasId) {
-        setSelectedCanvasId(param => firstCanvas.id);
+    if (canvases.length === 0) {
+      if (selectedCanvasId !== undefined) {
+        setSelectedCanvasId(param => {});
+      }
+      
+    } else {
+      let hasValidSelection = selectedCanvasId !== undefined ? Belt_Array.some(canvases, canvas => canvas.id === selectedCanvasId) : false;
+      if (!hasValidSelection) {
+        let firstCanvas = canvases[0];
+        if (firstCanvas !== undefined) {
+          setSelectedCanvasId(param => firstCanvas.id);
+        }
+        
       }
       
     }
-    
   }, [
     canvases,
     selectedCanvasId
@@ -706,8 +713,7 @@ function App(props) {
       }
       
     } else {
-      let selectedId = Stdlib_Option.getOr(selectedBrushId, "");
-      let hasSelection = Belt_Array.some(savedBrushes, entry => entry.id === selectedId);
+      let hasSelection = Stdlib_Option.mapOr(selectedBrushId, false, selectedId => Belt_Array.some(savedBrushes, entry => entry.id === selectedId));
       if (!hasSelection) {
         let entry = savedBrushes[0];
         if (entry !== undefined) {
@@ -728,8 +734,7 @@ function App(props) {
       }
       
     } else {
-      let selectedId = Stdlib_Option.getOr(selectedTileMaskId, "");
-      let hasSelection = Belt_Array.some(savedTileMasks, entry => entry.id === selectedId);
+      let hasSelection = Stdlib_Option.mapOr(selectedTileMaskId, false, selectedId => Belt_Array.some(savedTileMasks, entry => entry.id === selectedId));
       if (!hasSelection) {
         let entry = savedTileMasks[0];
         if (entry !== undefined) {
@@ -944,14 +949,13 @@ function App(props) {
     setCanvases(prev => Belt_Array.keep(prev, canvas => canvas.id !== currentCanvasId));
     setCanvasBoards(prev => Belt_Array.keep(prev, entry => entry.id !== currentCanvasId));
     BoardStorageJs.deleteBoard(currentCanvasId);
-    if (nextSelectionId !== undefined) {
-      setSelectedCanvasId(param => nextSelectionId);
-    }
+    setSelectedCanvasId(param => nextSelectionId);
     clearHoverRef.current();
     setCursorOverlayOff(param => true);
   };
   let handleSelectCanvas = canvasId => {
-    if (canvasId !== selectedCanvasId) {
+    let isAlreadySelected = selectedCanvasId !== undefined ? selectedCanvasId === canvasId : false;
+    if (!isAlreadySelected) {
       setSelectedCanvasId(param => canvasId);
     }
     clearHoverRef.current();

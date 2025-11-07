@@ -234,7 +234,7 @@ let make = () => {
     "selected-tile-mask-id",
     None,
   )
-  let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage("selected-canvas-id", "")
+  let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage("selected-canvas-id", None)
   let (myColor, setMyColor, _) = useLocalStorage("my-color", Initials.myColor)
 
   // Persistent UI Selection
@@ -341,7 +341,7 @@ let make = () => {
       let (defaultCanvas, defaultBoard) = makeDefaultCanvas()
       setCanvases(_ => [defaultCanvas])
       storeBoardValue(defaultCanvas.id, defaultBoard)
-      setSelectedCanvasId(_ => defaultCanvas.id)
+      setSelectedCanvasId(_ => Some(defaultCanvas.id))
     }
     None
   }, (areBoardsLoaded, canvasCount))
@@ -359,16 +359,23 @@ let make = () => {
     None
   }, (areBoardsLoaded, canvases, canvasBoards))
 
-  let currentCanvas = switch canvases->Belt.Array.getBy(canvas => canvas.id == selectedCanvasId) {
-  | Some(canvas) => canvas
-  | None =>
-    switch canvases->Array.get(0) {
-    | Some(firstCanvas) => firstCanvas
-    | None =>
-      let (defaultCanvas, _) = makeDefaultCanvas()
-      defaultCanvas
+  let selectedCanvas =
+    switch selectedCanvasId {
+    | Some(id) => canvases->Belt.Array.getBy(canvas => canvas.id == id)
+    | None => None
     }
-  }
+
+  let currentCanvas =
+    switch selectedCanvas {
+    | Some(canvas) => canvas
+    | None =>
+      switch canvases->Array.get(0) {
+      | Some(firstCanvas) => firstCanvas
+      | None =>
+        let (defaultCanvas, _) = makeDefaultCanvas()
+        defaultCanvas
+      }
+    }
 
   let currentCanvasId = currentCanvas.id
   let (includeExportDotMask, setIncludeExportDotMask) = React.useState(() =>
@@ -389,14 +396,21 @@ let make = () => {
   currentCanvasIdRef.current = currentCanvasId
 
   React.useEffect2(() => {
-    let hasValidSelection = canvases->Belt.Array.some(canvas => canvas.id == selectedCanvasId)
-    if !hasValidSelection {
-      switch canvases->Array.get(0) {
-      | Some(firstCanvas) =>
-        if firstCanvas.id != selectedCanvasId {
-          setSelectedCanvasId(_ => firstCanvas.id)
+    if canvases->Array.length == 0 {
+      if selectedCanvasId != None {
+        setSelectedCanvasId(_ => None)
+      }
+    } else {
+      let hasValidSelection =
+        switch selectedCanvasId {
+        | Some(id) => canvases->Belt.Array.some(canvas => canvas.id == id)
+        | None => false
         }
-      | None => ()
+      if !hasValidSelection {
+        switch canvases->Array.get(0) {
+        | Some(firstCanvas) => setSelectedCanvasId(_ => Some(firstCanvas.id))
+        | None => ()
+        }
       }
     }
     None
@@ -816,7 +830,7 @@ let make = () => {
     )
     setCanvases(prev => prev->Array.concat([newCanvas]))
     storeBoardValue(newCanvas.id, newBoard)
-    setSelectedCanvasId(_ => newCanvas.id)
+    setSelectedCanvasId(_ => Some(newCanvas.id))
     zoomRef.current = fittedZoom
     panRef.current = newPan
     clearHoverRef.current()
@@ -852,18 +866,20 @@ let make = () => {
       setCanvasBoards(prev => prev->Belt.Array.keep(entry => entry.id != currentCanvasId))
       removePersistedBoard(currentCanvasId)
 
-      switch nextSelectionId {
-      | Some(nextId) => setSelectedCanvasId(_ => nextId)
-      | None => ()
-      }
+      setSelectedCanvasId(_ => nextSelectionId)
       clearHoverRef.current()
       setCursorOverlayOff(_ => true)
     }
   }
 
   let handleSelectCanvas = canvasId => {
-    if canvasId != selectedCanvasId {
-      setSelectedCanvasId(_ => canvasId)
+    let isAlreadySelected =
+      switch selectedCanvasId {
+      | Some(id) => id == canvasId
+      | None => false
+      }
+    if !isAlreadySelected {
+      setSelectedCanvasId(_ => Some(canvasId))
     }
     clearHoverRef.current()
     setCursorOverlayOff(_ => true)
