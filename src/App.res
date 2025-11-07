@@ -9,6 +9,18 @@ external useLocalStorage: (string, 'a) => ('a, ('a => 'a) => unit, unit => 'a) =
 @module("./useLocalStorage.js")
 external setLocalStoragePersistencePaused: bool => unit = "setLocalStoragePersistencePaused"
 
+@module("./boardStorage.js")
+external loadAllBoards: unit => Js.Promise.t<array<canvasBoardState>> = "loadAllBoards"
+
+@module("./boardStorage.js")
+external saveBoardEntry: (string, board) => Js.Promise.t<unit> = "saveBoard"
+
+@module("./boardStorage.js")
+external deleteBoardEntry: string => Js.Promise.t<unit> = "deleteBoard"
+
+@module("./boardStorage.js")
+external loadLegacyBoardsFromLocalStorage: unit => array<canvasBoardState> = "loadLegacyBoardsFromLocalStorage"
+
 let makeBoard = (i, j) => Board.make(i, j)
 let makeBrush = (i, j) => Array2D.make(i, j, () => true)
 let makeTileMask = (i, j) => Array2D.make(i, j, () => true)
@@ -64,6 +76,8 @@ let useIsMouseDown = () => {
 
   isMouseDown
 }
+
+let runBoardStoragePromise = promise => ignore(promise)
 
 let _isLight = color => {
   let (_, _, l) = Texel.convert(color->Texel.hexToRgb, Texel.srgb, Texel.okhsl)
@@ -186,7 +200,9 @@ let make = () => {
   // Persistent tool state
   let (brushMode, setBrushMode, _) = useLocalStorage("brush-mode", Color)
   let (canvases, setCanvases, _) = useLocalStorage("canvas-metadata-v1", [])
-  let (canvasBoards, setCanvasBoards, _) = useLocalStorage("canvas-boards-v1", [])
+  let (canvasBoards, setCanvasBoards) =
+    React.useState((): array<Types.canvasBoardState> => [])
+  let (areBoardsLoaded, setBoardsLoaded) = React.useState(() => false)
   let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage("selected-canvas-id", "")
   let (brush, setBrush, _) = useLocalStorage("brush", makeBrush(3, 3))
   let (savedBrushes, setSavedBrushes, _) = useLocalStorage("saved-brushes", defaultBrushes)
@@ -236,16 +252,95 @@ let make = () => {
   // Canvas selection & derived state
   let canvasCount = canvases->Array.length
 
+  let persistBoardValue = (id, boardValue) =>
+    runBoardStoragePromise(saveBoardEntry(id, boardValue))
+
+  let removePersistedBoard = id => runBoardStoragePromise(deleteBoardEntry(id))
+
+  let storeBoardValue = (id, boardValue) => {
+    setCanvasBoards(prev => {
+      let replaced = ref(false)
+      let next =
+        prev->Array.map(entry =>
+          if entry.id == id {
+            replaced := true
+            {id: entry.id, board: boardValue}
+          } else {
+            entry
+          }
+        )
+      if replaced.contents {
+        next
+      } else {
+        next->Array.concat([{id, board: boardValue}])
+      }
+    })
+    persistBoardValue(id, boardValue)
+  }
+
+  let modifyBoardEntry = (id, updater) => {
+    let updatedBoardRef = ref(None)
+    setCanvasBoards(prev => {
+      let next =
+        prev->Array.map(entry =>
+          if entry.id == id {
+            let nextBoard = updater(entry.board)
+            updatedBoardRef := Some(nextBoard)
+            {id: entry.id, board: nextBoard}
+          } else {
+            entry
+          }
+        )
+      switch updatedBoardRef.contents {
+      | Some(_) => next
+      | None =>
+        let fallback = updater(makeBoard(defaultBoardDimI, defaultBoardDimJ))
+        updatedBoardRef := Some(fallback)
+        next->Array.concat([{id, board: fallback}])
+      }
+    })
+    switch updatedBoardRef.contents {
+    | Some(boardValue) => persistBoardValue(id, boardValue)
+    | None => ()
+    }
+  }
+
   React.useEffect0(() => {
-    if canvasCount == 0 {
+    ignore(
+      Js.Promise.then_(entries => {
+        setCanvasBoards(_ => entries)
+        loadLegacyBoardsFromLocalStorage()
+        ->Array.forEach(entry => storeBoardValue(entry.id, entry.board))
+        setBoardsLoaded(_ => true)
+        Js.Promise.resolve(())
+      }, loadAllBoards())
+    )
+    None
+  })
+
+  React.useEffect2(() => {
+    if areBoardsLoaded && canvasCount == 0 {
       updateViewportCenter()
       let (defaultCanvas, defaultBoard) = makeDefaultCanvas()
       setCanvases(_ => [defaultCanvas])
-      setCanvasBoards(_ => [{id: defaultCanvas.id, board: defaultBoard}])
+      storeBoardValue(defaultCanvas.id, defaultBoard)
       setSelectedCanvasId(_ => defaultCanvas.id)
     }
     None
-  })
+  }, (areBoardsLoaded, canvasCount))
+
+  React.useEffect3(() => {
+    if areBoardsLoaded {
+      canvases->Array.forEach(canvas => {
+        let hasBoard = canvasBoards->Belt.Array.some(entry => entry.id == canvas.id)
+        if !hasBoard {
+          let fallbackBoard = makeBoard(defaultBoardDimI, defaultBoardDimJ)
+          storeBoardValue(canvas.id, fallbackBoard)
+        }
+      })
+    }
+    None
+  }, (areBoardsLoaded, canvases, canvasBoards))
 
   let currentCanvas = switch canvases->Belt.Array.getBy(canvas => canvas.id == selectedCanvasId) {
   | Some(canvas) => canvas
@@ -335,24 +430,7 @@ let make = () => {
       prev->Array.map(canvas => canvas.id == targetId ? updater(canvas) : canvas)
     )
 
-  let updateCanvasBoardById = (targetId, updater) =>
-    setCanvasBoards(prev => {
-      let updatedRef = ref(false)
-      let mapped =
-        prev->Array.map(entry =>
-          if entry.id == targetId {
-            updatedRef := true
-            {id: entry.id, board: updater(entry.board)}
-          } else {
-            entry
-          }
-        )
-      if updatedRef.contents {
-        mapped
-      } else {
-        mapped->Array.concat([{id: targetId, board: updater(makeBoard(defaultBoardDimI, defaultBoardDimJ))}])
-      }
-    })
+  let updateCanvasBoardById = (targetId, updater) => modifyBoardEntry(targetId, updater)
 
   let setBoard = updater => updateCanvasBoardById(currentCanvasIdRef.current, updater)
 
@@ -651,7 +729,7 @@ let make = () => {
       ~canvasBackgroundColor,
     )
     setCanvases(prev => prev->Array.concat([newCanvas]))
-    setCanvasBoards(prev => prev->Array.concat([{id: newCanvas.id, board: newBoard}]))
+    storeBoardValue(newCanvas.id, newBoard)
     setSelectedCanvasId(_ => newCanvas.id)
     zoomRef.current = fittedZoom
     panRef.current = newPan
@@ -686,6 +764,7 @@ let make = () => {
 
       setCanvases(prev => prev->Belt.Array.keep(canvas => canvas.id != currentCanvasId))
       setCanvasBoards(prev => prev->Belt.Array.keep(entry => entry.id != currentCanvasId))
+      removePersistedBoard(currentCanvasId)
 
       switch nextSelectionId {
       | Some(nextId) => setSelectedCanvasId(_ => nextId)
@@ -843,133 +922,139 @@ let make = () => {
       }
     })
 
-  <div className=" flex flex-row h-dvh overflow-x-hidden">
-    <div className="flex flex-col flex-none overflow-x-hidden divide-y divide-gray-300">
-      <ZoomControl zoomOut zoomIn centerCanvas fitCanvasToViewport zoomPercent />
-
-      <div className="flex flex-row gap-2 h-full flex-none p-2">
-        <SavedBrushesPanel
-          brush
-          setBrush
-          savedBrushes
-          handleAddBrush
-          handleDeleteSelectedBrush
-          canDeleteSelectedBrush
-          canSaveBrush={boardDimI <= 32 && boardDimJ <= 32}
-        />
-        <SavedTileMasksPanel
-          setTileMask
-          savedTileMasks
-          selectedTileMaskIndex
-          setSelectedTileMaskIndex
-          handleAddTileMask
-          handleDeleteSelectedTileMask
-          canDeleteSelectedTileMask
-          canSaveTileMask={boardDimI <= 32 && boardDimJ <= 32}
-        />
-      </div>
+  if !areBoardsLoaded {
+    <div className="flex h-dvh items-center justify-center text-sm text-gray-500">
+      {React.string("Loading canvases…")}
     </div>
+  } else {
+    <div className=" flex flex-row h-dvh overflow-x-hidden">
+      <div className="flex flex-col flex-none overflow-x-hidden divide-y divide-gray-300">
+        <ZoomControl zoomOut zoomIn centerCanvas fitCanvasToViewport zoomPercent />
 
-    <div className="flex flex-col flex-1 overflow-x-hidden">
-      <div className={"flex-1 pt-2"}>
-        <CanvasViewport
-          canvasContainerRef
-          board
-          boardDimI
-          boardDimJ
-          transformValue
-          zoom
-          pan
-          cursorOverlayOff
-          setCursorOverlayOff
+        <div className="flex flex-row gap-2 h-full flex-none p-2">
+          <SavedBrushesPanel
+            brush
+            setBrush
+            savedBrushes
+            handleAddBrush
+            handleDeleteSelectedBrush
+            canDeleteSelectedBrush
+            canSaveBrush={boardDimI <= 32 && boardDimJ <= 32}
+          />
+          <SavedTileMasksPanel
+            setTileMask
+            savedTileMasks
+            selectedTileMaskIndex
+            setSelectedTileMaskIndex
+            handleAddTileMask
+            handleDeleteSelectedTileMask
+            canDeleteSelectedTileMask
+            canSaveTileMask={boardDimI <= 32 && boardDimJ <= 32}
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col flex-1 overflow-x-hidden">
+        <div className={"flex-1 pt-2"}>
+          <CanvasViewport
+            canvasContainerRef
+            board
+            boardDimI
+            boardDimJ
+            transformValue
+            zoom
+            pan
+            cursorOverlayOff
+            setCursorOverlayOff
+            isMouseDown
+            applyBrush
+            handlePickColor
+            setHoveredPickColor
+            isPickingColor
+            showCursorOverlay
+            overlayMode
+            gridMode
+            canvasBackgroundColor
+            gridLineColor
+            overlayColor=myColor
+            checkeredPrimaryColor
+            checkeredSecondaryColor
+            viewportBackgroundColor
+            isSilhouette
+            clearHoverRef
+            brush
+            brushDimI
+            brushDimJ
+            brushCenterDimI
+            brushCenterDimJ
+            tileMask
+            tileMaskDimI
+            tileMaskDimJ
+            isDotMask
+          />
+        </div>
+
+        <CanvasThumbnails
+          canvases
+          canvasBoards
+          currentCanvasId
+          canDeleteCanvas
+          handleDeleteCanvas
+          handleAddCanvas
+          handleSelectCanvas
           isMouseDown
-          applyBrush
-          handlePickColor
-          setHoveredPickColor
-          isPickingColor
-          showCursorOverlay
-          overlayMode
-          gridMode
-          canvasBackgroundColor
-          gridLineColor
-          overlayColor=myColor
-          checkeredPrimaryColor
-          checkeredSecondaryColor
-          viewportBackgroundColor
-          isSilhouette
-          clearHoverRef
-          brush
-          brushDimI
-          brushDimJ
-          brushCenterDimI
-          brushCenterDimJ
-          tileMask
-          tileMaskDimI
-          tileMaskDimJ
-          isDotMask
         />
       </div>
-
-      <CanvasThumbnails
-        canvases
-        canvasBoards
-        currentCanvasId
-        canDeleteCanvas
-        handleDeleteCanvas
-        handleAddCanvas
-        handleSelectCanvas
-        isMouseDown
-      />
-    </div>
-    <div className=" h-full overflow-x-visible flex flex-col w-48 py-2">
-      <ColorControl
-        brushMode
-        setBrushMode
-        myColor
-        setMyColor
-        hoveredPickColor
-        isPickingColor
-        onStartColorPick
-        canvasBackgroundColor
-      />
-      <div className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"}>
-        <ColorsUsed myColor board onSelectUsedColor onReplaceUsedColor isMouseDown />
-
-        <BrushOverlayControl overlayMode setOverlayMode />
-        <CanvasGridControl gridMode setGridMode />
-
-        <CanvasColorsControl
+      <div className=" h-full overflow-x-visible flex flex-col w-48 py-2">
+        <ColorControl
+          brushMode
+          setBrushMode
           myColor
+          setMyColor
+          hoveredPickColor
+          isPickingColor
+          onStartColorPick
           canvasBackgroundColor
-          setCanvasBackgroundColor
-          viewportBackgroundColor
-          setViewportBackgroundColor
         />
-        <SilhouetteControl isSilhouette setIsSilhouette />
-        <DotModeControl isDotMask setCanvasDotMask />
+        <div className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"}>
+          <ColorsUsed myColor board onSelectUsedColor onReplaceUsedColor isMouseDown />
 
-        <CanvasSizeControl
-          resizeRowsInput
-          setResizeRowsInput
-          resizeColsInput
-          setResizeColsInput
-          resizeMode
-          setResizeMode
-          canSubmitResize
-          handleResizeSubmit
-        />
+          <BrushOverlayControl overlayMode setOverlayMode />
+          <CanvasGridControl gridMode setGridMode />
 
-        <ExportControl
-          exportScaleInput
-          setExportScaleInput
-          includeExportBackground
-          setIncludeExportBackground
-          includeExportDotMask
-          setIncludeExportDotMask
-          canExport
-          onExport={handleExportPng}
-        />
+          <CanvasColorsControl
+            myColor
+            canvasBackgroundColor
+            setCanvasBackgroundColor
+            viewportBackgroundColor
+            setViewportBackgroundColor
+          />
+          <SilhouetteControl isSilhouette setIsSilhouette />
+          <DotModeControl isDotMask setCanvasDotMask />
+
+          <CanvasSizeControl
+            resizeRowsInput
+            setResizeRowsInput
+            resizeColsInput
+            setResizeColsInput
+            resizeMode
+            setResizeMode
+            canSubmitResize
+            handleResizeSubmit
+          />
+
+          <ExportControl
+            exportScaleInput
+            setExportScaleInput
+            includeExportBackground
+            setIncludeExportBackground
+            includeExportDotMask
+            setIncludeExportDotMask
+            canExport
+            onExport={handleExportPng}
+          />
+        </div>
       </div>
     </div>
-  </div>
+  }
 }

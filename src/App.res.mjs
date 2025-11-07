@@ -7,6 +7,7 @@ import * as Initials from "./Initials.res.mjs";
 import * as Belt_Array from "rescript/lib/es6/Belt_Array.js";
 import * as Belt_Float from "rescript/lib/es6/Belt_Float.js";
 import * as ColorsUsed from "./ColorsUsed.res.mjs";
+import * as Js_promise from "rescript/lib/es6/Js_promise.js";
 import * as Stdlib_Int from "rescript/lib/es6/Stdlib_Int.js";
 import * as ZoomControl from "./ZoomControl.res.mjs";
 import * as Color from "@texel/color";
@@ -18,6 +19,7 @@ import * as CanvasViewport from "./CanvasViewport.res.mjs";
 import * as DotModeControl from "./DotModeControl.res.mjs";
 import * as ExportBoardJs from "./exportBoard.js";
 import * as CanvasThumbnails from "./CanvasThumbnails.res.mjs";
+import * as BoardStorageJs from "./boardStorage.js";
 import * as CanvasGridControl from "./CanvasGridControl.res.mjs";
 import * as CanvasSizeControl from "./CanvasSizeControl.res.mjs";
 import * as SavedBrushesPanel from "./SavedBrushesPanel.res.mjs";
@@ -265,29 +267,32 @@ function App(props) {
   let match$2 = UseLocalStorageJs("canvas-metadata-v1", []);
   let setCanvases = match$2[1];
   let canvases = match$2[0];
-  let match$3 = UseLocalStorageJs("canvas-boards-v1", []);
+  let match$3 = React.useState(() => []);
   let setCanvasBoards = match$3[1];
   let canvasBoards = match$3[0];
-  let match$4 = UseLocalStorageJs("selected-canvas-id", "");
-  let setSelectedCanvasId = match$4[1];
-  let selectedCanvasId = match$4[0];
-  let match$5 = UseLocalStorageJs("brush", Array2D.make(3, 3, () => true));
-  let setBrush = match$5[1];
-  let brush = match$5[0];
-  let match$6 = UseLocalStorageJs("saved-brushes", defaultBrushes);
-  let setSavedBrushes = match$6[1];
-  let savedBrushes = match$6[0];
-  let match$7 = UseLocalStorageJs("saved-tile-masks", defaultTileMasks);
-  let setSavedTileMasks = match$7[1];
-  let savedTileMasks = match$7[0];
-  let match$8 = UseLocalStorageJs("selected-tile-mask-index", 0);
-  let setSelectedTileMaskIndex = match$8[1];
-  let selectedTileMaskIndex = match$8[0];
-  let match$9 = UseLocalStorageJs("tile-mask", Array2D.make(4, 4, () => true));
-  let setTileMask = match$9[1];
-  let tileMask = match$9[0];
-  let match$10 = UseLocalStorageJs("brush-overlay-mode", "overlay");
-  let overlayMode = match$10[0];
+  let match$4 = React.useState(() => false);
+  let setBoardsLoaded = match$4[1];
+  let areBoardsLoaded = match$4[0];
+  let match$5 = UseLocalStorageJs("selected-canvas-id", "");
+  let setSelectedCanvasId = match$5[1];
+  let selectedCanvasId = match$5[0];
+  let match$6 = UseLocalStorageJs("brush", Array2D.make(3, 3, () => true));
+  let setBrush = match$6[1];
+  let brush = match$6[0];
+  let match$7 = UseLocalStorageJs("saved-brushes", defaultBrushes);
+  let setSavedBrushes = match$7[1];
+  let savedBrushes = match$7[0];
+  let match$8 = UseLocalStorageJs("saved-tile-masks", defaultTileMasks);
+  let setSavedTileMasks = match$8[1];
+  let savedTileMasks = match$8[0];
+  let match$9 = UseLocalStorageJs("selected-tile-mask-index", 0);
+  let setSelectedTileMaskIndex = match$9[1];
+  let selectedTileMaskIndex = match$9[0];
+  let match$10 = UseLocalStorageJs("tile-mask", Array2D.make(4, 4, () => true));
+  let setTileMask = match$10[1];
+  let tileMask = match$10[0];
+  let match$11 = UseLocalStorageJs("brush-overlay-mode", "overlay");
+  let overlayMode = match$11[0];
   let showCursorOverlay;
   switch (overlayMode) {
     case "none" :
@@ -298,28 +303,28 @@ function App(props) {
       showCursorOverlay = true;
       break;
   }
-  let match$11 = UseLocalStorageJs("grid-mode", "none");
-  let gridMode = match$11[0];
-  let match$12 = UseLocalStorageJs("my-color", Initials.myColor);
-  let setMyColor = match$12[1];
-  let myColor = match$12[0];
-  let match$13 = UseLocalStorageJs("canvas-silhouette", false);
-  let isSilhouette = match$13[0];
-  let match$14 = UseLocalStorageJs("viewport-background-color", Initials.viewportBackgroundColor);
-  let viewportBackgroundColor = match$14[0];
-  let match$15 = React.useState(() => false);
-  let setCursorOverlayOff = match$15[1];
-  let match$16 = React.useState(() => "16");
-  let exportScaleInput = match$16[0];
-  let match$17 = React.useState(() => true);
-  let includeExportBackground = match$17[0];
-  let match$18 = React.useState(() => "Scale");
-  let resizeMode = match$18[0];
-  let match$19 = React.useState(() => false);
-  let setIsPickingColor = match$19[1];
-  let isPickingColor = match$19[0];
-  let match$20 = React.useState(() => {});
-  let setHoveredPickColor = match$20[1];
+  let match$12 = UseLocalStorageJs("grid-mode", "none");
+  let gridMode = match$12[0];
+  let match$13 = UseLocalStorageJs("my-color", Initials.myColor);
+  let setMyColor = match$13[1];
+  let myColor = match$13[0];
+  let match$14 = UseLocalStorageJs("canvas-silhouette", false);
+  let isSilhouette = match$14[0];
+  let match$15 = UseLocalStorageJs("viewport-background-color", Initials.viewportBackgroundColor);
+  let viewportBackgroundColor = match$15[0];
+  let match$16 = React.useState(() => false);
+  let setCursorOverlayOff = match$16[1];
+  let match$17 = React.useState(() => "16");
+  let exportScaleInput = match$17[0];
+  let match$18 = React.useState(() => true);
+  let includeExportBackground = match$18[0];
+  let match$19 = React.useState(() => "Scale");
+  let resizeMode = match$19[0];
+  let match$20 = React.useState(() => false);
+  let setIsPickingColor = match$20[1];
+  let isPickingColor = match$20[0];
+  let match$21 = React.useState(() => {});
+  let setHoveredPickColor = match$21[1];
   let clearHoverRef = React.useRef(() => {});
   let zoomRef = React.useRef(1);
   let panRef = React.useRef([
@@ -337,21 +342,105 @@ function App(props) {
     return next;
   });
   let canvasCount = canvases.length;
+  let storeBoardValue = (id, boardValue) => {
+    setCanvasBoards(prev => {
+      let replaced = {
+        contents: false
+      };
+      let next = prev.map(entry => {
+        if (entry.id === id) {
+          replaced.contents = true;
+          return {
+            id: entry.id,
+            board: boardValue
+          };
+        } else {
+          return entry;
+        }
+      });
+      if (replaced.contents) {
+        return next;
+      } else {
+        return next.concat([{
+            id: id,
+            board: boardValue
+          }]);
+      }
+    });
+    BoardStorageJs.saveBoard(id, boardValue);
+  };
+  let modifyBoardEntry = (id, updater) => {
+    let updatedBoardRef = {
+      contents: undefined
+    };
+    setCanvasBoards(prev => {
+      let next = prev.map(entry => {
+        if (entry.id !== id) {
+          return entry;
+        }
+        let nextBoard = updater(entry.board);
+        updatedBoardRef.contents = nextBoard;
+        return {
+          id: entry.id,
+          board: nextBoard
+        };
+      });
+      let match = updatedBoardRef.contents;
+      if (match !== undefined) {
+        return next;
+      }
+      let fallback = updater(Board.make(12, 12));
+      updatedBoardRef.contents = fallback;
+      return next.concat([{
+          id: id,
+          board: fallback
+        }]);
+    });
+    let boardValue = updatedBoardRef.contents;
+    if (boardValue === undefined) {
+      return;
+    }
+    BoardStorageJs.saveBoard(id, boardValue);
+  };
   React.useEffect(() => {
-    if (canvasCount === 0) {
+    Js_promise.then_(entries => {
+      setCanvasBoards(param => entries);
+      BoardStorageJs.loadLegacyBoardsFromLocalStorage().forEach(entry => storeBoardValue(entry.id, entry.board));
+      setBoardsLoaded(param => true);
+      return Promise.resolve();
+    }, BoardStorageJs.loadAllBoards());
+  }, []);
+  React.useEffect(() => {
+    if (areBoardsLoaded && canvasCount === 0) {
       updateViewportCenter();
       let match = makeDefaultCanvas();
-      let defaultBoard = match[1];
       let defaultCanvas = match[0];
       setCanvases(param => [defaultCanvas]);
-      setCanvasBoards(param => [{
-          id: defaultCanvas.id,
-          board: defaultBoard
-        }]);
+      storeBoardValue(defaultCanvas.id, match[1]);
       setSelectedCanvasId(param => defaultCanvas.id);
     }
     
-  }, []);
+  }, [
+    areBoardsLoaded,
+    canvasCount
+  ]);
+  React.useEffect(() => {
+    if (areBoardsLoaded) {
+      canvases.forEach(canvas => {
+        let hasBoard = Belt_Array.some(canvasBoards, entry => entry.id === canvas.id);
+        if (hasBoard) {
+          return;
+        }
+        let fallbackBoard = Board.make(12, 12);
+        storeBoardValue(canvas.id, fallbackBoard);
+      });
+    }
+    
+  }, [
+    areBoardsLoaded,
+    canvases,
+    canvasBoards
+  ]);
   let canvas = Belt_Array.getBy(canvases, canvas => canvas.id === selectedCanvasId);
   let currentCanvas;
   if (canvas !== undefined) {
@@ -361,9 +450,9 @@ function App(props) {
     currentCanvas = firstCanvas !== undefined ? firstCanvas : makeDefaultCanvas()[0];
   }
   let currentCanvasId = currentCanvas.id;
-  let match$21 = React.useState(() => currentCanvas.isDotMask);
-  let setIncludeExportDotMask = match$21[1];
-  let includeExportDotMask = match$21[0];
+  let match$22 = React.useState(() => currentCanvas.isDotMask);
+  let setIncludeExportDotMask = match$22[1];
+  let includeExportDotMask = match$22[0];
   React.useEffect(() => {
     setIncludeExportDotMask(prev => {
       if (prev === currentCanvas.isDotMask) {
@@ -417,30 +506,6 @@ function App(props) {
       return canvas;
     }
   }));
-  let updateCanvasBoardById = (targetId, updater) => setCanvasBoards(prev => {
-    let updatedRef = {
-      contents: false
-    };
-    let mapped = prev.map(entry => {
-      if (entry.id === targetId) {
-        updatedRef.contents = true;
-        return {
-          id: entry.id,
-          board: updater(entry.board)
-        };
-      } else {
-        return entry;
-      }
-    });
-    if (updatedRef.contents) {
-      return mapped;
-    } else {
-      return mapped.concat([{
-          id: targetId,
-          board: updater(Board.make(12, 12))
-        }]);
-    }
-  });
   let setCanvasDotMask = updater => updateCanvasById(currentCanvasIdRef.current, canvas => ({
     id: canvas.id,
     zoom: canvas.zoom,
@@ -504,22 +569,22 @@ function App(props) {
     let factor = 1 / Initials.zoom_factor;
     updateZoom(prev => prev * factor);
   };
-  let match$22 = Board.dims(board);
-  let boardDimJ = match$22[1];
-  let boardDimI = match$22[0];
+  let match$23 = Board.dims(board);
+  let boardDimJ = match$23[1];
+  let boardDimI = match$23[0];
   let fitZoom = computeZoomToFitForDimensions(boardDimI, boardDimJ);
   let zoomPercent = fitZoom !== undefined ? (
       fitZoom <= 0 ? zoom * 100 : zoom / fitZoom * 100
     ) : zoom * 100;
   let lastAutoCenteredDimsRef = React.useRef(undefined);
-  let match$23 = Array2D.dims(brush);
-  let brushDimJ = match$23[1];
-  let brushDimI = match$23[0];
+  let match$24 = Array2D.dims(brush);
+  let brushDimJ = match$24[1];
+  let brushDimI = match$24[0];
   let brushCenterDimI = brushDimI / 2 | 0;
   let brushCenterDimJ = brushDimJ / 2 | 0;
-  let match$24 = Array2D.dims(tileMask);
-  let tileMaskDimJ = match$24[1];
-  let tileMaskDimI = match$24[0];
+  let match$25 = Array2D.dims(tileMask);
+  let tileMaskDimJ = match$25[1];
+  let tileMaskDimI = match$25[0];
   let centerCanvasForDimensions = (dimI, dimJ) => {
     let match = computeCenteredPan(dimI, dimJ, zoomRef.current);
     let nextPanY = match[1];
@@ -569,12 +634,12 @@ function App(props) {
     }
   };
   let fitCanvasToViewport = () => fitCanvasToViewportForDimensions(boardDimI, boardDimJ);
-  let match$25 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$25[1];
-  let resizeRowsInput = match$25[0];
-  let match$26 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$26[1];
-  let resizeColsInput = match$26[0];
+  let match$26 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$26[1];
+  let resizeRowsInput = match$26[0];
+  let match$27 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$27[1];
+  let resizeColsInput = match$27[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -656,9 +721,9 @@ function App(props) {
       return mapped;
     }
   };
-  let match$27 = parsePositiveInt(resizeRowsInput);
-  let match$28 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$27 !== undefined && match$28 !== undefined ? match$27 !== boardDimI || match$28 !== boardDimJ : false;
+  let match$28 = parsePositiveInt(resizeRowsInput);
+  let match$29 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$28 !== undefined && match$29 !== undefined ? match$28 !== boardDimI || match$29 !== boardDimJ : false;
   let exportScaleValue = parsePositiveFloat(exportScaleInput);
   let canExport = Stdlib_Option.isSome(exportScaleValue);
   let handleResizeSubmit = () => {
@@ -671,7 +736,7 @@ function App(props) {
       return;
     }
     if (resizeMode === "Scale") {
-      updateCanvasBoardById(currentCanvasIdRef.current, prev => {
+      modifyBoardEntry(currentCanvasIdRef.current, prev => {
         let match$2 = Board.dims(prev);
         let prevCols = match$2[1];
         let prevRows = match$2[0];
@@ -689,7 +754,7 @@ function App(props) {
         return nextBoard;
       });
     } else {
-      updateCanvasBoardById(currentCanvasIdRef.current, prev => {
+      modifyBoardEntry(currentCanvasIdRef.current, prev => {
         let nextBoard = Board.make(match, match$1);
         for (let rowI = 0; rowI < match; ++rowI) {
           for (let colJ = 0; colJ < match$1; ++colJ) {
@@ -765,10 +830,7 @@ function App(props) {
     let fittedZoom = match[0];
     let newCanvas = makeCanvas(fittedZoom, newPan, false, canvasBackgroundColor);
     setCanvases(prev => prev.concat([newCanvas]));
-    setCanvasBoards(prev => prev.concat([{
-        id: newCanvas.id,
-        board: newBoard
-      }]));
+    storeBoardValue(newCanvas.id, newBoard);
     setSelectedCanvasId(param => newCanvas.id);
     zoomRef.current = fittedZoom;
     panRef.current = newPan;
@@ -806,6 +868,7 @@ function App(props) {
     }
     setCanvases(prev => Belt_Array.keep(prev, canvas => canvas.id !== currentCanvasId));
     setCanvasBoards(prev => Belt_Array.keep(prev, entry => entry.id !== currentCanvasId));
+    BoardStorageJs.deleteBoard(currentCanvasId);
     if (nextSelectionId !== undefined) {
       setSelectedCanvasId(param => nextSelectionId);
     }
@@ -830,7 +893,7 @@ function App(props) {
   let applyBrush = (clickI, clickJ) => {
     UseLocalStorageJs$1.setLocalStoragePersistencePaused(true);
     let brushColor = getBrushColor();
-    updateCanvasBoardById(currentCanvasIdRef.current, prev => {
+    modifyBoardEntry(currentCanvasIdRef.current, prev => {
       let match = Board.dims(prev);
       let cols = match[1];
       let rows = match[0];
@@ -924,7 +987,7 @@ function App(props) {
     setMyColor(param => color);
     setBrushMode(param => "Color");
   };
-  let onReplaceUsedColor = color => updateCanvasBoardById(currentCanvasIdRef.current, prev => {
+  let onReplaceUsedColor = color => modifyBoardEntry(currentCanvasIdRef.current, prev => {
     let match = Board.dims(prev);
     let cols = match[1];
     let replacement = myColor;
@@ -948,171 +1011,178 @@ function App(props) {
       return Board.setMany(prev, updates);
     }
   });
-  return JsxRuntime.jsxs("div", {
-    children: [
-      JsxRuntime.jsxs("div", {
-        children: [
-          JsxRuntime.jsx(ZoomControl.make, {
-            zoomOut: zoomOut,
-            zoomIn: zoomIn,
-            centerCanvas: centerCanvas,
-            fitCanvasToViewport: fitCanvasToViewport,
-            zoomPercent: zoomPercent
-          }),
-          JsxRuntime.jsxs("div", {
-            children: [
-              JsxRuntime.jsx(SavedBrushesPanel.make, {
-                brush: brush,
-                setBrush: setBrush,
-                savedBrushes: savedBrushes,
-                handleAddBrush: handleAddBrush,
-                canDeleteSelectedBrush: canDeleteSelectedBrush,
-                handleDeleteSelectedBrush: handleDeleteSelectedBrush,
-                canSaveBrush: boardDimI <= 32 && boardDimJ <= 32
-              }),
-              JsxRuntime.jsx(SavedTileMasksPanel.make, {
-                setTileMask: setTileMask,
-                savedTileMasks: savedTileMasks,
-                selectedTileMaskIndex: selectedTileMaskIndex,
-                setSelectedTileMaskIndex: setSelectedTileMaskIndex,
-                handleAddTileMask: handleAddTileMask,
-                canDeleteSelectedTileMask: canDeleteSelectedTileMask,
-                handleDeleteSelectedTileMask: handleDeleteSelectedTileMask,
-                canSaveTileMask: boardDimI <= 32 && boardDimJ <= 32
-              })
-            ],
-            className: "flex flex-row gap-2 h-full flex-none p-2"
-          })
-        ],
-        className: "flex flex-col flex-none overflow-x-hidden divide-y divide-gray-300"
-      }),
-      JsxRuntime.jsxs("div", {
-        children: [
-          JsxRuntime.jsx("div", {
-            children: JsxRuntime.jsx(CanvasViewport.make, {
-              canvasContainerRef: canvasContainerRef,
-              board: board,
-              boardDimI: boardDimI,
-              boardDimJ: boardDimJ,
-              transformValue: transformValue,
-              zoom: zoom,
-              pan: pan,
-              cursorOverlayOff: match$15[0],
-              setCursorOverlayOff: setCursorOverlayOff,
-              isMouseDown: isMouseDown,
-              applyBrush: applyBrush,
-              handlePickColor: handlePickColor,
-              setHoveredPickColor: setHoveredPickColor,
-              isPickingColor: isPickingColor,
-              showCursorOverlay: showCursorOverlay,
-              overlayMode: overlayMode,
-              overlayColor: myColor,
-              gridMode: gridMode,
-              canvasBackgroundColor: canvasBackgroundColor,
-              gridLineColor: gridLineColor,
-              checkeredPrimaryColor: checkeredPrimaryColor,
-              checkeredSecondaryColor: checkeredSecondaryColor,
-              viewportBackgroundColor: viewportBackgroundColor,
-              isSilhouette: isSilhouette,
-              clearHoverRef: clearHoverRef,
-              brush: brush,
-              brushDimI: brushDimI,
-              brushDimJ: brushDimJ,
-              brushCenterDimI: brushCenterDimI,
-              brushCenterDimJ: brushCenterDimJ,
-              tileMask: tileMask,
-              tileMaskDimI: tileMaskDimI,
-              tileMaskDimJ: tileMaskDimJ,
-              isDotMask: isDotMask
+  if (areBoardsLoaded) {
+    return JsxRuntime.jsxs("div", {
+      children: [
+        JsxRuntime.jsxs("div", {
+          children: [
+            JsxRuntime.jsx(ZoomControl.make, {
+              zoomOut: zoomOut,
+              zoomIn: zoomIn,
+              centerCanvas: centerCanvas,
+              fitCanvasToViewport: fitCanvasToViewport,
+              zoomPercent: zoomPercent
             }),
-            className: "flex-1 pt-2"
-          }),
-          JsxRuntime.jsx(CanvasThumbnails.make, {
-            canvases: canvases,
-            canvasBoards: canvasBoards,
-            currentCanvasId: currentCanvasId,
-            canDeleteCanvas: canDeleteCanvas,
-            handleDeleteCanvas: handleDeleteCanvas,
-            handleAddCanvas: handleAddCanvas,
-            handleSelectCanvas: handleSelectCanvas,
-            isMouseDown: isMouseDown
-          })
-        ],
-        className: "flex flex-col flex-1 overflow-x-hidden"
-      }),
-      JsxRuntime.jsxs("div", {
-        children: [
-          JsxRuntime.jsx(ColorControl.make, {
-            brushMode: brushMode,
-            setBrushMode: setBrushMode,
-            myColor: myColor,
-            setMyColor: setMyColor,
-            hoveredPickColor: match$20[0],
-            isPickingColor: isPickingColor,
-            onStartColorPick: onStartColorPick,
-            canvasBackgroundColor: canvasBackgroundColor
-          }),
-          JsxRuntime.jsxs("div", {
-            children: [
-              JsxRuntime.jsx(ColorsUsed.make, {
+            JsxRuntime.jsxs("div", {
+              children: [
+                JsxRuntime.jsx(SavedBrushesPanel.make, {
+                  brush: brush,
+                  setBrush: setBrush,
+                  savedBrushes: savedBrushes,
+                  handleAddBrush: handleAddBrush,
+                  canDeleteSelectedBrush: canDeleteSelectedBrush,
+                  handleDeleteSelectedBrush: handleDeleteSelectedBrush,
+                  canSaveBrush: boardDimI <= 32 && boardDimJ <= 32
+                }),
+                JsxRuntime.jsx(SavedTileMasksPanel.make, {
+                  setTileMask: setTileMask,
+                  savedTileMasks: savedTileMasks,
+                  selectedTileMaskIndex: selectedTileMaskIndex,
+                  setSelectedTileMaskIndex: setSelectedTileMaskIndex,
+                  handleAddTileMask: handleAddTileMask,
+                  canDeleteSelectedTileMask: canDeleteSelectedTileMask,
+                  handleDeleteSelectedTileMask: handleDeleteSelectedTileMask,
+                  canSaveTileMask: boardDimI <= 32 && boardDimJ <= 32
+                })
+              ],
+              className: "flex flex-row gap-2 h-full flex-none p-2"
+            })
+          ],
+          className: "flex flex-col flex-none overflow-x-hidden divide-y divide-gray-300"
+        }),
+        JsxRuntime.jsxs("div", {
+          children: [
+            JsxRuntime.jsx("div", {
+              children: JsxRuntime.jsx(CanvasViewport.make, {
+                canvasContainerRef: canvasContainerRef,
                 board: board,
-                onSelectUsedColor: onSelectUsedColor,
-                onReplaceUsedColor: onReplaceUsedColor,
-                myColor: myColor,
-                isMouseDown: isMouseDown
-              }),
-              JsxRuntime.jsx(BrushOverlayControl.make, {
+                boardDimI: boardDimI,
+                boardDimJ: boardDimJ,
+                transformValue: transformValue,
+                zoom: zoom,
+                pan: pan,
+                cursorOverlayOff: match$16[0],
+                setCursorOverlayOff: setCursorOverlayOff,
+                isMouseDown: isMouseDown,
+                applyBrush: applyBrush,
+                handlePickColor: handlePickColor,
+                setHoveredPickColor: setHoveredPickColor,
+                isPickingColor: isPickingColor,
+                showCursorOverlay: showCursorOverlay,
                 overlayMode: overlayMode,
-                setOverlayMode: match$10[1]
-              }),
-              JsxRuntime.jsx(CanvasGridControl.make, {
+                overlayColor: myColor,
                 gridMode: gridMode,
-                setGridMode: match$11[1]
-              }),
-              JsxRuntime.jsx(CanvasColorsControl.make, {
-                myColor: myColor,
                 canvasBackgroundColor: canvasBackgroundColor,
-                setCanvasBackgroundColor: setCanvasBackgroundColor,
+                gridLineColor: gridLineColor,
+                checkeredPrimaryColor: checkeredPrimaryColor,
+                checkeredSecondaryColor: checkeredSecondaryColor,
                 viewportBackgroundColor: viewportBackgroundColor,
-                setViewportBackgroundColor: match$14[1]
-              }),
-              JsxRuntime.jsx(SilhouetteControl.make, {
                 isSilhouette: isSilhouette,
-                setIsSilhouette: match$13[1]
+                clearHoverRef: clearHoverRef,
+                brush: brush,
+                brushDimI: brushDimI,
+                brushDimJ: brushDimJ,
+                brushCenterDimI: brushCenterDimI,
+                brushCenterDimJ: brushCenterDimJ,
+                tileMask: tileMask,
+                tileMaskDimI: tileMaskDimI,
+                tileMaskDimJ: tileMaskDimJ,
+                isDotMask: isDotMask
               }),
-              JsxRuntime.jsx(DotModeControl.make, {
-                isDotMask: isDotMask,
-                setCanvasDotMask: setCanvasDotMask
-              }),
-              JsxRuntime.jsx(CanvasSizeControl.make, {
-                resizeRowsInput: resizeRowsInput,
-                setResizeRowsInput: setResizeRowsInput,
-                resizeColsInput: resizeColsInput,
-                setResizeColsInput: setResizeColsInput,
-                resizeMode: resizeMode,
-                setResizeMode: match$18[1],
-                canSubmitResize: canSubmitResize,
-                handleResizeSubmit: handleResizeSubmit
-              }),
-              JsxRuntime.jsx(ExportControl.make, {
-                exportScaleInput: exportScaleInput,
-                setExportScaleInput: match$16[1],
-                includeExportBackground: includeExportBackground,
-                setIncludeExportBackground: match$17[1],
-                includeExportDotMask: includeExportDotMask,
-                setIncludeExportDotMask: setIncludeExportDotMask,
-                canExport: canExport,
-                onExport: handleExportPng
-              })
-            ],
-            className: "overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"
-          })
-        ],
-        className: " h-full overflow-x-visible flex flex-col w-48 py-2"
-      })
-    ],
-    className: " flex flex-row h-dvh overflow-x-hidden"
-  });
+              className: "flex-1 pt-2"
+            }),
+            JsxRuntime.jsx(CanvasThumbnails.make, {
+              canvases: canvases,
+              canvasBoards: canvasBoards,
+              currentCanvasId: currentCanvasId,
+              canDeleteCanvas: canDeleteCanvas,
+              handleDeleteCanvas: handleDeleteCanvas,
+              handleAddCanvas: handleAddCanvas,
+              handleSelectCanvas: handleSelectCanvas,
+              isMouseDown: isMouseDown
+            })
+          ],
+          className: "flex flex-col flex-1 overflow-x-hidden"
+        }),
+        JsxRuntime.jsxs("div", {
+          children: [
+            JsxRuntime.jsx(ColorControl.make, {
+              brushMode: brushMode,
+              setBrushMode: setBrushMode,
+              myColor: myColor,
+              setMyColor: setMyColor,
+              hoveredPickColor: match$21[0],
+              isPickingColor: isPickingColor,
+              onStartColorPick: onStartColorPick,
+              canvasBackgroundColor: canvasBackgroundColor
+            }),
+            JsxRuntime.jsxs("div", {
+              children: [
+                JsxRuntime.jsx(ColorsUsed.make, {
+                  board: board,
+                  onSelectUsedColor: onSelectUsedColor,
+                  onReplaceUsedColor: onReplaceUsedColor,
+                  myColor: myColor,
+                  isMouseDown: isMouseDown
+                }),
+                JsxRuntime.jsx(BrushOverlayControl.make, {
+                  overlayMode: overlayMode,
+                  setOverlayMode: match$11[1]
+                }),
+                JsxRuntime.jsx(CanvasGridControl.make, {
+                  gridMode: gridMode,
+                  setGridMode: match$12[1]
+                }),
+                JsxRuntime.jsx(CanvasColorsControl.make, {
+                  myColor: myColor,
+                  canvasBackgroundColor: canvasBackgroundColor,
+                  setCanvasBackgroundColor: setCanvasBackgroundColor,
+                  viewportBackgroundColor: viewportBackgroundColor,
+                  setViewportBackgroundColor: match$15[1]
+                }),
+                JsxRuntime.jsx(SilhouetteControl.make, {
+                  isSilhouette: isSilhouette,
+                  setIsSilhouette: match$14[1]
+                }),
+                JsxRuntime.jsx(DotModeControl.make, {
+                  isDotMask: isDotMask,
+                  setCanvasDotMask: setCanvasDotMask
+                }),
+                JsxRuntime.jsx(CanvasSizeControl.make, {
+                  resizeRowsInput: resizeRowsInput,
+                  setResizeRowsInput: setResizeRowsInput,
+                  resizeColsInput: resizeColsInput,
+                  setResizeColsInput: setResizeColsInput,
+                  resizeMode: resizeMode,
+                  setResizeMode: match$19[1],
+                  canSubmitResize: canSubmitResize,
+                  handleResizeSubmit: handleResizeSubmit
+                }),
+                JsxRuntime.jsx(ExportControl.make, {
+                  exportScaleInput: exportScaleInput,
+                  setExportScaleInput: match$17[1],
+                  includeExportBackground: includeExportBackground,
+                  setIncludeExportBackground: match$18[1],
+                  includeExportDotMask: includeExportDotMask,
+                  setIncludeExportDotMask: setIncludeExportDotMask,
+                  canExport: canExport,
+                  onExport: handleExportPng
+                })
+              ],
+              className: "overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"
+            })
+          ],
+          className: " h-full overflow-x-visible flex flex-col w-48 py-2"
+        })
+      ],
+      className: " flex flex-row h-dvh overflow-x-hidden"
+    });
+  } else {
+    return JsxRuntime.jsx("div", {
+      children: "Loading canvases…",
+      className: "flex h-dvh items-center justify-center text-sm text-gray-500"
+    });
+  }
 }
 
 let make = App;
