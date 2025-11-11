@@ -3,6 +3,7 @@ open Webapi.Dom
 
 open Types
 module StorageKeys = StorageKeys
+module Palette = Palette
 
 module CanvasHistoryMap = Belt.Map.String
 
@@ -539,19 +540,19 @@ let make = () => {
   let canvasBackgroundColor = currentCanvas.canvasBackgroundColor
   let isCanvasBackgroundLight = _isLight(canvasBackgroundColor)
   let gridLineColor = if isCanvasBackgroundLight {
-    "rgba(0, 0, 0, 0.25)"
+    Palette.gridLineDark
   } else {
-    "rgba(255, 255, 255, 0.25)"
+    Palette.gridLineLight
   }
   let checkeredPrimaryColor = if isCanvasBackgroundLight {
-    "rgba(0, 0, 0, 0.15)"
+    Palette.checkeredPrimaryDark
   } else {
-    "rgba(255, 255, 255, 0.15)"
+    Palette.checkeredPrimaryLight
   }
   let checkeredSecondaryColor = if isCanvasBackgroundLight {
-    "rgba(0, 0, 0, 0.00)"
+    Palette.checkeredSecondaryDark
   } else {
-    "rgba(255, 255, 255, 0.00)"
+    Palette.checkeredSecondaryLight
   }
 
   zoomRef.current = zoom

@@ -1,3 +1,5 @@
+module Palette = Palette
+
 @react.component
 let make = (
   ~savedBrushes: array<Types.brushEntry>,
@@ -19,9 +21,9 @@ let make = (
       | None => false
       }
       let (filledColor, emptyColor) = if selected {
-        ("#f97316", "#fed7aa")
+        (Palette.Thumbnail.selectedFilled, Palette.Thumbnail.selectedEmpty)
       } else {
-        ("#9ca3af", "#e5e7eb")
+        (Palette.Thumbnail.unselectedFilled, Palette.Thumbnail.unselectedEmpty)
       }
       <button
         key={savedBrushEntry.id}

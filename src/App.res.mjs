@@ -3,6 +3,7 @@
 import * as Board from "./Board.res.mjs";
 import * as React from "react";
 import * as Array2D from "./Array2D.res.mjs";
+import * as Palette from "./Palette.res.mjs";
 import * as Initials from "./Initials.res.mjs";
 import * as Belt_Array from "rescript/lib/es6/Belt_Array.js";
 import * as Belt_Float from "rescript/lib/es6/Belt_Float.js";
@@ -559,9 +560,9 @@ function App(props) {
   let isDotMask = currentCanvas.isDotMask;
   let canvasBackgroundColor = currentCanvas.canvasBackgroundColor;
   let isCanvasBackgroundLight = _isLight(canvasBackgroundColor);
-  let gridLineColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.25)" : "rgba(255, 255, 255, 0.25)";
-  let checkeredPrimaryColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.15)" : "rgba(255, 255, 255, 0.15)";
-  let checkeredSecondaryColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.00)" : "rgba(255, 255, 255, 0.00)";
+  let gridLineColor = isCanvasBackgroundLight ? Palette.gridLineDark : Palette.gridLineLight;
+  let checkeredPrimaryColor = isCanvasBackgroundLight ? Palette.checkeredPrimaryDark : Palette.checkeredPrimaryLight;
+  let checkeredSecondaryColor = isCanvasBackgroundLight ? Palette.checkeredSecondaryDark : Palette.checkeredSecondaryLight;
   zoomRef.current = zoom;
   panRef.current = pan;
   let ensureStrokeSnapshot = () => {

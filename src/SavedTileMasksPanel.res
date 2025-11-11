@@ -1,3 +1,5 @@
+module Palette = Palette
+
 @react.component
 let make = (
   ~savedTileMasks: array<Types.tileMaskEntry>,
@@ -18,9 +20,9 @@ let make = (
       | None => false
       }
       let (filledColor, emptyColor) = if selected {
-        ("#f97316", "#fed7aa")
+        (Palette.Thumbnail.selectedFilled, Palette.Thumbnail.selectedEmpty)
       } else {
-        ("#9ca3af", "#e5e7eb")
+        (Palette.Thumbnail.unselectedFilled, Palette.Thumbnail.unselectedEmpty)
       }
       <button
         key={savedTileMask.id}
