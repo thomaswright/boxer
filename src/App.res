@@ -244,6 +244,7 @@ let make = () => {
     "viewport-background-color",
     Initials.viewportBackgroundColor,
   )
+  let (scrollWheelMode, setScrollWheelMode, _) = useLocalStorage("scroll-wheel-mode", ScrollZoom)
 
   // Lifecycle Helper
   let (areBoardsLoaded, setBoardsLoaded) = React.useState(() => false)
@@ -715,24 +716,30 @@ let make = () => {
   let handleWheelZoom = event => {
     let deltaY = event->ReactEvent.Wheel.deltaY
 
-    if deltaY == 0. {
-      ()
-    } else {
-      let anchor = switch canvasContainerRef.current->Js.Nullable.toOption {
-      | Some(containerElement) =>
-        let rect = containerElement->Element.getBoundingClientRect
-        let mouseEvent: ReactEvent.Mouse.t = event->Obj.magic
-        let clientX = mouseEvent->ReactEvent.Mouse.clientX->Int.toFloat
-        let clientY = mouseEvent->ReactEvent.Mouse.clientY->Int.toFloat
-        (clientX -. rect->DomRect.left, clientY -. rect->DomRect.top)
-      | None => (0., 0.)
-      }
-      let factor = if deltaY < 0. {
-        Initials.zoom_factor
+    switch scrollWheelMode {
+    | ScrollZoom =>
+      if deltaY == 0. {
+        ()
       } else {
-        1. /. Initials.zoom_factor
+        let anchor = switch canvasContainerRef.current->Js.Nullable.toOption {
+        | Some(containerElement) =>
+          let rect = containerElement->Element.getBoundingClientRect
+          let mouseEvent: ReactEvent.Mouse.t = event->Obj.magic
+          let clientX = mouseEvent->ReactEvent.Mouse.clientX->Int.toFloat
+          let clientY = mouseEvent->ReactEvent.Mouse.clientY->Int.toFloat
+          (clientX -. rect->DomRect.left, clientY -. rect->DomRect.top)
+        | None => (0., 0.)
+        }
+        let factor = if deltaY < 0. {
+          Initials.zoom_factor
+        } else {
+          1. /. Initials.zoom_factor
+        }
+        adjustZoomByFactor(~focalPoint=anchor, factor)
       }
-      adjustZoomByFactor(~focalPoint=anchor, factor)
+    | ScrollPan =>
+      let deltaX = event->ReactEvent.Wheel.deltaX
+      adjustPan(-.deltaX, -.deltaY)
     }
   }
 
@@ -1233,6 +1240,7 @@ let make = () => {
     <div className=" flex flex-row h-dvh overflow-x-hidden">
       <div className="flex flex-col flex-none overflow-x-hidden divide-y divide-gray-300">
         <ZoomControl zoomOut zoomIn centerCanvas fitCanvasToViewport zoomPercent />
+        <ScrollWheelControl scrollWheelMode setScrollWheelMode />
 
         <div className="flex flex-row gap-2 h-full flex-none p-2">
           <SavedBrushesPanel
