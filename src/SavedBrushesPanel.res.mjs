@@ -14,6 +14,10 @@ function SavedBrushesPanel(props) {
   let selectedBrushId = props.selectedBrushId;
   return JsxRuntime.jsxs("div", {
     children: [
+      JsxRuntime.jsx("div", {
+        children: "Brush",
+        className: "text-2xs font-bold"
+      }),
       props.savedBrushes.map(savedBrushEntry => {
         let savedBrush = savedBrushEntry.brush;
         let match = Array2D.dims(savedBrush);

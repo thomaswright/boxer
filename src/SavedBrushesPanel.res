@@ -9,15 +9,15 @@ let make = (
   ~canSaveBrush,
 ) => {
   <div className={"flex flex-col gap-1 h-full overflow-y-scroll items-end"}>
+    <div className={"text-2xs font-bold"}> {"Brush"->React.string} </div>
     {savedBrushes
     ->Array.map(savedBrushEntry => {
       let savedBrush = savedBrushEntry.brush
       let (dimI, dimJ) = savedBrush->Array2D.dims
-      let selected =
-        switch selectedBrushId {
-        | Some(id) => savedBrushEntry.id == id
-        | None => false
-        }
+      let selected = switch selectedBrushId {
+      | Some(id) => savedBrushEntry.id == id
+      | None => false
+      }
       let (filledColor, emptyColor) = if selected {
         ("#f97316", "#fed7aa")
       } else {

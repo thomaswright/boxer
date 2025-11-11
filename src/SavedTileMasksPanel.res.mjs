@@ -13,6 +13,10 @@ function SavedTileMasksPanel(props) {
   let selectedTileMaskId = props.selectedTileMaskId;
   return JsxRuntime.jsxs("div", {
     children: [
+      JsxRuntime.jsx("div", {
+        children: "Dither",
+        className: "text-2xs font-bold"
+      }),
       props.savedTileMasks.map(savedTileMask => {
         let selected = selectedTileMaskId !== undefined ? savedTileMask.id === selectedTileMaskId : false;
         let match = selected ? [

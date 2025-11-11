@@ -9,13 +9,14 @@ let make = (
   ~canSaveTileMask,
 ) => {
   <div className={"flex flex-col gap-1 h-full overflow-y-scroll items-end"}>
+    <div className={"text-2xs font-bold"}> {"Dither"->React.string} </div>
+
     {savedTileMasks
     ->Array.map(savedTileMask => {
-      let selected =
-        switch selectedTileMaskId {
-        | Some(id) => savedTileMask.id == id
-        | None => false
-        }
+      let selected = switch selectedTileMaskId {
+      | Some(id) => savedTileMask.id == id
+      | None => false
+      }
       let (filledColor, emptyColor) = if selected {
         ("#f97316", "#fed7aa")
       } else {
