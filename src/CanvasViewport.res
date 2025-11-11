@@ -264,6 +264,10 @@ let make = (
     className="relative border border-gray-300 overflow-hidden w-full h-full"
     style={{
       backgroundColor: viewportBackgroundColor,
+    }}
+    onWheel={event => {
+      event->ReactEvent.Wheel.preventDefault
+      onWheel(event)
     }}>
     <div
       className={"absolute top-0 left-0"}
@@ -316,10 +320,6 @@ let make = (
         onMouseEnter={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onMouseDown={handleMouseDown}
-        onWheel={event => {
-          event->ReactEvent.Wheel.preventDefault
-          onWheel(event)
-        }}
       />
       {isDotMask
         ? <div

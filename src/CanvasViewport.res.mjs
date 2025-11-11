@@ -277,11 +277,7 @@ function CanvasViewport(props) {
           onMouseDown: handleMouseDown,
           onMouseEnter: handleMouseMove,
           onMouseLeave: handleMouseLeave,
-          onMouseMove: handleMouseMove,
-          onWheel: event => {
-            event.preventDefault();
-            onWheel(event);
-          }
+          onMouseMove: handleMouseMove
         }),
         props.isDotMask ? JsxRuntime.jsx("div", {
             className: "absolute top-0 left-0 pointer-events-none",
@@ -325,6 +321,10 @@ function CanvasViewport(props) {
     className: "relative border border-gray-300 overflow-hidden w-full h-full",
     style: {
       backgroundColor: props.viewportBackgroundColor
+    },
+    onWheel: event => {
+      event.preventDefault();
+      onWheel(event);
     }
   });
 }
