@@ -1013,42 +1013,46 @@ let make = () => {
 
       <div className="flex flex-col flex-1 overflow-x-hidden">
         <div className={"flex-1 pt-2"}>
-          <CanvasViewport
-            canvasContainerRef
-            board
-            boardDimI
-            boardDimJ
-            transformValue
-            zoom
-            pan
-            cursorOverlayOff
-            setCursorOverlayOff
-            isMouseDown
-            applyBrush
-            handlePickColor
-            setHoveredPickColor
-            isPickingColor
-            showCursorOverlay
-            overlayMode
-            gridMode
-            canvasBackgroundColor
-            gridLineColor
-            overlayColor=myColor
-            checkeredPrimaryColor
-            checkeredSecondaryColor
-            viewportBackgroundColor
-            isSilhouette
-            clearHoverRef
-            brush
-            brushDimI
-            brushDimJ
-            brushCenterDimI
-            brushCenterDimJ
-            tileMask
-            tileMaskDimI
-            tileMaskDimJ
-            isDotMask
-          />
+          {if selectedCanvas == None {
+            <div> {React.string("No canvas selected")} </div>
+          } else {
+            <CanvasViewport
+              canvasContainerRef
+              board
+              boardDimI
+              boardDimJ
+              transformValue
+              zoom
+              pan
+              cursorOverlayOff
+              setCursorOverlayOff
+              isMouseDown
+              applyBrush
+              handlePickColor
+              setHoveredPickColor
+              isPickingColor
+              showCursorOverlay
+              overlayMode
+              gridMode
+              canvasBackgroundColor
+              gridLineColor
+              overlayColor=myColor
+              checkeredPrimaryColor
+              checkeredSecondaryColor
+              viewportBackgroundColor
+              isSilhouette
+              clearHoverRef
+              brush
+              brushDimI
+              brushDimJ
+              brushCenterDimI
+              brushCenterDimJ
+              tileMask
+              tileMaskDimI
+              tileMaskDimJ
+              isDotMask
+            />
+          }}
         </div>
 
         <CanvasThumbnails
