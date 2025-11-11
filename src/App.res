@@ -2,6 +2,7 @@
 open Webapi.Dom
 
 open Types
+module StorageKeys = StorageKeys
 
 module CanvasHistoryMap = Belt.Map.String
 
@@ -222,7 +223,7 @@ let make = () => {
   }
 
   // Persistent Data
-  let (canvases, setCanvases, _) = useLocalStorage("canvas-metadata-v1", [])
+  let (canvases, setCanvases, _) = useLocalStorage(StorageKeys.canvases, [])
   let (canvasBoards, setCanvasBoards) = React.useState((): array<Types.canvasBoardState> => [])
   let (boardHistoryByCanvas, setBoardHistoryByCanvas) = React.useState(() => CanvasHistoryMap.empty)
   let canvasBoardsRef = React.useRef(canvasBoards)
@@ -235,13 +236,13 @@ let make = () => {
       boardHistoryByCanvasRef.current = next
       next
     })
-  let (savedBrushes, setSavedBrushes, _) = useLocalStorage("saved-brushes", defaultBrushEntries)
+  let (savedBrushes, setSavedBrushes, _) = useLocalStorage(StorageKeys.savedBrushes, defaultBrushEntries)
   let (savedTileMasks, setSavedTileMasks, _) = useLocalStorage(
-    "saved-tile-masks",
+    StorageKeys.savedTileMasks,
     defaultTileMaskEntries,
   )
   let (viewportBackgroundColor, setViewportBackgroundColor, _) = useLocalStorage(
-    "viewport-background-color",
+    StorageKeys.viewportBackgroundColor,
     Initials.viewportBackgroundColor,
   )
 
@@ -249,22 +250,22 @@ let make = () => {
   let (areBoardsLoaded, setBoardsLoaded) = React.useState(() => false)
 
   // Persistent Tool Selection
-  let (selectedBrushId, setSelectedBrushId, _) = useLocalStorage("selected-brush-id", None)
+  let (selectedBrushId, setSelectedBrushId, _) = useLocalStorage(StorageKeys.selectedBrushId, None)
   let (selectedTileMaskId, setSelectedTileMaskId, _) = useLocalStorage(
-    "selected-tile-mask-id",
+    StorageKeys.selectedTileMaskId,
     None,
   )
-  let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage("selected-canvas-id", None)
-  let (myColor, setMyColor, _) = useLocalStorage("my-color", Initials.myColor)
+  let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage(StorageKeys.selectedCanvasId, None)
+  let (myColor, setMyColor, _) = useLocalStorage(StorageKeys.myColor, Initials.myColor)
 
   // Persistent UI Selection
-  let (brushMode, setBrushMode, _) = useLocalStorage("brush-mode", Color)
-  let (overlayMode, setOverlayMode, _) = useLocalStorage("brush-overlay-mode", OverlayDefault)
+  let (brushMode, setBrushMode, _) = useLocalStorage(StorageKeys.brushMode, Color)
+  let (overlayMode, setOverlayMode, _) = useLocalStorage(StorageKeys.brushOverlayMode, OverlayDefault)
 
-  let (gridMode, setGridMode, _) = useLocalStorage("grid-mode", GridNone)
+  let (gridMode, setGridMode, _) = useLocalStorage(StorageKeys.gridMode, GridNone)
 
   // Transient UI
-  let (isSilhouette, setIsSilhouette, _) = useLocalStorage("canvas-silhouette", Initials.silhouette)
+  let (isSilhouette, setIsSilhouette, _) = useLocalStorage(StorageKeys.silhouette, Initials.silhouette)
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
   let (exportScaleInput, setExportScaleInput) = React.useState(() => "16")
   let (includeExportBackground, setIncludeExportBackground) = React.useState(() => true)
