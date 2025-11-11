@@ -53,7 +53,7 @@ let make = (
       </div>
       <div className="flex flex-row w-full gap-2 justify-between items-center">
         <input
-          className="border rounded px-2 py-1 text-sm flex-none w-16 "
+          className="border border-[var(--plain-300)] rounded px-2 py-1 text-sm flex-none w-16 "
           value={resizeRowsInput}
           onChange={event => {
             let value = ReactEvent.Form.target(event)["value"]
@@ -62,7 +62,7 @@ let make = (
         />
         <Icons.X />
         <input
-          className="border rounded px-2 py-1 text-sm flex-none w-16 "
+          className="border border-[var(--plain-300)] rounded px-2 py-1 text-sm flex-none w-16 "
           value={resizeColsInput}
           onChange={event => {
             let value = ReactEvent.Form.target(event)["value"]

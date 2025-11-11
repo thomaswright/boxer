@@ -1304,10 +1304,6 @@ function App(props) {
               fitCanvasToViewport: fitCanvasToViewport,
               zoomPercent: zoomPercent
             }),
-            JsxRuntime.jsx(ThemeToggle.make, {
-              theme: match[0],
-              setTheme: match[1]
-            }),
             JsxRuntime.jsxs("div", {
               children: [
                 JsxRuntime.jsx(SavedBrushesPanel.make, {
@@ -1454,6 +1450,10 @@ function App(props) {
                   setIncludeExportDotMask: setIncludeExportDotMask,
                   canExport: canExport,
                   onExport: handleExportPng
+                }),
+                JsxRuntime.jsx(ThemeToggle.make, {
+                  theme: match[0],
+                  setTheme: match[1]
                 })
               ],
               className: "overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-[var(--plain-300)]"

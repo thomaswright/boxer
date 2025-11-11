@@ -23,7 +23,7 @@ function ExportControl(props) {
                 className: "text-xs uppercase tracking-wide text-[var(--plain-500)]"
               }),
               JsxRuntime.jsx("input", {
-                className: "border rounded px-2 py-1 text-sm w-16",
+                className: "border border-[var(--plain-300)]  rounded px-2 py-1 text-sm w-16",
                 min: "1",
                 step: 1.0,
                 type: "number",

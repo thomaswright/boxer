@@ -17,7 +17,7 @@ let make = (
           {"Scale"->React.string}
         </span>
         <input
-          className="border rounded px-2 py-1 text-sm w-16"
+          className="border border-[var(--plain-300)]  rounded px-2 py-1 text-sm w-16"
           type_="number"
           min={"1"}
           step={1.0}

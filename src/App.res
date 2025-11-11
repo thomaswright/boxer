@@ -1260,7 +1260,6 @@ let make = () => {
     <div className=" flex flex-row h-dvh overflow-x-hidden">
       <div className="flex flex-col flex-none overflow-x-hidden divide-y divide-[var(--plain-300)]">
         <ZoomControl zoomOut zoomIn centerCanvas fitCanvasToViewport zoomPercent />
-        <ThemeToggle theme setTheme />
 
         <div className="flex flex-row gap-2 h-full flex-none p-2">
           <SavedBrushesPanel
@@ -1389,6 +1388,7 @@ let make = () => {
             canExport
             onExport={handleExportPng}
           />
+          <ThemeToggle theme setTheme />
         </div>
       </div>
     </div>
