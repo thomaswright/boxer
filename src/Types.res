@@ -43,6 +43,4 @@ type gridMode =
 type overlayMode =
   | @as("none") OverlayNone | @as("overlay") OverlayDefault | @as("color") OverlayColor
 
-type scrollWheelMode = | @as("zoom") ScrollZoom | @as("pan") ScrollPan
-
 type canvasRenderer

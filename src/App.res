@@ -244,7 +244,6 @@ let make = () => {
     "viewport-background-color",
     Initials.viewportBackgroundColor,
   )
-  let (scrollWheelMode, setScrollWheelMode, _) = useLocalStorage("scroll-wheel-mode", ScrollZoom)
 
   // Lifecycle Helper
   let (areBoardsLoaded, setBoardsLoaded) = React.useState(() => false)
@@ -714,17 +713,16 @@ let make = () => {
   let zoomIn = () => adjustZoomByFactor(Initials.zoom_factor)
   let zoomOut = () => adjustZoomByFactor(1. /. Initials.zoom_factor)
   let handleWheelZoom = event => {
-    let deltaY = event->ReactEvent.Wheel.deltaY
+    let mouseEvent: ReactEvent.Mouse.t = event->Obj.magic
 
-    switch scrollWheelMode {
-    | ScrollZoom =>
-      if deltaY == 0. {
-        ()
-      } else {
+    let deltaY = event->ReactEvent.Wheel.deltaY
+    let deltaX = event->ReactEvent.Wheel.deltaX
+    let isZoomGesture = mouseEvent->ReactEvent.Mouse.altKey
+    if isZoomGesture {
+      if deltaY != 0. {
         let anchor = switch canvasContainerRef.current->Js.Nullable.toOption {
         | Some(containerElement) =>
           let rect = containerElement->Element.getBoundingClientRect
-          let mouseEvent: ReactEvent.Mouse.t = event->Obj.magic
           let clientX = mouseEvent->ReactEvent.Mouse.clientX->Int.toFloat
           let clientY = mouseEvent->ReactEvent.Mouse.clientY->Int.toFloat
           (clientX -. rect->DomRect.left, clientY -. rect->DomRect.top)
@@ -737,8 +735,7 @@ let make = () => {
         }
         adjustZoomByFactor(~focalPoint=anchor, factor)
       }
-    | ScrollPan =>
-      let deltaX = event->ReactEvent.Wheel.deltaX
+    } else {
       adjustPan(-.deltaX, -.deltaY)
     }
   }
@@ -1240,7 +1237,6 @@ let make = () => {
     <div className=" flex flex-row h-dvh overflow-x-hidden">
       <div className="flex flex-col flex-none overflow-x-hidden divide-y divide-gray-300">
         <ZoomControl zoomOut zoomIn centerCanvas fitCanvasToViewport zoomPercent />
-        <ScrollWheelControl scrollWheelMode setScrollWheelMode />
 
         <div className="flex flex-row gap-2 h-full flex-none p-2">
           <SavedBrushesPanel
