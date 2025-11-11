@@ -794,6 +794,9 @@ let make = () => {
         (nextPanX, nextPanY)
       }
     )
+    // lastAutoCenteredDimsRef.current = Some((dimI, dimJ))
+    // clearHoverRef.current()
+    // setCursorOverlayOff(_ => true)
   }
 
   let centerCanvas = () => centerCanvasForDimensions(boardDimI, boardDimJ)
@@ -806,6 +809,9 @@ let make = () => {
         panRef.current = (nextPanX, nextPanY)
         {...canvas, zoom: nextZoom, pan: (nextPanX, nextPanY)}
       })
+    // lastAutoCenteredDimsRef.current = Some((dimI, dimJ))
+    // clearHoverRef.current()
+    // setCursorOverlayOff(_ => true)
     | None => centerCanvasForDimensions(dimI, dimJ)
     }
 
