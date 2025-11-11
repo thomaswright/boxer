@@ -148,18 +148,18 @@ function CanvasViewport(props) {
     let relativeY = clientY - rect.top;
     let boardX = (relativeX - panX) / zoom;
     let boardY = (relativeY - panY) / zoom;
-    if (boardX < 0 || boardY < 0) {
-      return;
-    }
     let col = Math.floor(boardX / 1) | 0;
     let row = Math.floor(boardY / 1) | 0;
-    if (col < 0 || col >= boardDimJ || row < 0 || row >= boardDimI) {
-      return;
+    return [
+      row,
+      col
+    ];
+  };
+  let isWithinBoard = (row, col) => {
+    if (row >= 0 && row < boardDimI && col >= 0) {
+      return col < boardDimJ;
     } else {
-      return [
-        row,
-        col
-      ];
+      return false;
     }
   };
   let handleMouseMove = event => {
@@ -173,9 +173,13 @@ function CanvasViewport(props) {
         col
       ]);
       if (isPickingColor) {
-        let hoveredColor = Board.get(board, row, col);
-        let hoveredColor$1 = (hoveredColor == null) ? undefined : Primitive_option.some(hoveredColor);
-        setHoveredPickColor(param => hoveredColor$1);
+        if (isWithinBoard(row, col)) {
+          let hoveredColor = Board.get(board, row, col);
+          let hoveredColor$1 = (hoveredColor == null) ? undefined : Primitive_option.some(hoveredColor);
+          setHoveredPickColor(param => hoveredColor$1);
+        } else {
+          setHoveredPickColor(param => {});
+        }
       }
       if (isMouseDown && !isPickingColor) {
         return applyBrush(row, col);
@@ -201,7 +205,11 @@ function CanvasViewport(props) {
       col
     ]);
     if (isPickingColor) {
-      return handlePickColor(row, col);
+      if (isWithinBoard(row, col)) {
+        return handlePickColor(row, col);
+      } else {
+        return;
+      }
     } else {
       applyBrush(row, col);
       return setCursorOverlayOff(param => true);
@@ -273,11 +281,7 @@ function CanvasViewport(props) {
             height: heightString,
             imageRendering: "pixelated",
             width: widthString
-          },
-          onMouseDown: handleMouseDown,
-          onMouseEnter: handleMouseMove,
-          onMouseLeave: handleMouseLeave,
-          onMouseMove: handleMouseMove
+          }
         }),
         props.isDotMask ? JsxRuntime.jsx("div", {
             className: "absolute top-0 left-0 pointer-events-none",
@@ -322,6 +326,10 @@ function CanvasViewport(props) {
     style: {
       backgroundColor: props.viewportBackgroundColor
     },
+    onMouseDown: handleMouseDown,
+    onMouseEnter: handleMouseMove,
+    onMouseLeave: handleMouseLeave,
+    onMouseMove: handleMouseMove,
     onWheel: event => {
       event.preventDefault();
       onWheel(event);

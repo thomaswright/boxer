@@ -145,20 +145,12 @@ let make = (
       let relativeY = clientY->Int.toFloat -. rect->DomRect.top
       let boardX = (relativeX -. panX) /. zoom
       let boardY = (relativeY -. panY) /. zoom
-      if boardX < 0. || boardY < 0. {
-        None
-      } else {
-        let col = (boardX /. cellSizeFloat)->Js.Math.floor_float->Float.toInt
-        let row = (boardY /. cellSizeFloat)->Js.Math.floor_float->Float.toInt
-
-        if col < 0 || col >= boardDimJ || row < 0 || row >= boardDimI {
-          None
-        } else {
-          Some((row, col))
-        }
-      }
+      let col = (boardX /. cellSizeFloat)->Js.Math.floor_float->Float.toInt
+      let row = (boardY /. cellSizeFloat)->Js.Math.floor_float->Float.toInt
+      Some((row, col))
     | None => None
     }
+  let isWithinBoard = (row, col) => row >= 0 && row < boardDimI && col >= 0 && col < boardDimJ
 
   let handleMouseMove = event => {
     setCursorOverlayOff(_ => false)
@@ -166,8 +158,12 @@ let make = (
     | Some((row, col)) =>
       updateHover(Some((row, col)))
       if isPickingColor {
-        let hoveredColor = Board.get(board, row, col)->Js.Nullable.toOption
-        setHoveredPickColor(_ => hoveredColor)
+        if isWithinBoard(row, col) {
+          let hoveredColor = Board.get(board, row, col)->Js.Nullable.toOption
+          setHoveredPickColor(_ => hoveredColor)
+        } else {
+          setHoveredPickColor(_ => None)
+        }
       }
       if isMouseDown && !isPickingColor {
         applyBrush(row, col)
@@ -185,7 +181,9 @@ let make = (
     | Some((row, col)) =>
       updateHover(Some((row, col)))
       if isPickingColor {
-        handlePickColor(row, col)
+        if isWithinBoard(row, col) {
+          handlePickColor(row, col)
+        }
       } else {
         applyBrush(row, col)
         setCursorOverlayOff(_ => true)
@@ -268,7 +266,11 @@ let make = (
     onWheel={event => {
       event->ReactEvent.Wheel.preventDefault
       onWheel(event)
-    }}>
+    }}
+    onMouseMove={handleMouseMove}
+    onMouseEnter={handleMouseMove}
+    onMouseLeave={handleMouseLeave}
+    onMouseDown={handleMouseDown}>
     <div
       className={"absolute top-0 left-0"}
       style={{
@@ -316,10 +318,6 @@ let make = (
           height: heightString,
           imageRendering: "pixelated",
         }}
-        onMouseMove={handleMouseMove}
-        onMouseEnter={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        onMouseDown={handleMouseDown}
       />
       {isDotMask
         ? <div
