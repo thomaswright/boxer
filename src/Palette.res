@@ -1,3 +1,5 @@
+// these are passed to canvas elements and can't be vars
+
 let gridLineDark = "rgba(0, 0, 0, 0.25)"
 let gridLineLight = "rgba(255, 255, 255, 0.25)"
 let checkeredPrimaryDark = "rgba(0, 0, 0, 0.15)"

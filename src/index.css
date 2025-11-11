@@ -30,6 +30,7 @@ html {
   --plain-900: var(--color-gray-900);
   --plain-950: var(--color-gray-950);
   --accent: var(--color-blue-500);
+  --secondary: var(--color-orange-500);
 }
 
 .dark {
@@ -50,4 +51,5 @@ html {
   --plain-900: var(--color-gray-100);
   --plain-950: var(--color-gray-50);
   --accent: var(--color-blue-500);
+  --secondary: var(--color-orange-500);
 }

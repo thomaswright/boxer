@@ -36,7 +36,7 @@ function SavedBrushesPanel(props) {
               children: match[0].toString() + ":" + match[1].toString(),
               className: [
                 " text-3xs font-bold w-4 text-center bg-[var(--plain-white)]",
-                selected ? "text-orange-700" : "text-[var(--plain-black)]"
+                selected ? "text-[var(--secondary)]" : "text-[var(--plain-black)]"
               ].join(" "),
               style: {
                 writingMode: "sideways-lr"
@@ -49,7 +49,7 @@ function SavedBrushesPanel(props) {
                 emptyColor: match$1[1]
               }),
               className: [
-                selected ? "bg-orange-500" : "bg-[var(--plain-400)]",
+                selected ? "bg-[var(--secondary)]" : "bg-[var(--plain-400)]",
                 "h-8 w-8 rounded-xs overflow-hidden"
               ].join(" ")
             })
