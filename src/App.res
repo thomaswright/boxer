@@ -133,6 +133,7 @@ let defaultBrushEntries = defaultBrushPatterns->Array.mapWithIndex((brush, index
 
 @react.component
 let make = () => {
+  let (theme, setTheme) = Theme.useTheme()
   // Layout helpers
   let canvasContainerRef = React.useRef(Js.Nullable.null)
   let (viewportCenter, setViewportCenter) = React.useState(() => (192., 192.))
@@ -1240,13 +1241,14 @@ let make = () => {
     })
 
   if !areBoardsLoaded {
-    <div className="flex h-dvh items-center justify-center text-sm text-gray-500">
+    <div className="flex h-dvh items-center justify-center text-sm text-[color:var(--plain-500)]">
       {React.string("Loading canvases…")}
     </div>
   } else {
     <div className=" flex flex-row h-dvh overflow-x-hidden">
-      <div className="flex flex-col flex-none overflow-x-hidden divide-y divide-gray-300">
+      <div className="flex flex-col flex-none overflow-x-hidden divide-y divide-[color:var(--plain-300)]">
         <ZoomControl zoomOut zoomIn centerCanvas fitCanvasToViewport zoomPercent />
+        <ThemeToggle theme setTheme />
 
         <div className="flex flex-row gap-2 h-full flex-none p-2">
           <SavedBrushesPanel
@@ -1337,7 +1339,10 @@ let make = () => {
           onStartColorPick
           canvasBackgroundColor
         />
-        <div className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-gray-300"}>
+        <div
+          className={
+            "overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-[color:var(--plain-300)]"
+          }>
           <ColorsUsed myColor board onSelectUsedColor onReplaceUsedColor isMouseDown />
 
           <BrushOverlayControl overlayMode setOverlayMode />

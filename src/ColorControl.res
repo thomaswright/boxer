@@ -20,7 +20,9 @@ let make = (
     <div className="flex flex-row justify-center">
       <button
         className={[
-          brushMode == Color ? " bg-blue-500 text-white" : "bg-gray-200",
+          brushMode == Color
+            ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]"
+            : "bg-[color:var(--plain-200)] text-[color:var(--plain-900)]",
           "px-2 font-medium rounded-l",
         ]->Array.join(" ")}
         onClick={_ => setBrushMode(_ => Color)}>
@@ -28,7 +30,9 @@ let make = (
       </button>
       <button
         className={[
-          brushMode == Erase ? " bg-blue-500 text-white" : "bg-gray-200",
+          brushMode == Erase
+            ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]"
+            : "bg-[color:var(--plain-200)] text-[color:var(--plain-900)]",
           "px-2 font-medium rounded-r",
         ]->Array.join(" ")}
         onClick={_ => setBrushMode(_ => Erase)}>
@@ -36,7 +40,9 @@ let make = (
       </button>
       <button
         className={[
-          isPickingColor ? " bg-blue-500 text-white" : "bg-gray-200",
+          isPickingColor
+            ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]"
+            : "bg-[color:var(--plain-200)] text-[color:var(--plain-900)]",
           "px-2 font-medium rounded ml-2",
         ]->Array.join(" ")}
         onClick={_ => onStartColorPick()}>
@@ -45,7 +51,7 @@ let make = (
     </div>
     {isPickingColor
       ? <div
-          className="w-full h-[200px] border border-gray-300"
+          className="w-full h-[200px] border border-[color:var(--plain-300)]"
           style={{
             backgroundColor: previewColor,
           }}

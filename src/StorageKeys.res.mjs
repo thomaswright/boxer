@@ -25,6 +25,8 @@ let gridMode = "grid-mode";
 
 let silhouette = "canvas-silhouette";
 
+let theme = "theme";
+
 export {
   canvases,
   savedBrushes,
@@ -38,5 +40,6 @@ export {
   brushOverlayMode,
   gridMode,
   silhouette,
+  theme,
 }
 /* No side effect */

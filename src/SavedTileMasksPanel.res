@@ -32,7 +32,9 @@ let make = (
         <div
           className={[
             "h-8 w-8 rounded-xs overflow-hidden",
-            selected ? "bg-orange-100 " : "bg-gray-100",
+            selected
+              ? "bg-[color:var(--accent)]"
+              : "bg-[color:var(--plain-100)]",
           ]->Array.join(" ")}>
           <BoolGridPreview
             grid={savedTileMask.mask} filledColor={Some(filledColor)} emptyColor={Some(emptyColor)}
@@ -44,7 +46,9 @@ let make = (
     <button
       className={[
         "rounded p-1 h-6 w-6 text-sm font-medium",
-        canSaveTileMask ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed",
+        canSaveTileMask
+          ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]"
+          : "bg-[color:var(--plain-200)] text-[color:var(--plain-500)] cursor-not-allowed",
       ]->Array.join(" ")}
       disabled={canSaveTileMask}
       onClick={_ => handleAddTileMask()}>
@@ -55,8 +59,8 @@ let make = (
       className={[
         "rounded p-1 h-6 w-6 text-sm font-medium",
         canDeleteSelectedTileMask
-          ? "bg-blue-500 text-white"
-          : "bg-gray-200 text-gray-500 cursor-not-allowed",
+          ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]"
+          : "bg-[color:var(--plain-200)] text-[color:var(--plain-500)] cursor-not-allowed",
       ]->Array.join(" ")}
       disabled={!canDeleteSelectedTileMask}
       onClick={_ => handleDeleteSelectedTileMask()}>

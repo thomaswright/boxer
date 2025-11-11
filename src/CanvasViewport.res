@@ -259,7 +259,7 @@ let make = (
 
   <div
     ref={ReactDOM.Ref.domRef(canvasContainerRef)}
-    className="relative border border-gray-300 overflow-hidden w-full h-full"
+    className="relative border border-[color:var(--plain-300)] overflow-hidden w-full h-full"
     style={{
       backgroundColor: viewportBackgroundColor,
     }}

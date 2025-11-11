@@ -5,20 +5,49 @@
 }
 
 @theme {
-  --color-rescript-50: oklch(97% 0.02 27);
-  --color-rescript-100: oklch(93% 0.04 27);
-  --color-rescript-200: oklch(87% 0.07 27);
-  --color-rescript-300: oklch(79% 0.12 27);
-  --color-rescript-400: oklch(71% 0.16 27);
-  --color-rescript-500: oklch(63% 0.19 27);
-  --color-rescript-600: oklch(55% 0.17 27);
-  --color-rescript-700: oklch(47% 0.15 27);
-  --color-rescript-800: oklch(39% 0.12 27);
-  --color-rescript-900: oklch(31% 0.09 27);
-  --color-rescript-950: oklch(23% 0.06 27);
   --font-inter: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   --text-2xs: 0.7rem;
   --text-2xs--line-height: 0.85rem;
   --text-3xs: 0.6rem;
   --text-3xs--line-height: 0.75rem;
+}
+
+html {
+  background-color: white;
+  color: black;
+
+  --plain-white: white;
+  --plain-black: black;
+  --plain-50: var(--color-gray-50);
+  --plain-100: var(--color-gray-100);
+  --plain-200: var(--color-gray-200);
+  --plain-300: var(--color-gray-300);
+  --plain-400: var(--color-gray-400);
+  --plain-500: var(--color-gray-500);
+  --plain-600: var(--color-gray-600);
+  --plain-700: var(--color-gray-700);
+  --plain-800: var(--color-gray-800);
+  --plain-900: var(--color-gray-900);
+  --plain-950: var(--color-gray-950);
+  --accent: var(--color-blue-500);
+}
+
+.dark {
+  background-color: black;
+  color: white;
+
+  --plain-white: black;
+  --plain-black: white;
+  --plain-50: var(--color-gray-950);
+  --plain-100: var(--color-gray-900);
+  --plain-200: var(--color-gray-800);
+  --plain-300: var(--color-gray-700);
+  --plain-400: var(--color-gray-600);
+  --plain-500: var(--color-gray-500);
+  --plain-600: var(--color-gray-400);
+  --plain-700: var(--color-gray-300);
+  --plain-800: var(--color-gray-200);
+  --plain-900: var(--color-gray-100);
+  --plain-950: var(--color-gray-50);
+  --accent: var(--color-blue-500);
 }

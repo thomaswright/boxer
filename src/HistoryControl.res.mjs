@@ -8,7 +8,7 @@ function HistoryControl(props) {
   let canRedo = props.canRedo;
   let canUndo = props.canUndo;
   let buttonClass = enabled => "flex-1 rounded px-2 py-1 text-xs font-medium flex items-center justify-center " + (
-    enabled ? "bg-gray-200 text-gray-900" : "bg-gray-100 text-gray-400 cursor-not-allowed"
+    enabled ? "bg-[color:var(--plain-200)] text-[color:var(--plain-900)]" : "bg-[color:var(--plain-100)] text-[color:var(--plain-400)] cursor-not-allowed"
   );
   return JsxRuntime.jsxs("div", {
     children: [
@@ -20,7 +20,7 @@ function HistoryControl(props) {
           }),
           JsxRuntime.jsx("span", {
             children: "Cmd+Z / Cmd+Shift+Z",
-            className: "text-xs text-gray-500 font-mono"
+            className: "text-xs text-[color:var(--plain-500)] font-mono"
           })
         ],
         className: "flex flex-row items-center justify-between"

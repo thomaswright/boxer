@@ -35,8 +35,8 @@ function SavedBrushesPanel(props) {
             JsxRuntime.jsx("div", {
               children: match[0].toString() + ":" + match[1].toString(),
               className: [
-                " text-3xs font-bold w-4 text-center bg-white",
-                selected ? "text-orange-700" : "text-black"
+                " text-3xs font-bold w-4 text-center bg-[color:var(--plain-white)]",
+                selected ? "text-orange-700" : "text-[color:var(--plain-black)]"
               ].join(" "),
               style: {
                 writingMode: "sideways-lr"
@@ -49,7 +49,7 @@ function SavedBrushesPanel(props) {
                 emptyColor: match$1[1]
               }),
               className: [
-                selected ? "bg-orange-500" : "bg-gray-400",
+                selected ? "bg-orange-500" : "bg-[color:var(--plain-400)]",
                 "h-8 w-8 rounded-xs overflow-hidden"
               ].join(" ")
             })
@@ -62,7 +62,7 @@ function SavedBrushesPanel(props) {
         children: JsxRuntime.jsx(Tb.TbPlus, {}),
         className: [
           "rounded p-1 h-6 w-6 text-sm font-medium",
-          canSaveBrush ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+          canSaveBrush ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]" : "bg-[color:var(--plain-200)] text-[color:var(--plain-500)] cursor-not-allowed"
         ].join(" "),
         disabled: canSaveBrush,
         onClick: param => handleAddBrush()
@@ -71,7 +71,7 @@ function SavedBrushesPanel(props) {
         children: JsxRuntime.jsx(Tb.TbTrash, {}),
         className: [
           "rounded p-1 h-6 w-6 text-sm font-medium",
-          canDeleteSelectedBrush ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+          canDeleteSelectedBrush ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]" : "bg-[color:var(--plain-200)] text-[color:var(--plain-500)] cursor-not-allowed"
         ].join(" "),
         disabled: !canDeleteSelectedBrush,
         onClick: param => handleDeleteSelectedBrush()

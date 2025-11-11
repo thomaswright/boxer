@@ -12,13 +12,13 @@ function CanvasSizeControl(props) {
   let setResizeRowsInput = props.setResizeRowsInput;
   let baseButtonClasses = "flex-1 px-2 py-1 text-xs font-medium border first:rounded-l last:rounded-r";
   let tmp;
-  tmp = resizeMode === "Scale" ? "bg-blue-500 text-white border-blue-500" : "bg-gray-100 text-gray-700 border-gray-300";
+  tmp = resizeMode === "Scale" ? "bg-[color:var(--accent)] text-[color:var(--plain-white)] border-[color:var(--accent)]" : "bg-[color:var(--plain-100)] text-[color:var(--plain-700)] border-[color:var(--plain-300)]";
   let scaleButtonClasses = [
     baseButtonClasses,
     tmp
   ].join(" ");
   let tmp$1;
-  tmp$1 = resizeMode === "Scale" ? "bg-gray-100 text-gray-700 border-gray-300" : "bg-blue-500 text-white border-blue-500";
+  tmp$1 = resizeMode === "Scale" ? "bg-[color:var(--plain-100)] text-[color:var(--plain-700)] border-[color:var(--plain-300)]" : "bg-[color:var(--accent)] text-[color:var(--plain-white)] border-[color:var(--accent)]";
   let cropButtonClasses = [
     baseButtonClasses,
     tmp$1
@@ -79,7 +79,7 @@ function CanvasSizeControl(props) {
             children: "Save",
             className: [
               "rounded px-2 py-1 text-sm font-medium",
-              canSubmitResize ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500 cursor-not-allowed"
+              canSubmitResize ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]" : "bg-[color:var(--plain-200)] text-[color:var(--plain-500)] cursor-not-allowed"
             ].join(" "),
             disabled: !canSubmitResize,
             onClick: param => handleResizeSubmit()

@@ -28,12 +28,12 @@ function ZoomControl(props) {
         children: [
           JsxRuntime.jsx("button", {
             children: JsxRuntime.jsx(Tb.TbMinus, {}),
-            className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200  flex justify-center items-center",
+            className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-[color:var(--plain-200)] text-[color:var(--plain-900)] flex justify-center items-center",
             onClick: param => zoomOut()
           }),
           JsxRuntime.jsx("button", {
             children: JsxRuntime.jsx(Tb.TbPlus, {}),
-            className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-gray-200 flex justify-center items-center",
+            className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-[color:var(--plain-200)] text-[color:var(--plain-900)] flex justify-center items-center",
             onClick: param => zoomIn()
           })
         ],
@@ -43,12 +43,12 @@ function ZoomControl(props) {
         children: [
           JsxRuntime.jsx("button", {
             children: "Fit",
-            className: "flex-1 rounded px-2 py-1 text-xs font-medium bg-gray-200",
+            className: "flex-1 rounded px-2 py-1 text-xs font-medium bg-[color:var(--plain-200)] text-[color:var(--plain-900)]",
             onClick: param => fitCanvasToViewport()
           }),
           JsxRuntime.jsx("button", {
             children: "Center",
-            className: "flex-1 rounded px-2 py-1 text-xs font-medium bg-gray-200",
+            className: "flex-1 rounded px-2 py-1 text-xs font-medium bg-[color:var(--plain-200)] text-[color:var(--plain-900)]",
             onClick: param => centerCanvas()
           })
         ],

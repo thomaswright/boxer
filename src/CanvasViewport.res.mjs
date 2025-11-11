@@ -322,7 +322,7 @@ function CanvasViewport(props) {
       }
     }),
     ref: Primitive_option.some(canvasContainerRef),
-    className: "relative border border-gray-300 overflow-hidden w-full h-full",
+    className: "relative border border-[color:var(--plain-300)] overflow-hidden w-full h-full",
     style: {
       backgroundColor: props.viewportBackgroundColor
     },

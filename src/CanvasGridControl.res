@@ -12,9 +12,9 @@ let buttonClass = (~isActive) =>
   "flex-1 text-xs font-medium px-1 py-1 nth-[1]:rounded-t nth-[1]:col-span-2 nth-[4]:rounded-bl nth-[5]:rounded-br border transition-colors " ++ if (
     isActive
   ) {
-    "bg-gray-900 text-white border-gray-900"
+    "bg-[color:var(--plain-900)] text-[color:var(--plain-white)] border-[color:var(--plain-900)]"
   } else {
-    "bg-white text-gray-800 border-gray-200 hover:border-gray-400"
+    "bg-[color:var(--plain-white)] text-[color:var(--plain-800)] border-[color:var(--plain-200)] hover:border-[color:var(--plain-400)]"
   }
 
 @react.component
