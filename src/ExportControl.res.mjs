@@ -20,7 +20,7 @@ function ExportControl(props) {
             children: [
               JsxRuntime.jsx("span", {
                 children: "Scale",
-                className: "text-xs uppercase tracking-wide text-[color:var(--plain-500)]"
+                className: "text-xs uppercase tracking-wide text-[var(--plain-500)]"
               }),
               JsxRuntime.jsx("input", {
                 className: "border rounded px-2 py-1 text-sm w-16",
@@ -40,7 +40,7 @@ function ExportControl(props) {
             children: "Export",
             className: [
               "rounded px-2 py-1 text-sm font-medium flex-1 h-fit",
-              canExport ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]" : "bg-[color:var(--plain-200)] text-[color:var(--plain-500)] cursor-not-allowed"
+              canExport ? "bg-[var(--accent)] text-[var(--plain-white)]" : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed"
             ].join(" "),
             disabled: !canExport,
             onClick: param => onExport()

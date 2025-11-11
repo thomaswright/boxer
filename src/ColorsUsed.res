@@ -116,15 +116,15 @@ let make = (
     <div className="flex flex-row items-center justify-between">
       <span className="font-medium flex-1"> {"Colors Used"->React.string} </span>
 
-      <span className="text-xs text-[color:var(--plain-500)] px-2">
+      <span className="text-xs text-[var(--plain-500)] px-2">
         {uniqueColorCount->Int.toString->React.string}
       </span>
       <button
         type_="button"
         className={[
           replaceMode
-            ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]"
-            : "bg-[color:var(--plain-200)] text-[color:var(--plain-900)]",
+            ? "bg-[var(--accent)] text-[var(--plain-white)]"
+            : "bg-[var(--plain-200)] text-[var(--plain-900)]",
           "px-1 py-0.5 font-medium text-xs rounded",
         ]->Array.join(" ")}
         onClick={_ => setReplaceMode(v => !v)}>
@@ -133,7 +133,7 @@ let make = (
     </div>
     {switch usages->Array.length {
     | 0 =>
-      <div className="text-xs text-[color:var(--plain-500)]">
+      <div className="text-xs text-[var(--plain-500)]">
         {"Start drawing to see colors"->React.string}
       </div>
     | _ =>
@@ -146,19 +146,19 @@ let make = (
             key={color}
             type_="button"
             className={[
-              "flex flex-1 flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-[color:var(--plain-100)] text-left",
-              isSelected ? "bg-[color:var(--plain-200)]" : "",
+              "flex flex-1 flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-[var(--plain-100)] text-left",
+              isSelected ? "bg-[var(--plain-200)]" : "",
             ]->Array.join(" ")}
             title={color}
             onClick={_ => replaceMode ? onReplaceUsedColor(color) : onSelectUsedColor(color)}>
             <div
-              className="w-4 h-4 rounded border border-[color:var(--plain-300)]"
+              className="w-4 h-4 rounded border border-[var(--plain-300)]"
               style={{backgroundColor: color}}
             />
-            <div className="text-xs text-[color:var(--plain-500)] tabular-nums">
+            <div className="text-xs text-[var(--plain-500)] tabular-nums">
               {`${percentLabel == "0" ? "<1" : percentLabel}%`->React.string}
             </div>
-            <div className="text-xs text-[color:var(--plain-400)] w-8 text-right tabular-nums">
+            <div className="text-xs text-[var(--plain-400)] w-8 text-right tabular-nums">
               {count->Int.toString->React.string}
             </div>
           </button>

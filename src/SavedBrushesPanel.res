@@ -31,15 +31,15 @@ let make = (
         className={["flex flex-row"]->Array.join(" ")}>
         <div
           className={[
-            " text-3xs font-bold w-4 text-center bg-[color:var(--plain-white)]",
-            selected ? "text-orange-700" : "text-[color:var(--plain-black)]",
+            " text-3xs font-bold w-4 text-center bg-[var(--plain-white)]",
+            selected ? "text-orange-700" : "text-[var(--plain-black)]",
           ]->Array.join(" ")}
           style={{writingMode: "sideways-lr"}}>
           {`${dimI->Int.toString}:${dimJ->Int.toString}`->React.string}
         </div>
         <div
           className={[
-            selected ? "bg-orange-500" : "bg-[color:var(--plain-400)]",
+            selected ? "bg-orange-500" : "bg-[var(--plain-400)]",
             "h-8 w-8 rounded-xs overflow-hidden",
           ]->Array.join(" ")}>
           <BoolGridPreview
@@ -53,8 +53,8 @@ let make = (
       className={[
         "rounded p-1 h-6 w-6 text-sm font-medium",
         canSaveBrush
-          ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]"
-          : "bg-[color:var(--plain-200)] text-[color:var(--plain-500)] cursor-not-allowed",
+          ? "bg-[var(--accent)] text-[var(--plain-white)]"
+          : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed",
       ]->Array.join(" ")}
       disabled={canSaveBrush}
       onClick={_ => handleAddBrush()}>
@@ -64,8 +64,8 @@ let make = (
       className={[
         "rounded p-1 h-6 w-6 text-sm font-medium",
         canDeleteSelectedBrush
-          ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]"
-          : "bg-[color:var(--plain-200)] text-[color:var(--plain-500)] cursor-not-allowed",
+          ? "bg-[var(--accent)] text-[var(--plain-white)]"
+          : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed",
       ]->Array.join(" ")}
       disabled={!canDeleteSelectedBrush}
       onClick={_ => handleDeleteSelectedBrush()}>

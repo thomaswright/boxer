@@ -19,14 +19,14 @@ function ThemeToggle(props) {
           JsxRuntime.jsx("button", {
             children: "Light",
             className: "flex-1 rounded px-2 py-1 text-xs font-medium border transition-colors " + (
-              theme === "light" ? "bg-[color:var(--accent)] text-[color:var(--plain-white)] border-[color:var(--accent)]" : "bg-[color:var(--plain-200)] text-[color:var(--plain-900)] border-[color:var(--plain-300)]"
+              theme === "light" ? "bg-[var(--accent)] text-[var(--plain-white)] border-[var(--accent)]" : "bg-[var(--plain-200)] text-[var(--plain-900)] border-[var(--plain-300)]"
             ),
             onClick: param => setTheme(param => "light")
           }),
           JsxRuntime.jsx("button", {
             children: "Dark",
             className: "flex-1 rounded px-2 py-1 text-xs font-medium border transition-colors " + (
-              theme === "dark" ? "bg-[color:var(--accent)] text-[color:var(--plain-white)] border-[color:var(--accent)]" : "bg-[color:var(--plain-200)] text-[color:var(--plain-900)] border-[color:var(--plain-300)]"
+              theme === "dark" ? "bg-[var(--accent)] text-[var(--plain-white)] border-[var(--accent)]" : "bg-[var(--plain-200)] text-[var(--plain-900)] border-[var(--plain-300)]"
             ),
             onClick: param => setTheme(param => "dark")
           })

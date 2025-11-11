@@ -1332,7 +1332,7 @@ function App(props) {
               className: "flex flex-row gap-2 h-full flex-none p-2"
             })
           ],
-          className: "flex flex-col flex-none overflow-x-hidden divide-y divide-[color:var(--plain-300)]"
+          className: "flex flex-col flex-none overflow-x-hidden divide-y divide-[var(--plain-300)]"
         }),
         JsxRuntime.jsxs("div", {
           children: [
@@ -1456,7 +1456,7 @@ function App(props) {
                   onExport: handleExportPng
                 })
               ],
-              className: "overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-[color:var(--plain-300)]"
+              className: "overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-[var(--plain-300)]"
             })
           ],
           className: " h-full overflow-x-visible flex flex-col w-48 py-2"
@@ -1467,7 +1467,7 @@ function App(props) {
   } else {
     return JsxRuntime.jsx("div", {
       children: "Loading canvases…",
-      className: "flex h-dvh items-center justify-center text-sm text-[color:var(--plain-500)]"
+      className: "flex h-dvh items-center justify-center text-sm text-[var(--plain-500)]"
     });
   }
 }

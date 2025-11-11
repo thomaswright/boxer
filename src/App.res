@@ -238,7 +238,10 @@ let make = () => {
       boardHistoryByCanvasRef.current = next
       next
     })
-  let (savedBrushes, setSavedBrushes, _) = useLocalStorage(StorageKeys.savedBrushes, defaultBrushEntries)
+  let (savedBrushes, setSavedBrushes, _) = useLocalStorage(
+    StorageKeys.savedBrushes,
+    defaultBrushEntries,
+  )
   let (savedTileMasks, setSavedTileMasks, _) = useLocalStorage(
     StorageKeys.savedTileMasks,
     defaultTileMaskEntries,
@@ -257,17 +260,26 @@ let make = () => {
     StorageKeys.selectedTileMaskId,
     None,
   )
-  let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage(StorageKeys.selectedCanvasId, None)
+  let (selectedCanvasId, setSelectedCanvasId, _) = useLocalStorage(
+    StorageKeys.selectedCanvasId,
+    None,
+  )
   let (myColor, setMyColor, _) = useLocalStorage(StorageKeys.myColor, Initials.myColor)
 
   // Persistent UI Selection
   let (brushMode, setBrushMode, _) = useLocalStorage(StorageKeys.brushMode, Color)
-  let (overlayMode, setOverlayMode, _) = useLocalStorage(StorageKeys.brushOverlayMode, OverlayDefault)
+  let (overlayMode, setOverlayMode, _) = useLocalStorage(
+    StorageKeys.brushOverlayMode,
+    OverlayDefault,
+  )
 
   let (gridMode, setGridMode, _) = useLocalStorage(StorageKeys.gridMode, GridNone)
 
   // Transient UI
-  let (isSilhouette, setIsSilhouette, _) = useLocalStorage(StorageKeys.silhouette, Initials.silhouette)
+  let (isSilhouette, setIsSilhouette, _) = useLocalStorage(
+    StorageKeys.silhouette,
+    Initials.silhouette,
+  )
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
   let (exportScaleInput, setExportScaleInput) = React.useState(() => "16")
   let (includeExportBackground, setIncludeExportBackground) = React.useState(() => true)
@@ -1241,12 +1253,12 @@ let make = () => {
     })
 
   if !areBoardsLoaded {
-    <div className="flex h-dvh items-center justify-center text-sm text-[color:var(--plain-500)]">
+    <div className="flex h-dvh items-center justify-center text-sm text-[var(--plain-500)]">
       {React.string("Loading canvases…")}
     </div>
   } else {
     <div className=" flex flex-row h-dvh overflow-x-hidden">
-      <div className="flex flex-col flex-none overflow-x-hidden divide-y divide-[color:var(--plain-300)]">
+      <div className="flex flex-col flex-none overflow-x-hidden divide-y divide-[var(--plain-300)]">
         <ZoomControl zoomOut zoomIn centerCanvas fitCanvasToViewport zoomPercent />
         <ThemeToggle theme setTheme />
 
@@ -1340,9 +1352,7 @@ let make = () => {
           canvasBackgroundColor
         />
         <div
-          className={
-            "overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-[color:var(--plain-300)]"
-          }>
+          className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-[var(--plain-300)]"}>
           <ColorsUsed myColor board onSelectUsedColor onReplaceUsedColor isMouseDown />
 
           <BrushOverlayControl overlayMode setOverlayMode />

@@ -9,25 +9,25 @@ let make = (~zoomOut, ~zoomIn, ~centerCanvas, ~fitCanvasToViewport, ~zoomPercent
     </div>
     <div className="flex flex-row gap-2">
       <button
-        className="flex-1 rounded px-2 py-1 text-sm font-medium bg-[color:var(--plain-200)] text-[color:var(--plain-900)] flex justify-center items-center"
+        className="flex-1 rounded px-2 py-1 text-sm font-medium bg-[var(--plain-200)] text-[var(--plain-900)] flex justify-center items-center"
         onClick={_ => zoomOut()}>
         <Icons.Minus />
       </button>
 
       <button
-        className="flex-1 rounded px-2 py-1 text-sm font-medium bg-[color:var(--plain-200)] text-[color:var(--plain-900)] flex justify-center items-center"
+        className="flex-1 rounded px-2 py-1 text-sm font-medium bg-[var(--plain-200)] text-[var(--plain-900)] flex justify-center items-center"
         onClick={_ => zoomIn()}>
         <Icons.Plus />
       </button>
     </div>
     <div className="flex flex-row gap-2">
       <button
-        className="flex-1 rounded px-2 py-1 text-xs font-medium bg-[color:var(--plain-200)] text-[color:var(--plain-900)]"
+        className="flex-1 rounded px-2 py-1 text-xs font-medium bg-[var(--plain-200)] text-[var(--plain-900)]"
         onClick={_ => fitCanvasToViewport()}>
         {"Fit"->React.string}
       </button>
       <button
-        className="flex-1 rounded px-2 py-1 text-xs font-medium bg-[color:var(--plain-200)] text-[color:var(--plain-900)]"
+        className="flex-1 rounded px-2 py-1 text-xs font-medium bg-[var(--plain-200)] text-[var(--plain-900)]"
         onClick={_ => centerCanvas()}>
         {"Center"->React.string}
       </button>

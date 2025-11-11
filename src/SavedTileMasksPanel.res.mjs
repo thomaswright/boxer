@@ -36,7 +36,7 @@ function SavedTileMasksPanel(props) {
             }),
             className: [
               "h-8 w-8 rounded-xs overflow-hidden",
-              selected ? "bg-[color:var(--accent)]" : "bg-[color:var(--plain-100)]"
+              selected ? "bg-[var(--accent)]" : "bg-[var(--plain-100)]"
             ].join(" ")
           }),
           onClick: param => setSelectedTileMaskId(param => savedTileMask.id)
@@ -46,7 +46,7 @@ function SavedTileMasksPanel(props) {
         children: JsxRuntime.jsx(Tb.TbPlus, {}),
         className: [
           "rounded p-1 h-6 w-6 text-sm font-medium",
-          canSaveTileMask ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]" : "bg-[color:var(--plain-200)] text-[color:var(--plain-500)] cursor-not-allowed"
+          canSaveTileMask ? "bg-[var(--accent)] text-[var(--plain-white)]" : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed"
         ].join(" "),
         disabled: canSaveTileMask,
         onClick: param => handleAddTileMask()
@@ -55,7 +55,7 @@ function SavedTileMasksPanel(props) {
         children: JsxRuntime.jsx(Tb.TbTrash, {}),
         className: [
           "rounded p-1 h-6 w-6 text-sm font-medium",
-          canDeleteSelectedTileMask ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]" : "bg-[color:var(--plain-200)] text-[color:var(--plain-500)] cursor-not-allowed"
+          canDeleteSelectedTileMask ? "bg-[var(--accent)] text-[var(--plain-white)]" : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed"
         ].join(" "),
         disabled: !canDeleteSelectedTileMask,
         onClick: param => handleDeleteSelectedTileMask()

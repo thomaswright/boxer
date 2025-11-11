@@ -21,8 +21,8 @@ let make = (
       <button
         className={[
           brushMode == Color
-            ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]"
-            : "bg-[color:var(--plain-200)] text-[color:var(--plain-900)]",
+            ? "bg-[var(--accent)] text-[var(--plain-white)]"
+            : "bg-[var(--plain-200)] text-[var(--plain-900)]",
           "px-2 font-medium rounded-l",
         ]->Array.join(" ")}
         onClick={_ => setBrushMode(_ => Color)}>
@@ -31,8 +31,8 @@ let make = (
       <button
         className={[
           brushMode == Erase
-            ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]"
-            : "bg-[color:var(--plain-200)] text-[color:var(--plain-900)]",
+            ? "bg-[var(--accent)] text-[var(--plain-white)]"
+            : "bg-[var(--plain-200)] text-[var(--plain-900)]",
           "px-2 font-medium rounded-r",
         ]->Array.join(" ")}
         onClick={_ => setBrushMode(_ => Erase)}>
@@ -41,8 +41,8 @@ let make = (
       <button
         className={[
           isPickingColor
-            ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]"
-            : "bg-[color:var(--plain-200)] text-[color:var(--plain-900)]",
+            ? "bg-[var(--accent)] text-[var(--plain-white)]"
+            : "bg-[var(--plain-200)] text-[var(--plain-900)]",
           "px-2 font-medium rounded ml-2",
         ]->Array.join(" ")}
         onClick={_ => onStartColorPick()}>
@@ -51,7 +51,7 @@ let make = (
     </div>
     {isPickingColor
       ? <div
-          className="w-full h-[200px] border border-[color:var(--plain-300)]"
+          className="w-full h-[200px] border border-[var(--plain-300)]"
           style={{
             backgroundColor: previewColor,
           }}

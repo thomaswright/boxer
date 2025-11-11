@@ -116,12 +116,12 @@ function ColorsUsed(props) {
           }),
           JsxRuntime.jsx("span", {
             children: uniqueColorCount.toString(),
-            className: "text-xs text-[color:var(--plain-500)] px-2"
+            className: "text-xs text-[var(--plain-500)] px-2"
           }),
           JsxRuntime.jsx("button", {
             children: "Set",
             className: [
-              replaceMode ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]" : "bg-[color:var(--plain-200)] text-[color:var(--plain-900)]",
+              replaceMode ? "bg-[var(--accent)] text-[var(--plain-white)]" : "bg-[var(--plain-200)] text-[var(--plain-900)]",
               "px-1 py-0.5 font-medium text-xs rounded"
             ].join(" "),
             type: "button",
@@ -138,7 +138,7 @@ function ColorsUsed(props) {
             return JsxRuntime.jsxs("button", {
               children: [
                 JsxRuntime.jsx("div", {
-                  className: "w-4 h-4 rounded border border-[color:var(--plain-300)]",
+                  className: "w-4 h-4 rounded border border-[var(--plain-300)]",
                   style: {
                     backgroundColor: color
                   }
@@ -147,16 +147,16 @@ function ColorsUsed(props) {
                   children: (
                     percentLabel === "0" ? "<1" : percentLabel
                   ) + "%",
-                  className: "text-xs text-[color:var(--plain-500)] tabular-nums"
+                  className: "text-xs text-[var(--plain-500)] tabular-nums"
                 }),
                 JsxRuntime.jsx("div", {
                   children: param.count.toString(),
-                  className: "text-xs text-[color:var(--plain-400)] w-8 text-right tabular-nums"
+                  className: "text-xs text-[var(--plain-400)] w-8 text-right tabular-nums"
                 })
               ],
               className: [
-                "flex flex-1 flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-[color:var(--plain-100)] text-left",
-                isSelected ? "bg-[color:var(--plain-200)]" : ""
+                "flex flex-1 flex-row items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-[var(--plain-100)] text-left",
+                isSelected ? "bg-[var(--plain-200)]" : ""
               ].join(" "),
               title: color,
               type: "button",
@@ -172,7 +172,7 @@ function ColorsUsed(props) {
           className: "flex flex-col max-h-48 overflow-scroll"
         }) : JsxRuntime.jsx("div", {
           children: "Start drawing to see colors",
-          className: "text-xs text-[color:var(--plain-500)]"
+          className: "text-xs text-[var(--plain-500)]"
         })
     ],
     className: "p-2 flex flex-col gap-2 w-full"

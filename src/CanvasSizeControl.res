@@ -15,19 +15,15 @@ let make = (
   let scaleButtonClasses = [
     baseButtonClasses,
     switch resizeMode {
-    | Scale =>
-      "bg-[color:var(--accent)] text-[color:var(--plain-white)] border-[color:var(--accent)]"
-    | Crop =>
-      "bg-[color:var(--plain-100)] text-[color:var(--plain-700)] border-[color:var(--plain-300)]"
+    | Scale => "bg-[var(--accent)] text-[var(--plain-white)] border-[var(--accent)]"
+    | Crop => "bg-[var(--plain-100)] text-[var(--plain-700)] border-[var(--plain-300)]"
     },
   ]->Array.join(" ")
   let cropButtonClasses = [
     baseButtonClasses,
     switch resizeMode {
-    | Crop =>
-      "bg-[color:var(--accent)] text-[color:var(--plain-white)] border-[color:var(--accent)]"
-    | Scale =>
-      "bg-[color:var(--plain-100)] text-[color:var(--plain-700)] border-[color:var(--plain-300)]"
+    | Crop => "bg-[var(--accent)] text-[var(--plain-white)] border-[var(--accent)]"
+    | Scale => "bg-[var(--plain-100)] text-[var(--plain-700)] border-[var(--plain-300)]"
     },
   ]->Array.join(" ")
 
@@ -79,8 +75,8 @@ let make = (
         className={[
           "rounded px-2 py-1 text-sm font-medium",
           canSubmitResize
-            ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]"
-            : "bg-[color:var(--plain-200)] text-[color:var(--plain-500)] cursor-not-allowed",
+            ? "bg-[var(--accent)] text-[var(--plain-white)]"
+            : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed",
         ]->Array.join(" ")}
         disabled={!canSubmitResize}
         onClick={_ => handleResizeSubmit()}>

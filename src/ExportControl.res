@@ -13,7 +13,7 @@ let make = (
     <span className="font-medium"> {"Export PNG"->React.string} </span>
     <div className="flex flex-row  gap-2 items-end">
       <label className="flex flex-col gap-1 text-sm">
-        <span className="text-xs uppercase tracking-wide text-[color:var(--plain-500)]">
+        <span className="text-xs uppercase tracking-wide text-[var(--plain-500)]">
           {"Scale"->React.string}
         </span>
         <input
@@ -32,8 +32,8 @@ let make = (
         className={[
           "rounded px-2 py-1 text-sm font-medium flex-1 h-fit",
           canExport
-            ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]"
-            : "bg-[color:var(--plain-200)] text-[color:var(--plain-500)] cursor-not-allowed",
+            ? "bg-[var(--accent)] text-[var(--plain-white)]"
+            : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed",
         ]->Array.join(" ")}
         disabled={!canExport}
         onClick={_ => onExport()}>

@@ -1,19 +1,16 @@
 @react.component
 let make = (~canUndo, ~canRedo, ~onUndo, ~onRedo) => {
   let buttonClass = enabled =>
-    "flex-1 rounded px-2 py-1 text-xs font-medium flex items-center justify-center " ++
-    (
-      if enabled {
-        "bg-[color:var(--plain-200)] text-[color:var(--plain-900)]"
-      } else {
-        "bg-[color:var(--plain-100)] text-[color:var(--plain-400)] cursor-not-allowed"
-      }
-    )
+    "flex-1 rounded px-2 py-1 text-xs font-medium flex items-center justify-center " ++ if enabled {
+      "bg-[var(--plain-200)] text-[var(--plain-900)]"
+    } else {
+      "bg-[var(--plain-100)] text-[var(--plain-400)] cursor-not-allowed"
+    }
 
   <div className="p-2 flex flex-col gap-2 w-full">
     <div className="flex flex-row items-center justify-between">
       <span className="font-medium"> {"History"->React.string} </span>
-      <span className="text-xs text-[color:var(--plain-500)] font-mono">
+      <span className="text-xs text-[var(--plain-500)] font-mono">
         {"Cmd+Z / Cmd+Shift+Z"->React.string}
       </span>
     </div>
@@ -26,8 +23,7 @@ let make = (~canUndo, ~canRedo, ~onUndo, ~onRedo) => {
             onUndo()
           } else {
             ()
-          }
-        }>
+          }}>
         {"Undo"->React.string}
       </button>
       <button
@@ -38,8 +34,7 @@ let make = (~canUndo, ~canRedo, ~onUndo, ~onRedo) => {
             onRedo()
           } else {
             ()
-          }
-        }>
+          }}>
         {"Redo"->React.string}
       </button>
     </div>

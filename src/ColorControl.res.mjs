@@ -18,7 +18,7 @@ function ColorControl(props) {
           JsxRuntime.jsx("button", {
             children: "Color",
             className: [
-              brushMode === "Color" ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]" : "bg-[color:var(--plain-200)] text-[color:var(--plain-900)]",
+              brushMode === "Color" ? "bg-[var(--accent)] text-[var(--plain-white)]" : "bg-[var(--plain-200)] text-[var(--plain-900)]",
               "px-2 font-medium rounded-l"
             ].join(" "),
             onClick: param => setBrushMode(param => "Color")
@@ -26,7 +26,7 @@ function ColorControl(props) {
           JsxRuntime.jsx("button", {
             children: "Erase",
             className: [
-              brushMode === "Erase" ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]" : "bg-[color:var(--plain-200)] text-[color:var(--plain-900)]",
+              brushMode === "Erase" ? "bg-[var(--accent)] text-[var(--plain-white)]" : "bg-[var(--plain-200)] text-[var(--plain-900)]",
               "px-2 font-medium rounded-r"
             ].join(" "),
             onClick: param => setBrushMode(param => "Erase")
@@ -34,7 +34,7 @@ function ColorControl(props) {
           JsxRuntime.jsx("button", {
             children: "Pick",
             className: [
-              isPickingColor ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]" : "bg-[color:var(--plain-200)] text-[color:var(--plain-900)]",
+              isPickingColor ? "bg-[var(--accent)] text-[var(--plain-white)]" : "bg-[var(--plain-200)] text-[var(--plain-900)]",
               "px-2 font-medium rounded ml-2"
             ].join(" "),
             onClick: param => onStartColorPick()
@@ -43,7 +43,7 @@ function ColorControl(props) {
         className: "flex flex-row justify-center"
       }),
       isPickingColor ? JsxRuntime.jsx("div", {
-          className: "w-full h-[200px] border border-[color:var(--plain-300)]",
+          className: "w-full h-[200px] border border-[var(--plain-300)]",
           style: {
             backgroundColor: previewColor
           }

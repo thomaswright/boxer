@@ -32,9 +32,7 @@ let make = (
         <div
           className={[
             "h-8 w-8 rounded-xs overflow-hidden",
-            selected
-              ? "bg-[color:var(--accent)]"
-              : "bg-[color:var(--plain-100)]",
+            selected ? "bg-[var(--accent)]" : "bg-[var(--plain-100)]",
           ]->Array.join(" ")}>
           <BoolGridPreview
             grid={savedTileMask.mask} filledColor={Some(filledColor)} emptyColor={Some(emptyColor)}
@@ -47,8 +45,8 @@ let make = (
       className={[
         "rounded p-1 h-6 w-6 text-sm font-medium",
         canSaveTileMask
-          ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]"
-          : "bg-[color:var(--plain-200)] text-[color:var(--plain-500)] cursor-not-allowed",
+          ? "bg-[var(--accent)] text-[var(--plain-white)]"
+          : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed",
       ]->Array.join(" ")}
       disabled={canSaveTileMask}
       onClick={_ => handleAddTileMask()}>
@@ -59,8 +57,8 @@ let make = (
       className={[
         "rounded p-1 h-6 w-6 text-sm font-medium",
         canDeleteSelectedTileMask
-          ? "bg-[color:var(--accent)] text-[color:var(--plain-white)]"
-          : "bg-[color:var(--plain-200)] text-[color:var(--plain-500)] cursor-not-allowed",
+          ? "bg-[var(--accent)] text-[var(--plain-white)]"
+          : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed",
       ]->Array.join(" ")}
       disabled={!canDeleteSelectedTileMask}
       onClick={_ => handleDeleteSelectedTileMask()}>
