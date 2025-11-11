@@ -260,10 +260,7 @@ let make = () => {
   // Persistent UI Selection
   let (brushMode, setBrushMode, _) = useLocalStorage("brush-mode", Color)
   let (overlayMode, setOverlayMode, _) = useLocalStorage("brush-overlay-mode", OverlayDefault)
-  let showCursorOverlay = switch overlayMode {
-  | OverlayNone => false
-  | _ => true
-  }
+
   let (gridMode, setGridMode, _) = useLocalStorage("grid-mode", GridNone)
 
   // Transient UI
@@ -275,6 +272,11 @@ let make = () => {
   let (isPickingColor, setIsPickingColor) = React.useState(() => false)
   let (hoveredPickColor, setHoveredPickColor) = React.useState(() => None)
   let clearHoverRef = React.useRef(() => ())
+
+  let showCursorOverlay = switch overlayMode {
+  | OverlayNone => false
+  | _ => !isPickingColor
+  }
 
   // Camera positioning
   let zoomRef = React.useRef(1.)

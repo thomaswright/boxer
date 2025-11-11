@@ -322,16 +322,6 @@ function App(props) {
   let brushMode = match$12[0];
   let match$13 = UseLocalStorageJs("brush-overlay-mode", "overlay");
   let overlayMode = match$13[0];
-  let showCursorOverlay;
-  switch (overlayMode) {
-    case "none" :
-      showCursorOverlay = false;
-      break;
-    case "overlay" :
-    case "color" :
-      showCursorOverlay = true;
-      break;
-  }
   let match$14 = UseLocalStorageJs("grid-mode", "none");
   let gridMode = match$14[0];
   let match$15 = UseLocalStorageJs("canvas-silhouette", false);
@@ -350,6 +340,16 @@ function App(props) {
   let match$21 = React.useState(() => {});
   let setHoveredPickColor = match$21[1];
   let clearHoverRef = React.useRef(() => {});
+  let showCursorOverlay;
+  switch (overlayMode) {
+    case "none" :
+      showCursorOverlay = false;
+      break;
+    case "overlay" :
+    case "color" :
+      showCursorOverlay = !isPickingColor;
+      break;
+  }
   let zoomRef = React.useRef(1);
   let panRef = React.useRef([
     0,
