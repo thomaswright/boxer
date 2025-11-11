@@ -684,17 +684,20 @@ let make = () => {
   let adjustPan = (deltaX, deltaY) =>
     updatePan(((prevX, prevY)) => (prevX +. deltaX, prevY +. deltaY))
 
-  let updateZoom = updater =>
+  let updateZoom = (~focalPoint=?, updater) =>
     updateCanvasById(currentCanvasIdRef.current, canvas => {
       let prevZoom = canvas.zoom
       let nextZoom = clampZoom(updater(prevZoom))
       if nextZoom != prevZoom {
-        let (centerX, centerY) = viewportCenterRef.current
+        let (anchorX, anchorY) = switch focalPoint {
+        | Some(point) => point
+        | None => viewportCenterRef.current
+        }
         let (prevPanX, prevPanY) = canvas.pan
-        let boardCenterX = (centerX -. prevPanX) /. prevZoom
-        let boardCenterY = (centerY -. prevPanY) /. prevZoom
-        let nextPanX = centerX -. boardCenterX *. nextZoom
-        let nextPanY = centerY -. boardCenterY *. nextZoom
+        let boardCenterX = (anchorX -. prevPanX) /. prevZoom
+        let boardCenterY = (anchorY -. prevPanY) /. prevZoom
+        let nextPanX = anchorX -. boardCenterX *. nextZoom
+        let nextPanY = anchorY -. boardCenterY *. nextZoom
         let nextPan = (nextPanX, nextPanY)
         zoomRef.current = nextZoom
         panRef.current = nextPan
@@ -705,17 +708,31 @@ let make = () => {
       }
     })
 
-  let adjustZoomByFactor = factor => updateZoom(prev => prev *. factor)
+  let adjustZoomByFactor = (~focalPoint=?, factor) =>
+    updateZoom(~focalPoint?, prev => prev *. factor)
   let zoomIn = () => adjustZoomByFactor(Initials.zoom_factor)
   let zoomOut = () => adjustZoomByFactor(1. /. Initials.zoom_factor)
   let handleWheelZoom = event => {
     let deltaY = event->ReactEvent.Wheel.deltaY
+
     if deltaY == 0. {
       ()
-    } else if deltaY < 0. {
-      adjustZoomByFactor(Initials.zoom_factor)
     } else {
-      adjustZoomByFactor(1. /. Initials.zoom_factor)
+      let anchor = switch canvasContainerRef.current->Js.Nullable.toOption {
+      | Some(containerElement) =>
+        let rect = containerElement->Element.getBoundingClientRect
+        let mouseEvent: ReactEvent.Mouse.t = event->Obj.magic
+        let clientX = mouseEvent->ReactEvent.Mouse.clientX->Int.toFloat
+        let clientY = mouseEvent->ReactEvent.Mouse.clientY->Int.toFloat
+        (clientX -. rect->DomRect.left, clientY -. rect->DomRect.top)
+      | None => (0., 0.)
+      }
+      let factor = if deltaY < 0. {
+        Initials.zoom_factor
+      } else {
+        1. /. Initials.zoom_factor
+      }
+      adjustZoomByFactor(~focalPoint=anchor, factor)
     }
   }
 

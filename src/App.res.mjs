@@ -743,50 +743,63 @@ function App(props) {
     param[0] + deltaX,
     param[1] + deltaY
   ]);
-  let updateZoom = updater => updateCanvasById(currentCanvasIdRef.current, canvas => {
-    let prevZoom = canvas.zoom;
-    let nextZoom = clampZoom(updater(prevZoom));
-    if (nextZoom !== prevZoom) {
-      let match = viewportCenterRef.current;
-      let centerY = match[1];
-      let centerX = match[0];
-      let match$1 = canvas.pan;
-      let boardCenterX = (centerX - match$1[0]) / prevZoom;
-      let boardCenterY = (centerY - match$1[1]) / prevZoom;
-      let nextPanX = centerX - boardCenterX * nextZoom;
-      let nextPanY = centerY - boardCenterY * nextZoom;
-      let nextPan = [
-        nextPanX,
-        nextPanY
-      ];
+  let adjustZoomByFactor = (focalPoint, factor) => {
+    let updater = prev => prev * factor;
+    updateCanvasById(currentCanvasIdRef.current, canvas => {
+      let prevZoom = canvas.zoom;
+      let nextZoom = clampZoom(updater(prevZoom));
+      if (nextZoom !== prevZoom) {
+        let match = focalPoint !== undefined ? focalPoint : viewportCenterRef.current;
+        let anchorY = match[1];
+        let anchorX = match[0];
+        let match$1 = canvas.pan;
+        let boardCenterX = (anchorX - match$1[0]) / prevZoom;
+        let boardCenterY = (anchorY - match$1[1]) / prevZoom;
+        let nextPanX = anchorX - boardCenterX * nextZoom;
+        let nextPanY = anchorY - boardCenterY * nextZoom;
+        let nextPan = [
+          nextPanX,
+          nextPanY
+        ];
+        zoomRef.current = nextZoom;
+        panRef.current = nextPan;
+        return {
+          id: canvas.id,
+          zoom: nextZoom,
+          pan: nextPan,
+          isDotMask: canvas.isDotMask,
+          canvasBackgroundColor: canvas.canvasBackgroundColor
+        };
+      }
       zoomRef.current = nextZoom;
-      panRef.current = nextPan;
-      return {
-        id: canvas.id,
-        zoom: nextZoom,
-        pan: nextPan,
-        isDotMask: canvas.isDotMask,
-        canvasBackgroundColor: canvas.canvasBackgroundColor
-      };
-    }
-    zoomRef.current = nextZoom;
-    return canvas;
-  });
-  let zoomIn = () => updateZoom(prev => prev * Initials.zoom_factor);
-  let zoomOut = () => {
-    let factor = 1 / Initials.zoom_factor;
-    updateZoom(prev => prev * factor);
+      return canvas;
+    });
   };
+  let zoomIn = () => adjustZoomByFactor(undefined, Initials.zoom_factor);
+  let zoomOut = () => adjustZoomByFactor(undefined, 1 / Initials.zoom_factor);
   let handleWheelZoom = event => {
     let deltaY = event.deltaY;
     if (deltaY === 0) {
       return;
     }
-    if (deltaY < 0) {
-      return updateZoom(prev => prev * Initials.zoom_factor);
+    let containerElement = canvasContainerRef.current;
+    let anchor;
+    if (containerElement == null) {
+      anchor = [
+        0,
+        0
+      ];
+    } else {
+      let rect = containerElement.getBoundingClientRect();
+      let clientX = event.clientX;
+      let clientY = event.clientY;
+      anchor = [
+        clientX - rect.left,
+        clientY - rect.top
+      ];
     }
-    let factor = 1 / Initials.zoom_factor;
-    updateZoom(prev => prev * factor);
+    let factor = deltaY < 0 ? Initials.zoom_factor : 1 / Initials.zoom_factor;
+    adjustZoomByFactor(anchor, factor);
   };
   let fallbackBrush = React.useMemo(() => Array2D.make(3, 3, () => true), []);
   let fallbackTileMask = React.useMemo(() => Array2D.make(4, 4, () => true), []);
@@ -1193,11 +1206,10 @@ function App(props) {
         switch (match) {
           case "[" :
             event.preventDefault();
-            let factor = 1 / Initials.zoom_factor;
-            return updateZoom(prev => prev * factor);
+            return zoomOut();
           case "]" :
             event.preventDefault();
-            return updateZoom(prev => prev * Initials.zoom_factor);
+            return adjustZoomByFactor(undefined, Initials.zoom_factor);
           case "Y" :
           case "y" :
             event.preventDefault();
