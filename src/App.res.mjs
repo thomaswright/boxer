@@ -20,7 +20,6 @@ import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
 import * as Belt_MapString from "rescript/lib/es6/Belt_MapString.js";
 import * as CanvasViewport from "./CanvasViewport.res.mjs";
 import * as DotModeControl from "./DotModeControl.res.mjs";
-import * as HistoryControl from "./HistoryControl.res.mjs";
 import * as ExportBoardJs from "./exportBoard.js";
 import * as CanvasThumbnails from "./CanvasThumbnails.res.mjs";
 import * as Primitive_object from "rescript/lib/es6/Primitive_object.js";
@@ -685,9 +684,7 @@ function App(props) {
     updateCanvasBoardById(false, canvasId, _prev => nextBoard);
     strokeSnapshotRef.current = undefined;
   };
-  let historyForCurrentCanvas = Belt_MapString.get(boardHistoryByCanvas, currentCanvasId);
-  let canUndo = historyForCurrentCanvas !== undefined ? historyForCurrentCanvas.past.length > 0 : false;
-  let canRedo = historyForCurrentCanvas !== undefined ? historyForCurrentCanvas.future.length > 0 : false;
+  Belt_MapString.get(boardHistoryByCanvas, currentCanvasId);
   React.useEffect(() => {
     if (!isMouseDown) {
       finalizeStrokeSnapshot();
@@ -1273,12 +1270,6 @@ function App(props) {
               centerCanvas: centerCanvas,
               fitCanvasToViewport: fitCanvasToViewport,
               zoomPercent: zoomPercent
-            }),
-            JsxRuntime.jsx(HistoryControl.make, {
-              canUndo: canUndo,
-              canRedo: canRedo,
-              onUndo: undo,
-              onRedo: redo
             }),
             JsxRuntime.jsxs("div", {
               children: [

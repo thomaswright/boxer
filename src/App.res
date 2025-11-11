@@ -1206,7 +1206,6 @@ let make = () => {
     <div className=" flex flex-row h-dvh overflow-x-hidden">
       <div className="flex flex-col flex-none overflow-x-hidden divide-y divide-gray-300">
         <ZoomControl zoomOut zoomIn centerCanvas fitCanvasToViewport zoomPercent />
-        <HistoryControl canUndo canRedo onUndo={undo} onRedo={redo} />
 
         <div className="flex flex-row gap-2 h-full flex-none p-2">
           <SavedBrushesPanel
