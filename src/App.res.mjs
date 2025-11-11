@@ -777,6 +777,17 @@ function App(props) {
     let factor = 1 / Initials.zoom_factor;
     updateZoom(prev => prev * factor);
   };
+  let handleWheelZoom = event => {
+    let deltaY = event.deltaY;
+    if (deltaY === 0) {
+      return;
+    }
+    if (deltaY < 0) {
+      return updateZoom(prev => prev * Initials.zoom_factor);
+    }
+    let factor = 1 / Initials.zoom_factor;
+    updateZoom(prev => prev * factor);
+  };
   let fallbackBrush = React.useMemo(() => Array2D.make(3, 3, () => true), []);
   let fallbackTileMask = React.useMemo(() => Array2D.make(4, 4, () => true), []);
   let brush;
@@ -1336,7 +1347,8 @@ function App(props) {
                   tileMask: tileMask,
                   tileMaskDimI: tileMaskDimI,
                   tileMaskDimJ: tileMaskDimJ,
-                  isDotMask: isDotMask
+                  isDotMask: isDotMask,
+                  onWheel: handleWheelZoom
                 }),
               className: "flex-1 pt-2"
             }),

@@ -20,6 +20,7 @@ function hoverToNullable(cell) {
 }
 
 function CanvasViewport(props) {
+  let onWheel = props.onWheel;
   let tileMask = props.tileMask;
   let brushCenterDimJ = props.brushCenterDimJ;
   let brushCenterDimI = props.brushCenterDimI;
@@ -276,7 +277,11 @@ function CanvasViewport(props) {
           onMouseDown: handleMouseDown,
           onMouseEnter: handleMouseMove,
           onMouseLeave: handleMouseLeave,
-          onMouseMove: handleMouseMove
+          onMouseMove: handleMouseMove,
+          onWheel: event => {
+            event.preventDefault();
+            onWheel(event);
+          }
         }),
         props.isDotMask ? JsxRuntime.jsx("div", {
             className: "absolute top-0 left-0 pointer-events-none",

@@ -708,6 +708,16 @@ let make = () => {
   let adjustZoomByFactor = factor => updateZoom(prev => prev *. factor)
   let zoomIn = () => adjustZoomByFactor(Initials.zoom_factor)
   let zoomOut = () => adjustZoomByFactor(1. /. Initials.zoom_factor)
+  let handleWheelZoom = event => {
+    let deltaY = event->ReactEvent.Wheel.deltaY
+    if deltaY == 0. {
+      ()
+    } else if deltaY < 0. {
+      adjustZoomByFactor(Initials.zoom_factor)
+    } else {
+      adjustZoomByFactor(1. /. Initials.zoom_factor)
+    }
+  }
 
   let fallbackBrush = React.useMemo0(() => makeBrush(3, 3))
   let fallbackTileMask = React.useMemo0(() => makeTileMask(4, 4))
@@ -1269,6 +1279,7 @@ let make = () => {
               tileMaskDimI
               tileMaskDimJ
               isDotMask
+              onWheel={handleWheelZoom}
             />
           }}
         </div>

@@ -50,6 +50,7 @@ let make = (
   ~tileMaskDimI,
   ~tileMaskDimJ,
   ~isDotMask,
+  ~onWheel,
 ) => {
   let canvasRef = React.useRef((Js.Nullable.null: Js.Nullable.t<Dom.element>))
   let rendererRef = React.useRef((None: option<canvasRenderer>))
@@ -315,6 +316,10 @@ let make = (
         onMouseEnter={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onMouseDown={handleMouseDown}
+        onWheel={event => {
+          event->ReactEvent.Wheel.preventDefault
+          onWheel(event)
+        }}
       />
       {isDotMask
         ? <div
