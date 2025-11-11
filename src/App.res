@@ -3,6 +3,15 @@ open Webapi.Dom
 
 open Types
 
+module CanvasHistoryMap = Belt.Map.String
+
+let maxHistoryEntries = 200
+
+type strokeSnapshot = {
+  canvasId: string,
+  startBoard: board,
+}
+
 @module("./useLocalStorage.js")
 external useLocalStorage: (string, 'a) => ('a, ('a => 'a) => unit, unit => 'a) = "default"
 
@@ -215,6 +224,17 @@ let make = () => {
   // Persistent Data
   let (canvases, setCanvases, _) = useLocalStorage("canvas-metadata-v1", [])
   let (canvasBoards, setCanvasBoards) = React.useState((): array<Types.canvasBoardState> => [])
+  let (boardHistoryByCanvas, setBoardHistoryByCanvas) = React.useState(() => CanvasHistoryMap.empty)
+  let canvasBoardsRef = React.useRef(canvasBoards)
+  canvasBoardsRef.current = canvasBoards
+  let boardHistoryByCanvasRef = React.useRef(boardHistoryByCanvas)
+  boardHistoryByCanvasRef.current = boardHistoryByCanvas
+  let updateBoardHistoryMap = updater =>
+    setBoardHistoryByCanvas(prev => {
+      let next = updater(prev)
+      boardHistoryByCanvasRef.current = next
+      next
+    })
   let (savedBrushes, setSavedBrushes, _) = useLocalStorage("saved-brushes", defaultBrushEntries)
   let (savedTileMasks, setSavedTileMasks, _) = useLocalStorage(
     "saved-tile-masks",
@@ -275,6 +295,67 @@ let make = () => {
 
   // Canvas selection & derived state
   let canvasCount = canvases->Array.length
+  let pushFront = (items, value) => [value]->Array.concat(items)
+  let dropFirst = items => {
+    let length = items->Array.length
+    if length <= 1 {
+      []
+    } else {
+      let trimmed = []
+      for index in 1 to length - 1 {
+        switch items->Array.get(index) {
+        | Some(value) => ignore(Js.Array2.push(trimmed, value))
+        | None => ()
+        }
+      }
+      trimmed
+    }
+  }
+  let clampArray = items =>
+    if maxHistoryEntries <= 0 || items->Array.length <= maxHistoryEntries {
+      items
+    } else {
+      let trimmed = []
+      for index in 0 to maxHistoryEntries - 1 {
+        switch items->Array.get(index) {
+        | Some(value) => ignore(Js.Array2.push(trimmed, value))
+        | None => ()
+        }
+      }
+      trimmed
+    }
+  let makeHistoryEntry = board => {past: [], present: Some(board), future: []}
+  let ensureHistoryPresent = (canvasId, board) =>
+    updateBoardHistoryMap(prev => {
+      if prev->CanvasHistoryMap.has(canvasId) {
+        prev
+      } else {
+        prev->CanvasHistoryMap.set(canvasId, makeHistoryEntry(board))
+      }
+    })
+  let clearHistoryForCanvas = canvasId =>
+    updateBoardHistoryMap(prev => prev->CanvasHistoryMap.remove(canvasId))
+  let recordBoardHistoryEntry = (canvasId, prevBoard, nextBoard) =>
+    if prevBoard == nextBoard {
+      ()
+    } else {
+      updateBoardHistoryMap(prevMap => {
+        let history = switch prevMap->CanvasHistoryMap.get(canvasId) {
+        | Some(existing) => existing
+        | None => makeHistoryEntry(prevBoard)
+        }
+        let cappedPast = history.past->pushFront(prevBoard)->clampArray
+        prevMap->CanvasHistoryMap.set(
+          canvasId,
+          {past: cappedPast, present: Some(nextBoard), future: []},
+        )
+      })
+    }
+  let strokeSnapshotRef = React.useRef((None: option<strokeSnapshot>))
+  let getBoardByCanvasId = canvasId =>
+    canvasBoardsRef.current
+    ->Belt.Array.getBy(entry => entry.id == canvasId)
+    ->Option.map(entry => entry.board)
 
   let persistBoardValue = (id, boardValue) => runBoardStoragePromise(saveBoardEntry(id, boardValue))
 
@@ -298,13 +379,16 @@ let make = () => {
       }
     })
     persistBoardValue(id, boardValue)
+    ensureHistoryPresent(id, boardValue)
   }
 
-  let modifyBoardEntry = (id, updater) => {
+  let modifyBoardEntry = (~trackHistory=true, id, updater) => {
     let updatedBoardRef = ref(None)
+    let previousBoardRef = ref(None)
     setCanvasBoards(prev => {
       let next = prev->Array.map(entry =>
         if entry.id == id {
+          previousBoardRef := Some(entry.board)
           let nextBoard = updater(entry.board)
           updatedBoardRef := Some(nextBoard)
           {id: entry.id, board: nextBoard}
@@ -315,13 +399,22 @@ let make = () => {
       switch updatedBoardRef.contents {
       | Some(_) => next
       | None =>
-        let fallback = updater(makeBoard(defaultBoardDimI, defaultBoardDimJ))
+        let fallbackPrev = makeBoard(defaultBoardDimI, defaultBoardDimJ)
+        previousBoardRef := Some(fallbackPrev)
+        let fallback = updater(fallbackPrev)
         updatedBoardRef := Some(fallback)
         next->Array.concat([{id, board: fallback}])
       }
     })
     switch updatedBoardRef.contents {
-    | Some(boardValue) => persistBoardValue(id, boardValue)
+    | Some(boardValue) =>
+      if trackHistory {
+        switch previousBoardRef.contents {
+        | Some(prevBoard) => recordBoardHistoryEntry(id, prevBoard, boardValue)
+        | None => ()
+        }
+      }
+      persistBoardValue(id, boardValue)
     | None => ()
     }
   }
@@ -358,6 +451,24 @@ let make = () => {
     }
     None
   }, (areBoardsLoaded, canvases, canvasBoards))
+
+  React.useEffect2(() => {
+    if areBoardsLoaded {
+      updateBoardHistoryMap(prev => {
+        let next = canvasBoards->Array.reduce(
+          prev,
+          (map, entry) =>
+            if map->CanvasHistoryMap.has(entry.id) {
+              map
+            } else {
+              map->CanvasHistoryMap.set(entry.id, makeHistoryEntry(entry.board))
+            },
+        )
+        next
+      })
+    }
+    None
+  }, (areBoardsLoaded, canvasBoards))
 
   let selectedCanvas = switch selectedCanvasId {
   | Some(id) => canvases->Belt.Array.getBy(canvas => canvas.id == id)
@@ -417,6 +528,8 @@ let make = () => {
   | Some(entry) => entry.board
   | None => makeBoard(defaultBoardDimI, defaultBoardDimJ)
   }
+  let currentBoardRef = React.useRef(board)
+  currentBoardRef.current = board
   let zoom = currentCanvas.zoom
   let pan = currentCanvas.pan
   let isDotMask = currentCanvas.isDotMask
@@ -441,6 +554,97 @@ let make = () => {
   zoomRef.current = zoom
   panRef.current = pan
 
+  let ensureStrokeSnapshot = () =>
+    switch strokeSnapshotRef.current {
+    | Some(snapshot) if snapshot.canvasId == currentCanvasIdRef.current => ()
+    | _ =>
+      strokeSnapshotRef.current = Some({
+        canvasId: currentCanvasIdRef.current,
+        startBoard: currentBoardRef.current,
+      })
+    }
+  let finalizeStrokeSnapshot = () =>
+    switch strokeSnapshotRef.current {
+    | Some(snapshot) =>
+      strokeSnapshotRef.current = None
+      switch getBoardByCanvasId(snapshot.canvasId) {
+      | Some(latestBoard) =>
+        recordBoardHistoryEntry(snapshot.canvasId, snapshot.startBoard, latestBoard)
+      | None => ()
+      }
+    | None => ()
+    }
+
+  let updateCanvasBoardById = (~trackHistory=true, targetId, updater) =>
+    modifyBoardEntry(~trackHistory, targetId, updater)
+
+  let replaceBoardWithoutHistory = (canvasId, boardValue) =>
+    updateCanvasBoardById(~trackHistory=false, canvasId, _prev => boardValue)
+  let undo = () => {
+    finalizeStrokeSnapshot()
+    let canvasId = currentCanvasIdRef.current
+    let historyMap = boardHistoryByCanvasRef.current
+    switch historyMap->CanvasHistoryMap.get(canvasId) {
+    | Some(history) =>
+      switch history.past->Array.get(0) {
+      | Some(previousBoard) =>
+        let remainingPast = history.past->dropFirst
+        let nextFuture = switch history.present {
+        | Some(presentBoard) => history.future->pushFront(presentBoard)->clampArray
+        | None => history.future
+        }
+        let nextHistory = {past: remainingPast, present: Some(previousBoard), future: nextFuture}
+        updateBoardHistoryMap(prev => prev->CanvasHistoryMap.set(canvasId, nextHistory))
+        replaceBoardWithoutHistory(canvasId, previousBoard)
+        strokeSnapshotRef.current = None
+      | None => ()
+      }
+    | None => ()
+    }
+  }
+  let redo = () => {
+    finalizeStrokeSnapshot()
+    let canvasId = currentCanvasIdRef.current
+    let historyMap = boardHistoryByCanvasRef.current
+    switch historyMap->CanvasHistoryMap.get(canvasId) {
+    | Some(history) =>
+      switch history.future->Array.get(0) {
+      | Some(nextBoard) =>
+        let nextPast = switch history.present {
+        | Some(presentBoard) => history.past->pushFront(presentBoard)->clampArray
+        | None => history.past
+        }
+        let remainingFuture = history.future->dropFirst
+        let nextHistory = {past: nextPast, present: Some(nextBoard), future: remainingFuture}
+        updateBoardHistoryMap(prev => prev->CanvasHistoryMap.set(canvasId, nextHistory))
+        replaceBoardWithoutHistory(canvasId, nextBoard)
+        strokeSnapshotRef.current = None
+      | None => ()
+      }
+    | None => ()
+    }
+  }
+  let historyForCurrentCanvas = boardHistoryByCanvas->CanvasHistoryMap.get(currentCanvasId)
+  let canUndo = switch historyForCurrentCanvas {
+  | Some(history) => history.past->Array.length > 0
+  | None => false
+  }
+  let canRedo = switch historyForCurrentCanvas {
+  | Some(history) => history.future->Array.length > 0
+  | None => false
+  }
+
+  React.useEffect1(() => {
+    if !isMouseDown {
+      finalizeStrokeSnapshot()
+    }
+    None
+  }, [isMouseDown])
+  React.useEffect1(() => {
+    finalizeStrokeSnapshot()
+    None
+  }, [currentCanvasId])
+
   let handlePickColor = (row, col) => {
     let pickedColor = Board.get(board, row, col)->Js.Nullable.toOption
     switch pickedColor {
@@ -456,9 +660,8 @@ let make = () => {
   let updateCanvasById = (targetId, updater) =>
     setCanvases(prev => prev->Array.map(canvas => canvas.id == targetId ? updater(canvas) : canvas))
 
-  let updateCanvasBoardById = (targetId, updater) => modifyBoardEntry(targetId, updater)
-
-  let setBoard = updater => updateCanvasBoardById(currentCanvasIdRef.current, updater)
+  let setBoard = (~trackHistory=true, updater) =>
+    updateCanvasBoardById(~trackHistory, currentCanvasIdRef.current, updater)
 
   let setCanvasDotMask = updater =>
     updateCanvasById(currentCanvasIdRef.current, canvas => {
@@ -797,6 +1000,7 @@ let make = () => {
 
   let handleDeleteCanvas = () => {
     if canDeleteCanvas {
+      finalizeStrokeSnapshot()
       let nextSelectionId = switch canvases->Belt.Array.getIndexBy(canvas =>
         canvas.id == currentCanvasId
       ) {
@@ -822,6 +1026,7 @@ let make = () => {
       setCanvases(prev => prev->Belt.Array.keep(canvas => canvas.id != currentCanvasId))
       setCanvasBoards(prev => prev->Belt.Array.keep(entry => entry.id != currentCanvasId))
       removePersistedBoard(currentCanvasId)
+      clearHistoryForCanvas(currentCanvasId)
 
       setSelectedCanvasId(_ => nextSelectionId)
       clearHoverRef.current()
@@ -835,6 +1040,7 @@ let make = () => {
     | None => false
     }
     if !isAlreadySelected {
+      finalizeStrokeSnapshot()
       setSelectedCanvasId(_ => Some(canvasId))
     }
     clearHoverRef.current()
@@ -853,8 +1059,9 @@ let make = () => {
 
   let applyBrush = (clickI, clickJ) => {
     setLocalStoragePersistencePaused(true)
+    ensureStrokeSnapshot()
     let brushColor = getBrushColor()
-    setBoard(prev => {
+    setBoard(~trackHistory=false, prev => {
       let (rows, cols) = Board.dims(prev)
       if rows == 0 || cols == 0 {
         prev
@@ -903,7 +1110,8 @@ let make = () => {
 
   React.useEffect0(() => {
     let handleKeyDown = event => {
-      if event->KeyboardEvent.metaKey {
+      let hasPrimaryModifier = event->KeyboardEvent.metaKey || event->KeyboardEvent.ctrlKey
+      if hasPrimaryModifier {
         switch event->KeyboardEvent.key {
         | "]" =>
           event->KeyboardEvent.preventDefault
@@ -911,6 +1119,16 @@ let make = () => {
         | "[" =>
           event->KeyboardEvent.preventDefault
           zoomOut()
+        | "z" | "Z" =>
+          event->KeyboardEvent.preventDefault
+          if event->KeyboardEvent.shiftKey {
+            redo()
+          } else {
+            undo()
+          }
+        | "y" | "Y" =>
+          event->KeyboardEvent.preventDefault
+          redo()
         | _ => ()
         }
       } else {
@@ -988,6 +1206,7 @@ let make = () => {
     <div className=" flex flex-row h-dvh overflow-x-hidden">
       <div className="flex flex-col flex-none overflow-x-hidden divide-y divide-gray-300">
         <ZoomControl zoomOut zoomIn centerCanvas fitCanvasToViewport zoomPercent />
+        <HistoryControl canUndo canRedo onUndo={undo} onRedo={redo} />
 
         <div className="flex flex-row gap-2 h-full flex-none p-2">
           <SavedBrushesPanel

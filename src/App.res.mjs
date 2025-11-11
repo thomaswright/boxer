@@ -13,13 +13,18 @@ import * as Belt_Option from "rescript/lib/es6/Belt_Option.js";
 import * as ZoomControl from "./ZoomControl.res.mjs";
 import * as Color from "@texel/color";
 import * as ColorControl from "./ColorControl.res.mjs";
+import * as Stdlib_Array from "rescript/lib/es6/Stdlib_Array.js";
 import * as ExportControl from "./ExportControl.res.mjs";
 import * as Primitive_int from "rescript/lib/es6/Primitive_int.js";
 import * as Stdlib_Option from "rescript/lib/es6/Stdlib_Option.js";
+import * as Belt_MapString from "rescript/lib/es6/Belt_MapString.js";
 import * as CanvasViewport from "./CanvasViewport.res.mjs";
 import * as DotModeControl from "./DotModeControl.res.mjs";
+import * as HistoryControl from "./HistoryControl.res.mjs";
 import * as ExportBoardJs from "./exportBoard.js";
 import * as CanvasThumbnails from "./CanvasThumbnails.res.mjs";
+import * as Primitive_object from "rescript/lib/es6/Primitive_object.js";
+import * as Primitive_option from "rescript/lib/es6/Primitive_option.js";
 import * as BoardStorageJs from "./boardStorage.js";
 import * as CanvasGridControl from "./CanvasGridControl.res.mjs";
 import * as CanvasSizeControl from "./CanvasSizeControl.res.mjs";
@@ -278,34 +283,46 @@ function App(props) {
   let match$2 = React.useState(() => []);
   let setCanvasBoards = match$2[1];
   let canvasBoards = match$2[0];
-  let match$3 = UseLocalStorageJs("saved-brushes", defaultBrushEntries);
-  let setSavedBrushes = match$3[1];
-  let savedBrushes = match$3[0];
-  let match$4 = UseLocalStorageJs("saved-tile-masks", defaultTileMaskEntries);
-  let setSavedTileMasks = match$4[1];
-  let savedTileMasks = match$4[0];
-  let match$5 = UseLocalStorageJs("viewport-background-color", Initials.viewportBackgroundColor);
-  let viewportBackgroundColor = match$5[0];
-  let match$6 = React.useState(() => false);
-  let setBoardsLoaded = match$6[1];
-  let areBoardsLoaded = match$6[0];
-  let match$7 = UseLocalStorageJs("selected-brush-id", undefined);
-  let setSelectedBrushId = match$7[1];
-  let selectedBrushId = match$7[0];
-  let match$8 = UseLocalStorageJs("selected-tile-mask-id", undefined);
-  let setSelectedTileMaskId = match$8[1];
-  let selectedTileMaskId = match$8[0];
-  let match$9 = UseLocalStorageJs("selected-canvas-id", undefined);
-  let setSelectedCanvasId = match$9[1];
-  let selectedCanvasId = match$9[0];
-  let match$10 = UseLocalStorageJs("my-color", Initials.myColor);
-  let setMyColor = match$10[1];
-  let myColor = match$10[0];
-  let match$11 = UseLocalStorageJs("brush-mode", "Color");
-  let setBrushMode = match$11[1];
-  let brushMode = match$11[0];
-  let match$12 = UseLocalStorageJs("brush-overlay-mode", "overlay");
-  let overlayMode = match$12[0];
+  let match$3 = React.useState(() => {});
+  let setBoardHistoryByCanvas = match$3[1];
+  let boardHistoryByCanvas = match$3[0];
+  let canvasBoardsRef = React.useRef(canvasBoards);
+  canvasBoardsRef.current = canvasBoards;
+  let boardHistoryByCanvasRef = React.useRef(boardHistoryByCanvas);
+  boardHistoryByCanvasRef.current = boardHistoryByCanvas;
+  let updateBoardHistoryMap = updater => setBoardHistoryByCanvas(prev => {
+    let next = updater(prev);
+    boardHistoryByCanvasRef.current = next;
+    return next;
+  });
+  let match$4 = UseLocalStorageJs("saved-brushes", defaultBrushEntries);
+  let setSavedBrushes = match$4[1];
+  let savedBrushes = match$4[0];
+  let match$5 = UseLocalStorageJs("saved-tile-masks", defaultTileMaskEntries);
+  let setSavedTileMasks = match$5[1];
+  let savedTileMasks = match$5[0];
+  let match$6 = UseLocalStorageJs("viewport-background-color", Initials.viewportBackgroundColor);
+  let viewportBackgroundColor = match$6[0];
+  let match$7 = React.useState(() => false);
+  let setBoardsLoaded = match$7[1];
+  let areBoardsLoaded = match$7[0];
+  let match$8 = UseLocalStorageJs("selected-brush-id", undefined);
+  let setSelectedBrushId = match$8[1];
+  let selectedBrushId = match$8[0];
+  let match$9 = UseLocalStorageJs("selected-tile-mask-id", undefined);
+  let setSelectedTileMaskId = match$9[1];
+  let selectedTileMaskId = match$9[0];
+  let match$10 = UseLocalStorageJs("selected-canvas-id", undefined);
+  let setSelectedCanvasId = match$10[1];
+  let selectedCanvasId = match$10[0];
+  let match$11 = UseLocalStorageJs("my-color", Initials.myColor);
+  let setMyColor = match$11[1];
+  let myColor = match$11[0];
+  let match$12 = UseLocalStorageJs("brush-mode", "Color");
+  let setBrushMode = match$12[1];
+  let brushMode = match$12[0];
+  let match$13 = UseLocalStorageJs("brush-overlay-mode", "overlay");
+  let overlayMode = match$13[0];
   let showCursorOverlay;
   switch (overlayMode) {
     case "none" :
@@ -316,23 +333,23 @@ function App(props) {
       showCursorOverlay = true;
       break;
   }
-  let match$13 = UseLocalStorageJs("grid-mode", "none");
-  let gridMode = match$13[0];
-  let match$14 = UseLocalStorageJs("canvas-silhouette", false);
-  let isSilhouette = match$14[0];
-  let match$15 = React.useState(() => false);
-  let setCursorOverlayOff = match$15[1];
-  let match$16 = React.useState(() => "16");
-  let exportScaleInput = match$16[0];
-  let match$17 = React.useState(() => true);
-  let includeExportBackground = match$17[0];
-  let match$18 = React.useState(() => "Scale");
-  let resizeMode = match$18[0];
-  let match$19 = React.useState(() => false);
-  let setIsPickingColor = match$19[1];
-  let isPickingColor = match$19[0];
-  let match$20 = React.useState(() => {});
-  let setHoveredPickColor = match$20[1];
+  let match$14 = UseLocalStorageJs("grid-mode", "none");
+  let gridMode = match$14[0];
+  let match$15 = UseLocalStorageJs("canvas-silhouette", false);
+  let isSilhouette = match$15[0];
+  let match$16 = React.useState(() => false);
+  let setCursorOverlayOff = match$16[1];
+  let match$17 = React.useState(() => "16");
+  let exportScaleInput = match$17[0];
+  let match$18 = React.useState(() => true);
+  let includeExportBackground = match$18[0];
+  let match$19 = React.useState(() => "Scale");
+  let resizeMode = match$19[0];
+  let match$20 = React.useState(() => false);
+  let setIsPickingColor = match$20[1];
+  let isPickingColor = match$20[0];
+  let match$21 = React.useState(() => {});
+  let setHoveredPickColor = match$21[1];
   let clearHoverRef = React.useRef(() => {});
   let zoomRef = React.useRef(1);
   let panRef = React.useRef([
@@ -350,6 +367,58 @@ function App(props) {
     return next;
   });
   let canvasCount = canvases.length;
+  let dropFirst = items => {
+    let length = items.length;
+    if (length <= 1) {
+      return [];
+    }
+    let trimmed = [];
+    for (let index = 1; index < length; ++index) {
+      let value = items[index];
+      if (value !== undefined) {
+        trimmed.push(Primitive_option.valFromOption(value));
+      }
+      
+    }
+    return trimmed;
+  };
+  let clampArray = items => {
+    if (items.length <= 200) {
+      return items;
+    }
+    let trimmed = [];
+    for (let index = 0; index <= 199; ++index) {
+      let value = items[index];
+      if (value !== undefined) {
+        trimmed.push(Primitive_option.valFromOption(value));
+      }
+      
+    }
+    return trimmed;
+  };
+  let makeHistoryEntry = board => ({
+    past: [],
+    present: Primitive_option.some(board),
+    future: []
+  });
+  let recordBoardHistoryEntry = (canvasId, prevBoard, nextBoard) => {
+    if (Primitive_object.equal(prevBoard, nextBoard)) {
+      return;
+    } else {
+      return updateBoardHistoryMap(prevMap => {
+        let existing = Belt_MapString.get(prevMap, canvasId);
+        let history = existing !== undefined ? existing : makeHistoryEntry(prevBoard);
+        let cappedPast = clampArray([prevBoard].concat(history.past));
+        return Belt_MapString.set(prevMap, canvasId, {
+          past: cappedPast,
+          present: nextBoard,
+          future: []
+        });
+      });
+    }
+  };
+  let strokeSnapshotRef = React.useRef(undefined);
+  let getBoardByCanvasId = canvasId => Stdlib_Option.map(Belt_Array.getBy(canvasBoardsRef.current, entry => entry.id === canvasId), entry => entry.board);
   let storeBoardValue = (id, boardValue) => {
     setCanvasBoards(prev => {
       let replaced = {
@@ -376,39 +445,13 @@ function App(props) {
       }
     });
     BoardStorageJs.saveBoard(id, boardValue);
-  };
-  let modifyBoardEntry = (id, updater) => {
-    let updatedBoardRef = {
-      contents: undefined
-    };
-    setCanvasBoards(prev => {
-      let next = prev.map(entry => {
-        if (entry.id !== id) {
-          return entry;
-        }
-        let nextBoard = updater(entry.board);
-        updatedBoardRef.contents = nextBoard;
-        return {
-          id: entry.id,
-          board: nextBoard
-        };
-      });
-      let match = updatedBoardRef.contents;
-      if (match !== undefined) {
-        return next;
+    updateBoardHistoryMap(prev => {
+      if (Belt_MapString.has(prev, id)) {
+        return prev;
+      } else {
+        return Belt_MapString.set(prev, id, makeHistoryEntry(boardValue));
       }
-      let fallback = updater(Board.make(12, 12));
-      updatedBoardRef.contents = fallback;
-      return next.concat([{
-          id: id,
-          board: fallback
-        }]);
     });
-    let boardValue = updatedBoardRef.contents;
-    if (boardValue === undefined) {
-      return;
-    }
-    BoardStorageJs.saveBoard(id, boardValue);
   };
   React.useEffect(() => {
     Js_promise.then_(entries => {
@@ -448,6 +491,21 @@ function App(props) {
     canvases,
     canvasBoards
   ]);
+  React.useEffect(() => {
+    if (areBoardsLoaded) {
+      updateBoardHistoryMap(prev => Stdlib_Array.reduce(canvasBoards, prev, (map, entry) => {
+        if (Belt_MapString.has(map, entry.id)) {
+          return map;
+        } else {
+          return Belt_MapString.set(map, entry.id, makeHistoryEntry(entry.board));
+        }
+      }));
+    }
+    
+  }, [
+    areBoardsLoaded,
+    canvasBoards
+  ]);
   let selectedCanvas = selectedCanvasId !== undefined ? Belt_Array.getBy(canvases, canvas => canvas.id === selectedCanvasId) : undefined;
   let currentCanvas;
   if (selectedCanvas !== undefined) {
@@ -457,9 +515,9 @@ function App(props) {
     currentCanvas = firstCanvas !== undefined ? firstCanvas : makeDefaultCanvas()[0];
   }
   let currentCanvasId = currentCanvas.id;
-  let match$21 = React.useState(() => currentCanvas.isDotMask);
-  let setIncludeExportDotMask = match$21[1];
-  let includeExportDotMask = match$21[0];
+  let match$22 = React.useState(() => currentCanvas.isDotMask);
+  let setIncludeExportDotMask = match$22[1];
+  let includeExportDotMask = match$22[0];
   React.useEffect(() => {
     setIncludeExportDotMask(prev => {
       if (prev === currentCanvas.isDotMask) {
@@ -494,6 +552,8 @@ function App(props) {
   ]);
   let entry = Belt_Array.getBy(canvasBoards, entry => entry.id === currentCanvasId);
   let board = entry !== undefined ? entry.board : Board.make(12, 12);
+  let currentBoardRef = React.useRef(board);
+  currentBoardRef.current = board;
   let zoom = currentCanvas.zoom;
   let pan = currentCanvas.pan;
   let isDotMask = currentCanvas.isDotMask;
@@ -504,6 +564,139 @@ function App(props) {
   let checkeredSecondaryColor = isCanvasBackgroundLight ? "rgba(0, 0, 0, 0.00)" : "rgba(255, 255, 255, 0.00)";
   zoomRef.current = zoom;
   panRef.current = pan;
+  let ensureStrokeSnapshot = () => {
+    let snapshot = strokeSnapshotRef.current;
+    if (snapshot !== undefined && snapshot.canvasId === currentCanvasIdRef.current) {
+      return;
+    }
+    strokeSnapshotRef.current = {
+      canvasId: currentCanvasIdRef.current,
+      startBoard: currentBoardRef.current
+    };
+  };
+  let finalizeStrokeSnapshot = () => {
+    let snapshot = strokeSnapshotRef.current;
+    if (snapshot === undefined) {
+      return;
+    }
+    strokeSnapshotRef.current = undefined;
+    let latestBoard = getBoardByCanvasId(snapshot.canvasId);
+    if (latestBoard !== undefined) {
+      return recordBoardHistoryEntry(snapshot.canvasId, snapshot.startBoard, latestBoard);
+    }
+    
+  };
+  let updateCanvasBoardById = (trackHistoryOpt, targetId, updater) => {
+    let trackHistory = trackHistoryOpt !== undefined ? trackHistoryOpt : true;
+    let trackHistoryOpt$1 = trackHistory;
+    let trackHistory$1 = trackHistoryOpt$1 !== undefined ? trackHistoryOpt$1 : true;
+    let updatedBoardRef = {
+      contents: undefined
+    };
+    let previousBoardRef = {
+      contents: undefined
+    };
+    setCanvasBoards(prev => {
+      let next = prev.map(entry => {
+        if (entry.id !== targetId) {
+          return entry;
+        }
+        previousBoardRef.contents = entry.board;
+        let nextBoard = updater(entry.board);
+        updatedBoardRef.contents = nextBoard;
+        return {
+          id: entry.id,
+          board: nextBoard
+        };
+      });
+      let match = updatedBoardRef.contents;
+      if (match !== undefined) {
+        return next;
+      }
+      let fallbackPrev = Board.make(12, 12);
+      previousBoardRef.contents = fallbackPrev;
+      let fallback = updater(fallbackPrev);
+      updatedBoardRef.contents = fallback;
+      return next.concat([{
+          id: targetId,
+          board: fallback
+        }]);
+    });
+    let boardValue = updatedBoardRef.contents;
+    if (boardValue === undefined) {
+      return;
+    }
+    if (trackHistory$1) {
+      let prevBoard = previousBoardRef.contents;
+      if (prevBoard !== undefined) {
+        recordBoardHistoryEntry(targetId, prevBoard, boardValue);
+      }
+      
+    }
+    BoardStorageJs.saveBoard(targetId, boardValue);
+  };
+  let undo = () => {
+    finalizeStrokeSnapshot();
+    let canvasId = currentCanvasIdRef.current;
+    let historyMap = boardHistoryByCanvasRef.current;
+    let history = Belt_MapString.get(historyMap, canvasId);
+    if (history === undefined) {
+      return;
+    }
+    let previousBoard = history.past[0];
+    if (previousBoard === undefined) {
+      return;
+    }
+    let remainingPast = dropFirst(history.past);
+    let presentBoard = history.present;
+    let nextFuture = presentBoard !== undefined ? clampArray([presentBoard].concat(history.future)) : history.future;
+    let nextHistory_present = previousBoard;
+    let nextHistory = {
+      past: remainingPast,
+      present: nextHistory_present,
+      future: nextFuture
+    };
+    updateBoardHistoryMap(prev => Belt_MapString.set(prev, canvasId, nextHistory));
+    updateCanvasBoardById(false, canvasId, _prev => previousBoard);
+    strokeSnapshotRef.current = undefined;
+  };
+  let redo = () => {
+    finalizeStrokeSnapshot();
+    let canvasId = currentCanvasIdRef.current;
+    let historyMap = boardHistoryByCanvasRef.current;
+    let history = Belt_MapString.get(historyMap, canvasId);
+    if (history === undefined) {
+      return;
+    }
+    let nextBoard = history.future[0];
+    if (nextBoard === undefined) {
+      return;
+    }
+    let presentBoard = history.present;
+    let nextPast = presentBoard !== undefined ? clampArray([presentBoard].concat(history.past)) : history.past;
+    let remainingFuture = dropFirst(history.future);
+    let nextHistory_present = nextBoard;
+    let nextHistory = {
+      past: nextPast,
+      present: nextHistory_present,
+      future: remainingFuture
+    };
+    updateBoardHistoryMap(prev => Belt_MapString.set(prev, canvasId, nextHistory));
+    updateCanvasBoardById(false, canvasId, _prev => nextBoard);
+    strokeSnapshotRef.current = undefined;
+  };
+  let historyForCurrentCanvas = Belt_MapString.get(boardHistoryByCanvas, currentCanvasId);
+  let canUndo = historyForCurrentCanvas !== undefined ? historyForCurrentCanvas.past.length > 0 : false;
+  let canRedo = historyForCurrentCanvas !== undefined ? historyForCurrentCanvas.future.length > 0 : false;
+  React.useEffect(() => {
+    if (!isMouseDown) {
+      finalizeStrokeSnapshot();
+    }
+    
+  }, [isMouseDown]);
+  React.useEffect(() => {
+    finalizeStrokeSnapshot();
+  }, [currentCanvasId]);
   let handlePickColor = (row, col) => {
     let pickedColor = Board.get(board, row, col);
     if (!(pickedColor == null)) {
@@ -520,6 +713,10 @@ function App(props) {
       return canvas;
     }
   }));
+  let setBoard = (trackHistoryOpt, updater) => {
+    let trackHistory = trackHistoryOpt !== undefined ? trackHistoryOpt : true;
+    updateCanvasBoardById(trackHistory, currentCanvasIdRef.current, updater);
+  };
   let setCanvasDotMask = updater => updateCanvasById(currentCanvasIdRef.current, canvas => ({
     id: canvas.id,
     zoom: canvas.zoom,
@@ -601,22 +798,22 @@ function App(props) {
     let entry$4 = savedTileMasks[0];
     tileMask = entry$4 !== undefined ? entry$4.mask : fallbackTileMask;
   }
-  let match$22 = Board.dims(board);
-  let boardDimJ = match$22[1];
-  let boardDimI = match$22[0];
+  let match$23 = Board.dims(board);
+  let boardDimJ = match$23[1];
+  let boardDimI = match$23[0];
   let fitZoom = computeZoomToFitForDimensions(boardDimI, boardDimJ);
   let zoomPercent = fitZoom !== undefined ? (
       fitZoom <= 0 ? zoom * 100 : zoom / fitZoom * 100
     ) : zoom * 100;
   let lastAutoCenteredDimsRef = React.useRef(undefined);
-  let match$23 = Array2D.dims(brush);
-  let brushDimJ = match$23[1];
-  let brushDimI = match$23[0];
+  let match$24 = Array2D.dims(brush);
+  let brushDimJ = match$24[1];
+  let brushDimI = match$24[0];
   let brushCenterDimI = brushDimI / 2 | 0;
   let brushCenterDimJ = brushDimJ / 2 | 0;
-  let match$24 = Array2D.dims(tileMask);
-  let tileMaskDimJ = match$24[1];
-  let tileMaskDimI = match$24[0];
+  let match$25 = Array2D.dims(tileMask);
+  let tileMaskDimJ = match$25[1];
+  let tileMaskDimI = match$25[0];
   let centerCanvasForDimensions = (dimI, dimJ) => {
     let match = computeCenteredPan(dimI, dimJ, zoomRef.current);
     let nextPanY = match[1];
@@ -666,12 +863,12 @@ function App(props) {
     }
   };
   let fitCanvasToViewport = () => fitCanvasToViewportForDimensions(boardDimI, boardDimJ);
-  let match$25 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$25[1];
-  let resizeRowsInput = match$25[0];
-  let match$26 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$26[1];
-  let resizeColsInput = match$26[0];
+  let match$26 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$26[1];
+  let resizeRowsInput = match$26[0];
+  let match$27 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$27[1];
+  let resizeColsInput = match$27[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -736,9 +933,9 @@ function App(props) {
       return mapped;
     }
   };
-  let match$27 = parsePositiveInt(resizeRowsInput);
-  let match$28 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$27 !== undefined && match$28 !== undefined ? match$27 !== boardDimI || match$28 !== boardDimJ : false;
+  let match$28 = parsePositiveInt(resizeRowsInput);
+  let match$29 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$28 !== undefined && match$29 !== undefined ? match$28 !== boardDimI || match$29 !== boardDimJ : false;
   let exportScaleValue = parsePositiveFloat(exportScaleInput);
   let canExport = Stdlib_Option.isSome(exportScaleValue);
   let handleResizeSubmit = () => {
@@ -751,7 +948,7 @@ function App(props) {
       return;
     }
     if (resizeMode === "Scale") {
-      modifyBoardEntry(currentCanvasIdRef.current, prev => {
+      setBoard(undefined, prev => {
         let match$2 = Board.dims(prev);
         let prevCols = match$2[1];
         let prevRows = match$2[0];
@@ -769,7 +966,7 @@ function App(props) {
         return nextBoard;
       });
     } else {
-      modifyBoardEntry(currentCanvasIdRef.current, prev => {
+      setBoard(undefined, prev => {
         let nextBoard = Board.make(match, match$1);
         for (let rowI = 0; rowI < match; ++rowI) {
           for (let colJ = 0; colJ < match$1; ++colJ) {
@@ -883,6 +1080,7 @@ function App(props) {
     if (!canDeleteCanvas) {
       return;
     }
+    finalizeStrokeSnapshot();
     let currentIndex = Belt_Array.getIndexBy(canvases, canvas => canvas.id === currentCanvasId);
     let nextSelectionId;
     if (currentIndex !== undefined) {
@@ -907,6 +1105,7 @@ function App(props) {
     setCanvases(prev => Belt_Array.keep(prev, canvas => canvas.id !== currentCanvasId));
     setCanvasBoards(prev => Belt_Array.keep(prev, entry => entry.id !== currentCanvasId));
     BoardStorageJs.deleteBoard(currentCanvasId);
+    updateBoardHistoryMap(prev => Belt_MapString.remove(prev, currentCanvasId));
     setSelectedCanvasId(param => nextSelectionId);
     clearHoverRef.current();
     setCursorOverlayOff(param => true);
@@ -914,6 +1113,7 @@ function App(props) {
   let handleSelectCanvas = canvasId => {
     let isAlreadySelected = selectedCanvasId !== undefined ? selectedCanvasId === canvasId : false;
     if (!isAlreadySelected) {
+      finalizeStrokeSnapshot();
       setSelectedCanvasId(param => canvasId);
     }
     clearHoverRef.current();
@@ -929,8 +1129,9 @@ function App(props) {
   };
   let applyBrush = (clickI, clickJ) => {
     UseLocalStorageJs$1.setLocalStoragePersistencePaused(true);
+    ensureStrokeSnapshot();
     let brushColor = getBrushColor();
-    modifyBoardEntry(currentCanvasIdRef.current, prev => {
+    setBoard(false, prev => {
       let match = Board.dims(prev);
       let cols = match[1];
       let rows = match[0];
@@ -978,7 +1179,8 @@ function App(props) {
   }, []);
   React.useEffect(() => {
     let handleKeyDown = event => {
-      if (event.metaKey) {
+      let hasPrimaryModifier = event.metaKey || event.ctrlKey;
+      if (hasPrimaryModifier) {
         let match = event.key;
         switch (match) {
           case "[" :
@@ -988,27 +1190,39 @@ function App(props) {
           case "]" :
             event.preventDefault();
             return updateZoom(prev => prev * Initials.zoom_factor);
+          case "Y" :
+          case "y" :
+            event.preventDefault();
+            return redo();
+          case "Z" :
+          case "z" :
+            break;
           default:
             return;
         }
-      } else {
-        let match$1 = event.key;
-        switch (match$1) {
-          case "ArrowDown" :
-            event.preventDefault();
-            return adjustPan(0, 20);
-          case "ArrowLeft" :
-            event.preventDefault();
-            return adjustPan(- 20, 0);
-          case "ArrowRight" :
-            event.preventDefault();
-            return adjustPan(20, 0);
-          case "ArrowUp" :
-            event.preventDefault();
-            return adjustPan(0, - 20);
-          default:
-            return;
+        event.preventDefault();
+        if (event.shiftKey) {
+          return redo();
+        } else {
+          return undo();
         }
+      }
+      let match$1 = event.key;
+      switch (match$1) {
+        case "ArrowDown" :
+          event.preventDefault();
+          return adjustPan(0, 20);
+        case "ArrowLeft" :
+          event.preventDefault();
+          return adjustPan(- 20, 0);
+        case "ArrowRight" :
+          event.preventDefault();
+          return adjustPan(20, 0);
+        case "ArrowUp" :
+          event.preventDefault();
+          return adjustPan(0, - 20);
+        default:
+          return;
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -1024,7 +1238,7 @@ function App(props) {
     setMyColor(param => color);
     setBrushMode(param => "Color");
   };
-  let onReplaceUsedColor = color => modifyBoardEntry(currentCanvasIdRef.current, prev => {
+  let onReplaceUsedColor = color => setBoard(undefined, prev => {
     let match = Board.dims(prev);
     let cols = match[1];
     let replacement = myColor;
@@ -1059,6 +1273,12 @@ function App(props) {
               centerCanvas: centerCanvas,
               fitCanvasToViewport: fitCanvasToViewport,
               zoomPercent: zoomPercent
+            }),
+            JsxRuntime.jsx(HistoryControl.make, {
+              canUndo: canUndo,
+              canRedo: canRedo,
+              onUndo: undo,
+              onRedo: redo
             }),
             JsxRuntime.jsxs("div", {
               children: [
@@ -1099,7 +1319,7 @@ function App(props) {
                   transformValue: transformValue,
                   zoom: zoom,
                   pan: pan,
-                  cursorOverlayOff: match$15[0],
+                  cursorOverlayOff: match$16[0],
                   setCursorOverlayOff: setCursorOverlayOff,
                   isMouseDown: isMouseDown,
                   applyBrush: applyBrush,
@@ -1149,7 +1369,7 @@ function App(props) {
               setBrushMode: setBrushMode,
               myColor: myColor,
               setMyColor: setMyColor,
-              hoveredPickColor: match$20[0],
+              hoveredPickColor: match$21[0],
               isPickingColor: isPickingColor,
               onStartColorPick: onStartColorPick,
               canvasBackgroundColor: canvasBackgroundColor
@@ -1165,22 +1385,22 @@ function App(props) {
                 }),
                 JsxRuntime.jsx(BrushOverlayControl.make, {
                   overlayMode: overlayMode,
-                  setOverlayMode: match$12[1]
+                  setOverlayMode: match$13[1]
                 }),
                 JsxRuntime.jsx(CanvasGridControl.make, {
                   gridMode: gridMode,
-                  setGridMode: match$13[1]
+                  setGridMode: match$14[1]
                 }),
                 JsxRuntime.jsx(CanvasColorsControl.make, {
                   myColor: myColor,
                   canvasBackgroundColor: canvasBackgroundColor,
                   setCanvasBackgroundColor: setCanvasBackgroundColor,
                   viewportBackgroundColor: viewportBackgroundColor,
-                  setViewportBackgroundColor: match$5[1]
+                  setViewportBackgroundColor: match$6[1]
                 }),
                 JsxRuntime.jsx(SilhouetteControl.make, {
                   isSilhouette: isSilhouette,
-                  setIsSilhouette: match$14[1]
+                  setIsSilhouette: match$15[1]
                 }),
                 JsxRuntime.jsx(DotModeControl.make, {
                   isDotMask: isDotMask,
@@ -1192,15 +1412,15 @@ function App(props) {
                   resizeColsInput: resizeColsInput,
                   setResizeColsInput: setResizeColsInput,
                   resizeMode: resizeMode,
-                  setResizeMode: match$18[1],
+                  setResizeMode: match$19[1],
                   canSubmitResize: canSubmitResize,
                   handleResizeSubmit: handleResizeSubmit
                 }),
                 JsxRuntime.jsx(ExportControl.make, {
                   exportScaleInput: exportScaleInput,
-                  setExportScaleInput: match$16[1],
+                  setExportScaleInput: match$17[1],
                   includeExportBackground: includeExportBackground,
-                  setIncludeExportBackground: match$17[1],
+                  setIncludeExportBackground: match$18[1],
                   includeExportDotMask: includeExportDotMask,
                   setIncludeExportDotMask: setIncludeExportDotMask,
                   canExport: canExport,

@@ -10,6 +10,12 @@ type canvasBoardState = {
   id: string,
   board: board,
 }
+type history<'a> = {
+  past: array<'a>,
+  present: option<'a>,
+  future: array<'a>,
+}
+type boardHistory = history<board>
 type boolean2D = array<array<bool>>
 type tileMaskEntry = {
   id: string,
