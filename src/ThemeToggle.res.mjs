@@ -37,7 +37,7 @@ function ThemeToggle(props) {
         className: buttonClass,
         onClick: param => {
           setTheme(param => "pink");
-          setViewportBackgroundColor(param => "#FFF1FB");
+          setViewportBackgroundColor(param => "#F4E6F0");
         }
       });
       break;

@@ -44,7 +44,7 @@ let make = (
         className={buttonClass}
         onClick={_ => {
           setTheme(_ => Pink)
-          setViewportBackgroundColor(_ => "#FFF1FB")
+          setViewportBackgroundColor(_ => "#F4E6F0")
         }}>
         {"🏝️"->React.string}
       </button>
