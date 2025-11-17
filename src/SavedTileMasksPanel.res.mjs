@@ -48,7 +48,7 @@ function SavedTileMasksPanel(props) {
           "rounded-lg h-8 w-8 text-lg font-medium flex items-center justify-center",
           canSaveTileMask ? "bg-[var(--accent)] text-[var(--plain-white)]" : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed"
         ].join(" "),
-        disabled: canSaveTileMask,
+        disabled: !canSaveTileMask,
         onClick: param => handleAddTileMask()
       }),
       JsxRuntime.jsx("button", {

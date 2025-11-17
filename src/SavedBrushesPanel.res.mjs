@@ -64,7 +64,7 @@ function SavedBrushesPanel(props) {
           "rounded-lg h-8 w-8 text-lg font-medium flex items-center justify-center",
           canSaveBrush ? "bg-[var(--accent)] text-[var(--plain-white)]" : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed"
         ].join(" "),
-        disabled: canSaveBrush,
+        disabled: !canSaveBrush,
         onClick: param => handleAddBrush()
       }),
       JsxRuntime.jsx("button", {

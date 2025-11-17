@@ -56,7 +56,7 @@ let make = (
           ? "bg-[var(--accent)] text-[var(--plain-white)]"
           : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed",
       ]->Array.join(" ")}
-      disabled={canSaveBrush}
+      disabled={!canSaveBrush}
       onClick={_ => {
         handleAddBrush()
       }}>
