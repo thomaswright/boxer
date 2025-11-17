@@ -13,31 +13,22 @@ function ZoomControl(props) {
     children: [
       JsxRuntime.jsxs("div", {
         children: [
-          JsxRuntime.jsx("span", {
-            children: "Zoom",
-            className: "font-medium"
+          JsxRuntime.jsx("button", {
+            children: JsxRuntime.jsx(Tb.TbMinus, {}),
+            className: "flex-none rounded w-6 h-6 text-sm font-medium bg-[var(--plain-200)] text-[var(--plain-900)] flex justify-center items-center",
+            onClick: param => zoomOut()
           }),
           JsxRuntime.jsx("span", {
             children: zoomPercentString + "%",
-            className: "text-sm font-mono"
-          })
-        ],
-        className: "flex flex-row items-center justify-between"
-      }),
-      JsxRuntime.jsxs("div", {
-        children: [
-          JsxRuntime.jsx("button", {
-            children: JsxRuntime.jsx(Tb.TbMinus, {}),
-            className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-[var(--plain-200)] text-[var(--plain-900)] flex justify-center items-center",
-            onClick: param => zoomOut()
+            className: "text-xs font-mono flex-1 flex flex-row items-center justify-center"
           }),
           JsxRuntime.jsx("button", {
             children: JsxRuntime.jsx(Tb.TbPlus, {}),
-            className: "flex-1 rounded px-2 py-1 text-sm font-medium bg-[var(--plain-200)] text-[var(--plain-900)] flex justify-center items-center",
+            className: "flex-none rounded w-6 h-6 text-sm font-medium bg-[var(--plain-200)] text-[var(--plain-900)] flex justify-center items-center",
             onClick: param => zoomIn()
           })
         ],
-        className: "flex flex-row gap-2"
+        className: "flex flex-row gap-2 items-center"
       }),
       JsxRuntime.jsxs("div", {
         children: [

@@ -3,19 +3,18 @@ let make = (~zoomOut, ~zoomIn, ~centerCanvas, ~fitCanvasToViewport, ~zoomPercent
   let zoomPercentString = zoomPercent->Float.toFixed(~digits=0)
 
   <div className="p-2 flex flex-col gap-2 w-full">
-    <div className="flex flex-row items-center justify-between">
-      <span className="font-medium"> {"Zoom"->React.string} </span>
-      <span className="text-sm font-mono"> {`${zoomPercentString}%`->React.string} </span>
-    </div>
-    <div className="flex flex-row gap-2">
+    <div className="flex flex-row gap-2 items-center">
       <button
-        className="flex-1 rounded px-2 py-1 text-sm font-medium bg-[var(--plain-200)] text-[var(--plain-900)] flex justify-center items-center"
+        className="flex-none rounded w-6 h-6 text-sm font-medium bg-[var(--plain-200)] text-[var(--plain-900)] flex justify-center items-center"
         onClick={_ => zoomOut()}>
         <Icons.Minus />
       </button>
+      <span className="text-xs font-mono flex-1 flex flex-row items-center justify-center">
+        {`${zoomPercentString}%`->React.string}
+      </span>
 
       <button
-        className="flex-1 rounded px-2 py-1 text-sm font-medium bg-[var(--plain-200)] text-[var(--plain-900)] flex justify-center items-center"
+        className="flex-none rounded w-6 h-6 text-sm font-medium bg-[var(--plain-200)] text-[var(--plain-900)] flex justify-center items-center"
         onClick={_ => zoomIn()}>
         <Icons.Plus />
       </button>
