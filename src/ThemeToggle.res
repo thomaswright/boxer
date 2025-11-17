@@ -1,27 +1,45 @@
 open Theme
 
 @react.component
-let make = (~theme: Theme.theme, ~setTheme) => {
-  let buttonClass = targetTheme =>
-    "flex-1 rounded px-2 py-1 text-xs font-medium border transition-colors " ++ if (
-      theme == targetTheme
-    ) {
-      "bg-[var(--accent)] text-[var(--plain-white)] border-[var(--accent)]"
-    } else {
-      "bg-[var(--plain-200)] text-[var(--plain-900)] border-[var(--plain-300)]"
-    }
+let make = (
+  ~theme: Theme.theme,
+  ~setTheme,
+  ~setViewportBackgroundColor,
+  ~canvasBackgroundColor,
+  ~setCanvasBackgroundColor,
+  ~myColor,
+) => {
+  let buttonClass = "w-fit flex-none rounded p-1 text-lg transition-colors bg-[var(--plain-200)] text-[var(--plain-black)]"
 
-  <div className="p-2 flex flex-col gap-2 w-full">
-    <div className="flex flex-row items-center justify-between">
-      <span className="font-medium"> {"Theme"->React.string} </span>
-    </div>
-    <div className="flex flex-row gap-2">
-      <button className={buttonClass(Light)} onClick={_ => setTheme(_ => Light)}>
-        {"Light"->React.string}
+  <div className="p-2 flex flex-row gap-2 w-full items-center">
+    {switch theme {
+    | Light =>
+      <button
+        className={buttonClass}
+        onClick={_ => {
+          setTheme(_ => Dark)
+          setViewportBackgroundColor(_ => "#181818")
+        }}>
+        <Icons.Sun />
       </button>
-      <button className={buttonClass(Dark)} onClick={_ => setTheme(_ => Dark)}>
-        {"Dark"->React.string}
+    | Dark =>
+      <button
+        className={buttonClass}
+        onClick={_ => {
+          setTheme(_ => Light)
+          setViewportBackgroundColor(_ => "#d8d8d8")
+        }}>
+        <Icons.Moon />
       </button>
-    </div>
+    }}
+
+    <div className="flex-1 text-right"> {"Background"->React.string} </div>
+    <button
+      className="w-6 h-6 border rounded"
+      style={{
+        backgroundColor: canvasBackgroundColor,
+      }}
+      onClick={_ => setCanvasBackgroundColor(_ => myColor)}
+    />
   </div>
 }

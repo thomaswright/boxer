@@ -134,6 +134,7 @@ let defaultBrushEntries = defaultBrushPatterns->Array.mapWithIndex((brush, index
 @react.component
 let make = () => {
   let (theme, setTheme) = Theme.useTheme()
+
   // Layout helpers
   let canvasContainerRef = React.useRef(Js.Nullable.null)
   let (viewportCenter, setViewportCenter) = React.useState(() => (192., 192.))
@@ -1040,7 +1041,10 @@ let make = () => {
       ~zoom=fittedZoom,
       ~pan=newPan,
       ~isDotMask=false,
-      ~canvasBackgroundColor,
+      ~canvasBackgroundColor=switch theme {
+      | Light => "#ffffff"
+      | Dark => "#000000"
+      },
     )
     setCanvases(prev => prev->Array.concat([newCanvas]))
     storeBoardValue(newCanvas.id, newBoard)
@@ -1357,13 +1361,6 @@ let make = () => {
           <BrushOverlayControl overlayMode setOverlayMode />
           <CanvasGridControl gridMode setGridMode />
 
-          <CanvasColorsControl
-            myColor
-            canvasBackgroundColor
-            setCanvasBackgroundColor
-            viewportBackgroundColor
-            setViewportBackgroundColor
-          />
           <SilhouetteControl isSilhouette setIsSilhouette />
           <DotModeControl isDotMask setCanvasDotMask />
 
@@ -1388,7 +1385,14 @@ let make = () => {
             canExport
             onExport={handleExportPng}
           />
-          <ThemeToggle theme setTheme />
+          <ThemeToggle
+            theme
+            setTheme
+            setViewportBackgroundColor
+            canvasBackgroundColor
+            setCanvasBackgroundColor
+            myColor
+          />
         </div>
       </div>
     </div>

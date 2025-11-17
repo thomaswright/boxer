@@ -35,7 +35,6 @@ import * as SavedBrushesPanel from "./SavedBrushesPanel.res.mjs";
 import * as SilhouetteControl from "./SilhouetteControl.res.mjs";
 import * as JsxRuntime from "react/jsx-runtime";
 import * as BrushOverlayControl from "./BrushOverlayControl.res.mjs";
-import * as CanvasColorsControl from "./CanvasColorsControl.res.mjs";
 import * as SavedTileMasksPanel from "./SavedTileMasksPanel.res.mjs";
 import UseLocalStorageJs from "./useLocalStorage.js";
 import * as UseLocalStorageJs$1 from "./useLocalStorage.js";
@@ -189,6 +188,7 @@ let defaultBrushEntries = defaultBrushPatterns.map((brush, index) => ({
 
 function App(props) {
   let match = Theme.useTheme();
+  let theme = match[0];
   let canvasContainerRef = React.useRef(null);
   let match$1 = React.useState(() => [
     192,
@@ -306,7 +306,6 @@ function App(props) {
   let setSavedTileMasks = match$6[1];
   let savedTileMasks = match$6[0];
   let match$7 = UseLocalStorageJs(StorageKeys.viewportBackgroundColor, Initials.viewportBackgroundColor);
-  let viewportBackgroundColor = match$7[0];
   let match$8 = React.useState(() => false);
   let setBoardsLoaded = match$8[1];
   let areBoardsLoaded = match$8[0];
@@ -1094,7 +1093,9 @@ function App(props) {
     let match = computeFitViewForDimensions(boardDimI, boardDimJ);
     let newPan = match[1];
     let fittedZoom = match[0];
-    let newCanvas = makeCanvas(fittedZoom, newPan, false, canvasBackgroundColor);
+    let tmp;
+    tmp = theme === "dark" ? "#000000" : "#ffffff";
+    let newCanvas = makeCanvas(fittedZoom, newPan, false, tmp);
     setCanvases(prev => prev.concat([newCanvas]));
     storeBoardValue(newCanvas.id, newBoard);
     setSelectedCanvasId(param => newCanvas.id);
@@ -1358,7 +1359,7 @@ function App(props) {
                   gridLineColor: gridLineColor,
                   checkeredPrimaryColor: checkeredPrimaryColor,
                   checkeredSecondaryColor: checkeredSecondaryColor,
-                  viewportBackgroundColor: viewportBackgroundColor,
+                  viewportBackgroundColor: match$7[0],
                   isSilhouette: isSilhouette,
                   clearHoverRef: clearHoverRef,
                   brush: brush,
@@ -1416,13 +1417,6 @@ function App(props) {
                   gridMode: gridMode,
                   setGridMode: match$15[1]
                 }),
-                JsxRuntime.jsx(CanvasColorsControl.make, {
-                  myColor: myColor,
-                  canvasBackgroundColor: canvasBackgroundColor,
-                  setCanvasBackgroundColor: setCanvasBackgroundColor,
-                  viewportBackgroundColor: viewportBackgroundColor,
-                  setViewportBackgroundColor: match$7[1]
-                }),
                 JsxRuntime.jsx(SilhouetteControl.make, {
                   isSilhouette: isSilhouette,
                   setIsSilhouette: match$16[1]
@@ -1452,8 +1446,12 @@ function App(props) {
                   onExport: handleExportPng
                 }),
                 JsxRuntime.jsx(ThemeToggle.make, {
-                  theme: match[0],
-                  setTheme: match[1]
+                  theme: theme,
+                  setTheme: match[1],
+                  setViewportBackgroundColor: match$7[1],
+                  canvasBackgroundColor: canvasBackgroundColor,
+                  setCanvasBackgroundColor: setCanvasBackgroundColor,
+                  myColor: myColor
                 })
               ],
               className: "overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-[var(--plain-300)]"
