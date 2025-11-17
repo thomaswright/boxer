@@ -73,4 +73,4 @@ export {
   Palette$1 as Palette,
   make,
 }
-/* react-icons/tb Not a pure module */
+/* Palette Not a pure module */

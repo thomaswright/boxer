@@ -1034,6 +1034,8 @@ let make = () => {
       ~canvasBackgroundColor=switch theme {
       | Light => "#ffffff"
       | Dark => "#000000"
+      | Tan => "#ffffff"
+      | Pink => "#ffffff"
       },
     )
     setCanvases(prev => prev->Array.concat([newCanvas]))

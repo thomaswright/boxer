@@ -1,6 +1,10 @@
 type theme =
   | @as("dark") Dark
   | @as("light") Light
+  | @as("tan") Tan
+  | @as("pink") Pink
+
+let allThemes = ["light", "dark", "tan", "pink"]
 
 @module("./useLocalStorage.js")
 external useLocalStorage: (string, 'a) => ('a, ('a => 'a) => unit, unit => 'a) = "default"
@@ -15,10 +19,8 @@ let useTheme = () => {
   let (theme, setTheme, _getTheme) = useLocalStorage(StorageKeys.theme, Light)
 
   React.useEffect1(() => {
-    let (remove, add) = theme == Dark ? ("light", "dark") : ("dark", "light")
-
-    removeClassToHtmlElement(remove)
-    addClassToHtmlElement(add)
+    allThemes->Array.forEach(t => removeClassToHtmlElement(t))
+    addClassToHtmlElement((theme :> string))
 
     None
   }, [theme])

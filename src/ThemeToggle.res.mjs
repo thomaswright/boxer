@@ -8,23 +8,50 @@ function ThemeToggle(props) {
   let setCanvasBackgroundColor = props.setCanvasBackgroundColor;
   let setViewportBackgroundColor = props.setViewportBackgroundColor;
   let setTheme = props.setTheme;
-  let buttonClass = "w-fit flex-none rounded p-1 text-lg transition-colors bg-[var(--plain-200)] text-[var(--plain-black)]";
+  let buttonClass = " flex-none rounded w-7 h-7 flex flex-row items-center justify-center text-lg transition-colors bg-[var(--plain-200)] text-[var(--plain-black)]";
   let tmp;
-  tmp = props.theme === "dark" ? JsxRuntime.jsx("button", {
-      children: JsxRuntime.jsx(Tb.TbMoon, {}),
-      className: buttonClass,
-      onClick: param => {
-        setTheme(param => "light");
-        setViewportBackgroundColor(param => "#d8d8d8");
-      }
-    }) : JsxRuntime.jsx("button", {
-      children: JsxRuntime.jsx(Tb.TbSun, {}),
-      className: buttonClass,
-      onClick: param => {
-        setTheme(param => "dark");
-        setViewportBackgroundColor(param => "#181818");
-      }
-    });
+  switch (props.theme) {
+    case "dark" :
+      tmp = JsxRuntime.jsx("button", {
+        children: JsxRuntime.jsx(Tb.TbMoon, {}),
+        className: buttonClass,
+        onClick: param => {
+          setTheme(param => "tan");
+          setViewportBackgroundColor(param => "#FBE0C1");
+        }
+      });
+      break;
+    case "light" :
+      tmp = JsxRuntime.jsx("button", {
+        children: JsxRuntime.jsx(Tb.TbSun, {}),
+        className: buttonClass,
+        onClick: param => {
+          setTheme(param => "dark");
+          setViewportBackgroundColor(param => "#181818");
+        }
+      });
+      break;
+    case "tan" :
+      tmp = JsxRuntime.jsx("button", {
+        children: "🏝️",
+        className: buttonClass,
+        onClick: param => {
+          setTheme(param => "pink");
+          setViewportBackgroundColor(param => "#FFF1FB");
+        }
+      });
+      break;
+    case "pink" :
+      tmp = JsxRuntime.jsx("button", {
+        children: "🌸",
+        className: buttonClass,
+        onClick: param => {
+          setTheme(param => "light");
+          setViewportBackgroundColor(param => "#d8d8d8");
+        }
+      });
+      break;
+  }
   return JsxRuntime.jsxs("div", {
     children: [
       JsxRuntime.jsx("div", {

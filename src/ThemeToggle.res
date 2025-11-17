@@ -9,7 +9,7 @@ let make = (
   ~setCanvasBackgroundColor,
   ~myColor,
 ) => {
-  let buttonClass = "w-fit flex-none rounded p-1 text-lg transition-colors bg-[var(--plain-200)] text-[var(--plain-black)]"
+  let buttonClass = " flex-none rounded w-7 h-7 flex flex-row items-center justify-center text-lg transition-colors bg-[var(--plain-200)] text-[var(--plain-black)]"
 
   <div className="p-2 flex flex-row gap-2 w-full items-center">
     <div className="flex-1 text-sm font-bold"> {"Background"->React.string} </div>
@@ -34,10 +34,28 @@ let make = (
       <button
         className={buttonClass}
         onClick={_ => {
+          setTheme(_ => Tan)
+          setViewportBackgroundColor(_ => "#FBE0C1")
+        }}>
+        <Icons.Moon />
+      </button>
+    | Tan =>
+      <button
+        className={buttonClass}
+        onClick={_ => {
+          setTheme(_ => Pink)
+          setViewportBackgroundColor(_ => "#FFF1FB")
+        }}>
+        {"🏝️"->React.string}
+      </button>
+    | Pink =>
+      <button
+        className={buttonClass}
+        onClick={_ => {
           setTheme(_ => Light)
           setViewportBackgroundColor(_ => "#d8d8d8")
         }}>
-        <Icons.Moon />
+        {"🌸"->React.string}
       </button>
     }}
   </div>

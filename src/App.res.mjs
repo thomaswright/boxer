@@ -1091,7 +1091,16 @@ function App(props) {
     let newPan = match[1];
     let fittedZoom = match[0];
     let tmp;
-    tmp = theme === "dark" ? "#000000" : "#ffffff";
+    switch (theme) {
+      case "dark" :
+        tmp = "#000000";
+        break;
+      case "light" :
+      case "tan" :
+      case "pink" :
+        tmp = "#ffffff";
+        break;
+    }
     let newCanvas = makeCanvas(fittedZoom, newPan, false, tmp);
     setCanvases(prev => prev.concat([newCanvas]));
     storeBoardValue(newCanvas.id, newBoard);

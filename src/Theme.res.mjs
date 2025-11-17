@@ -4,6 +4,13 @@ import * as React from "react";
 import * as StorageKeys from "./StorageKeys.res.mjs";
 import UseLocalStorageJs from "./useLocalStorage.js";
 
+let allThemes = [
+  "light",
+  "dark",
+  "tan",
+  "pink"
+];
+
 function useLocalStorage(prim0, prim1) {
   return UseLocalStorageJs(prim0, prim1);
 }
@@ -12,15 +19,10 @@ function useTheme() {
   let match = UseLocalStorageJs(StorageKeys.theme, "light");
   let theme = match[0];
   React.useEffect(() => {
-    let match = theme === "dark" ? [
-        "light",
-        "dark"
-      ] : [
-        "dark",
-        "light"
-      ];
-    document.documentElement.classList.remove(match[0]);
-    document.documentElement.classList.add(match[1]);
+    allThemes.forEach(t => {
+      document.documentElement.classList.remove(t);
+    });
+    document.documentElement.classList.add(theme);
   }, [theme]);
   return [
     theme,
@@ -29,6 +31,7 @@ function useTheme() {
 }
 
 export {
+  allThemes,
   useLocalStorage,
   useTheme,
 }

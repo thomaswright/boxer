@@ -31,15 +31,15 @@ let make = (
         className={["flex flex-row"]->Array.join(" ")}>
         <div
           className={[
-            " text-3xs font-bold w-4 text-center bg-[var(--plain-white)]",
-            selected ? "text-[var(--secondary)]" : "text-[var(--plain-black)]",
+            " text-3xs font-bold w-4 text-center",
+            selected ? "text-[var(--accent)]" : "text-[var(--plain-black)]",
           ]->Array.join(" ")}
           style={{writingMode: "sideways-lr"}}>
           {`${dimI->Int.toString}:${dimJ->Int.toString}`->React.string}
         </div>
         <div
           className={[
-            selected ? "bg-[var(--secondary)]" : "bg-[var(--plain-400)]",
+            selected ? "bg-[var(--accent)]" : "bg-[var(--plain-400)]",
             "h-8 w-8 rounded-xs overflow-hidden",
           ]->Array.join(" ")}>
           <BoolGridPreview
