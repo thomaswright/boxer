@@ -1,3 +1,6 @@
+module Palette = Palette
+module Theme = Theme
+
 @react.component
 let make = (
   ~grid: array<array<bool>>,
@@ -5,20 +8,26 @@ let make = (
   ~emptyColor: option<string>,
 ) => {
   let canvasRef = React.useRef((Js.Nullable.null: Js.Nullable.t<Dom.element>))
+  let (theme, _setTheme) = Theme.useTheme()
 
-  React.useEffect3(() => {
+  let resolveCanvasColor = color =>
+    color->Option.flatMap(value => Palette.resolveColor(value))
+
+  React.useEffect4(() => {
+    let resolvedFilledColor = resolveCanvasColor(filledColor)
+    let resolvedEmptyColor = resolveCanvasColor(emptyColor)
     switch canvasRef.current->Js.Nullable.toOption {
     | Some(canvasElement) =>
       PreviewCanvas.drawBoolGrid(
         ~canvasElement,
         ~grid,
-        ~trueColor=filledColor,
-        ~falseColor=emptyColor,
+        ~trueColor=resolvedFilledColor,
+        ~falseColor=resolvedEmptyColor,
       )
     | None => ()
     }
     None
-  }, (grid, filledColor, emptyColor))
+  }, (grid, filledColor, emptyColor, theme))
 
   <canvas
     ref={ReactDOM.Ref.domRef(canvasRef)}

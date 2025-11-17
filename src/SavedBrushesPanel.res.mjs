@@ -34,10 +34,7 @@ function SavedBrushesPanel(props) {
           children: [
             JsxRuntime.jsx("div", {
               children: match[0].toString() + ":" + match[1].toString(),
-              className: [
-                " text-3xs font-bold w-4 text-center",
-                selected ? "text-[var(--accent)]" : "text-[var(--plain-black)]"
-              ].join(" "),
+              className: [" text-3xs font-bold w-4 text-center text-[var(--plain-black)]"].join(" "),
               style: {
                 writingMode: "sideways-lr"
               }

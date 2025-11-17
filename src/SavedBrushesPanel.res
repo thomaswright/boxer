@@ -30,10 +30,9 @@ let make = (
         onClick={_ => setSelectedBrushId(_ => Some(savedBrushEntry.id))}
         className={["flex flex-row"]->Array.join(" ")}>
         <div
-          className={[
-            " text-3xs font-bold w-4 text-center",
-            selected ? "text-[var(--accent)]" : "text-[var(--plain-black)]",
-          ]->Array.join(" ")}
+          className={[" text-3xs font-bold w-4 text-center text-[var(--plain-black)]"]->Array.join(
+            " ",
+          )}
           style={{writingMode: "sideways-lr"}}>
           {`${dimI->Int.toString}:${dimJ->Int.toString}`->React.string}
         </div>

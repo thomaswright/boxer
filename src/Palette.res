@@ -7,22 +7,17 @@ let checkeredPrimaryLight = "rgba(255, 255, 255, 0.15)"
 let checkeredSecondaryDark = "rgba(0, 0, 0, 0.00)"
 let checkeredSecondaryLight = "rgba(255, 255, 255, 0.00)"
 
-let getColor = () => {
-  Webapi.Dom.document
-  ->Webapi.Dom.Document.querySelector(".tan")
-  ->Option.flatMap(element => {
-    let style = Webapi.Dom.Window.getComputedStyle(Webapi.Dom.window, element)
+@module("./themeColors.js")
+external resolveThemeColor: string => Js.Nullable.t<string> = "resolveThemeColor"
 
-    style->Webapi.Dom.CssStyleDeclaration.getPropertyValue("--plain-500")
-  })
-  ->Option.getOr("#dddddd")
-}
-
-Js.log(getColor())
+let resolveColor = color =>
+  color
+  ->resolveThemeColor
+  ->Js.Nullable.toOption
 
 module Thumbnail = {
-  let selectedFilled = "#E7000B"
-  let selectedEmpty = "#FFCAC2"
-  let unselectedFilled = "#9ca3af"
-  let unselectedEmpty = "#e5e7eb"
+  let selectedFilled = "var(--plain-500, #575757)"
+  let selectedEmpty = "var(--plain-100, #E2E2E2)"
+  let unselectedFilled = "var(--plain-300, #9ca3af)"
+  let unselectedEmpty = "var(--plain-200, #e5e7eb)"
 }
