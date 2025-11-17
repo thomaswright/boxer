@@ -686,7 +686,6 @@ function App(props) {
     updateCanvasBoardById(false, canvasId, _prev => nextBoard);
     strokeSnapshotRef.current = undefined;
   };
-  Belt_MapString.get(boardHistoryByCanvas, currentCanvasId);
   React.useEffect(() => {
     if (!isMouseDown) {
       finalizeStrokeSnapshot();

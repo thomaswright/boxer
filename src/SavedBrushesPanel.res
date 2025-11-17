@@ -57,7 +57,9 @@ let make = (
           : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed",
       ]->Array.join(" ")}
       disabled={canSaveBrush}
-      onClick={_ => handleAddBrush()}>
+      onClick={_ => {
+        handleAddBrush()
+      }}>
       <Icons.Plus />
     </button>
     <button

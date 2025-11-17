@@ -641,15 +641,6 @@ let make = () => {
     | None => ()
     }
   }
-  let historyForCurrentCanvas = boardHistoryByCanvas->CanvasHistoryMap.get(currentCanvasId)
-  let canUndo = switch historyForCurrentCanvas {
-  | Some(history) => history.past->Array.length > 0
-  | None => false
-  }
-  let canRedo = switch historyForCurrentCanvas {
-  | Some(history) => history.future->Array.length > 0
-  | None => false
-  }
 
   React.useEffect1(() => {
     if !isMouseDown {
