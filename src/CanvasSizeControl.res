@@ -11,45 +11,28 @@ let make = (
   ~canSubmitResize,
   ~handleResizeSubmit,
 ) => {
-  let baseButtonClasses = "flex-1 px-2 py-1 text-xs font-medium border first:rounded-l last:rounded-r"
-  let scaleButtonClasses = [
-    baseButtonClasses,
-    switch resizeMode {
-    | Scale => "bg-[var(--accent)] text-[var(--plain-white)] border-[var(--accent)]"
-    | Crop => "bg-[var(--plain-100)] text-[var(--plain-700)] border-[var(--plain-300)]"
-    },
-  ]->Array.join(" ")
-  let cropButtonClasses = [
-    baseButtonClasses,
-    switch resizeMode {
-    | Crop => "bg-[var(--accent)] text-[var(--plain-white)] border-[var(--accent)]"
-    | Scale => "bg-[var(--plain-100)] text-[var(--plain-700)] border-[var(--plain-300)]"
-    },
-  ]->Array.join(" ")
-
   <div className=" p-2 flex flex-col gap-2 w-full">
     <div
-      className={["flex flex-row items-center justify-between font-medium", "w-full"]->Array.join(
+      className={["flex flex-row items-center justify-between font-medium w-full"]->Array.join(
         " ",
       )}>
       {"Canvas Size"->React.string}
     </div>
     <div className="flex flex-col gap-2">
       <div className="flex flex-row">
-        <button
-          type_="button"
-          className={scaleButtonClasses}
-          ariaPressed={resizeMode == Scale ? #"true" : #"false"}
-          onClick={_ => setResizeMode(_ => Scale)}>
-          {"Scale"->React.string}
-        </button>
-        <button
-          type_="button"
-          className={cropButtonClasses}
-          ariaPressed={resizeMode == Crop ? #"true" : #"false"}
-          onClick={_ => setResizeMode(_ => Crop)}>
-          {"Crop"->React.string}
-        </button>
+        {[(Scale, "Scale"), (Crop, "Crop")]
+        ->Belt.Array.map(((mode, label)) =>
+          <button
+            type_="button"
+            className={Styles.segmentButton(
+              ~isActive=resizeMode == mode,
+            ) ++ " first:rounded-l last:rounded-r"}
+            onClick={_ => setResizeMode(_ => mode)}
+            key={label}>
+            {label->React.string}
+          </button>
+        )
+        ->React.array}
       </div>
       <div className="flex flex-row w-full gap-2 justify-between items-center">
         <input

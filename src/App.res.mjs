@@ -1425,6 +1425,14 @@ function App(props) {
                   isDotMask: isDotMask,
                   setCanvasDotMask: setCanvasDotMask
                 }),
+                JsxRuntime.jsx(ThemeToggle.make, {
+                  theme: theme,
+                  setTheme: match[1],
+                  setViewportBackgroundColor: match$7[1],
+                  canvasBackgroundColor: canvasBackgroundColor,
+                  setCanvasBackgroundColor: setCanvasBackgroundColor,
+                  myColor: myColor
+                }),
                 JsxRuntime.jsx(CanvasSizeControl.make, {
                   resizeRowsInput: resizeRowsInput,
                   setResizeRowsInput: setResizeRowsInput,
@@ -1444,14 +1452,6 @@ function App(props) {
                   setIncludeExportDotMask: setIncludeExportDotMask,
                   canExport: canExport,
                   onExport: handleExportPng
-                }),
-                JsxRuntime.jsx(ThemeToggle.make, {
-                  theme: theme,
-                  setTheme: match[1],
-                  setViewportBackgroundColor: match$7[1],
-                  canvasBackgroundColor: canvasBackgroundColor,
-                  setCanvasBackgroundColor: setCanvasBackgroundColor,
-                  myColor: myColor
                 })
               ],
               className: "overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-[var(--plain-300)]"

@@ -1363,7 +1363,14 @@ let make = () => {
 
           <SilhouetteControl isSilhouette setIsSilhouette />
           <DotModeControl isDotMask setCanvasDotMask />
-
+          <ThemeToggle
+            theme
+            setTheme
+            setViewportBackgroundColor
+            canvasBackgroundColor
+            setCanvasBackgroundColor
+            myColor
+          />
           <CanvasSizeControl
             resizeRowsInput
             setResizeRowsInput
@@ -1384,14 +1391,6 @@ let make = () => {
             setIncludeExportDotMask
             canExport
             onExport={handleExportPng}
-          />
-          <ThemeToggle
-            theme
-            setTheme
-            setViewportBackgroundColor
-            canvasBackgroundColor
-            setCanvasBackgroundColor
-            myColor
           />
         </div>
       </div>
