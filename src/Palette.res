@@ -8,8 +8,8 @@ let checkeredSecondaryDark = "rgba(0, 0, 0, 0.00)"
 let checkeredSecondaryLight = "rgba(255, 255, 255, 0.00)"
 
 module Thumbnail = {
-  let selectedFilled = "#f97316"
-  let selectedEmpty = "#fed7aa"
+  let selectedFilled = "#E7000B"
+  let selectedEmpty = "#FFCAC2"
   let unselectedFilled = "#9ca3af"
   let unselectedEmpty = "#e5e7eb"
 }

@@ -2,8 +2,8 @@
 
 
 let Thumbnail = {
-  selectedFilled: "#f97316",
-  selectedEmpty: "#fed7aa",
+  selectedFilled: "#E7000B",
+  selectedEmpty: "#FFCAC2",
   unselectedFilled: "#9ca3af",
   unselectedEmpty: "#e5e7eb"
 };
