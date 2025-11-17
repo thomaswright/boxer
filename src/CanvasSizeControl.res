@@ -39,7 +39,7 @@ let make = (
       <div className={"flex flex-row gap-2 w-full"}>
         <button
           className={[
-            "rounded px-1 py-1 text-xs font-medium flex-1",
+            "rounded-lg px-1 py-1 text-xs font-medium flex-1",
             canSubmitResize
               ? "bg-[var(--accent)] text-[var(--plain-white)]"
               : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed",
@@ -50,7 +50,7 @@ let make = (
         </button>
         <button
           className={[
-            "rounded px-1 py-1 text-xs font-medium flex-1",
+            "rounded-lg px-1 py-1 text-xs font-medium flex-1",
             canSubmitResize
               ? "bg-[var(--accent)] text-[var(--plain-white)]"
               : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed",

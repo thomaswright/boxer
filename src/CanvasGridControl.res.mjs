@@ -40,7 +40,7 @@ function CanvasGridControl(props) {
           let mode = param[0];
           return JsxRuntime.jsx("button", {
             children: label,
-            className: Styles.segmentButton(gridMode === mode) + " nth-[1]:rounded-t nth-[1]:col-span-2 nth-[4]:rounded-bl nth-[5]:rounded-br",
+            className: Styles.segmentButton(gridMode === mode) + " py-1 nth-[1]:rounded-t-xl nth-[1]:col-span-2 nth-[4]:rounded-bl-xl nth-[5]:rounded-br-xl",
             type: "button",
             onClick: param => setGridMode(param => mode)
           }, label);

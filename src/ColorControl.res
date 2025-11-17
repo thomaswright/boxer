@@ -18,32 +18,28 @@ let make = (
 
   <div className="relative flex flex-col gap-2 w-full overflow-x-visible items-center flex-none">
     <div className="flex flex-row justify-center">
-      <button
-        className={[
-          brushMode == Color
-            ? "bg-[var(--accent)] text-[var(--plain-white)]"
-            : "bg-[var(--plain-200)] text-[var(--plain-900)]",
-          "px-2 font-medium rounded-l",
-        ]->Array.join(" ")}
-        onClick={_ => setBrushMode(_ => Color)}>
-        {"Color"->React.string}
-      </button>
-      <button
-        className={[
-          brushMode == Erase
-            ? "bg-[var(--accent)] text-[var(--plain-white)]"
-            : "bg-[var(--plain-200)] text-[var(--plain-900)]",
-          "px-2 font-medium rounded-r",
-        ]->Array.join(" ")}
-        onClick={_ => setBrushMode(_ => Erase)}>
-        {"Erase"->React.string}
-      </button>
+      <div className={"flex flex-row"}>
+        {[(Color, "Color"), (Erase, "Erase")]
+        ->Belt.Array.map(((mode, label)) =>
+          <button
+            type_="button"
+            className={Styles.segmentButton(
+              ~isActive=brushMode == mode,
+            ) ++ " py-1 px-3 first:rounded-l-xl last:rounded-r-xl"}
+            onClick={_ => setBrushMode(_ => mode)}
+            key={label}>
+            {label->React.string}
+          </button>
+        )
+        ->React.array}
+      </div>
+
       <button
         className={[
           isPickingColor
             ? "bg-[var(--accent)] text-[var(--plain-white)]"
             : "bg-[var(--plain-200)] text-[var(--plain-900)]",
-          "px-2 font-medium rounded ml-2",
+          "px-3 font-medium rounded-xl ml-2 text-xs",
         ]->Array.join(" ")}
         onClick={_ => onStartColorPick()}>
         {"Pick"->React.string}

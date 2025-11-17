@@ -61,7 +61,7 @@ function SavedBrushesPanel(props) {
       JsxRuntime.jsx("button", {
         children: JsxRuntime.jsx(Tb.TbPlus, {}),
         className: [
-          "rounded p-1 h-6 w-6 text-sm font-medium",
+          "rounded-lg h-8 w-8 text-lg font-medium flex items-center justify-center",
           canSaveBrush ? "bg-[var(--accent)] text-[var(--plain-white)]" : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed"
         ].join(" "),
         disabled: canSaveBrush,
@@ -70,7 +70,7 @@ function SavedBrushesPanel(props) {
       JsxRuntime.jsx("button", {
         children: JsxRuntime.jsx(Tb.TbTrash, {}),
         className: [
-          "rounded p-1 h-6 w-6 text-sm font-medium",
+          "rounded-lg h-8 w-8 text-lg font-medium flex items-center justify-center",
           canDeleteSelectedBrush ? "bg-[var(--accent)] text-[var(--plain-white)]" : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed"
         ].join(" "),
         disabled: !canDeleteSelectedBrush,

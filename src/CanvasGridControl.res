@@ -17,7 +17,7 @@ let make = (~gridMode, ~setGridMode) => {
           type_="button"
           className={Styles.segmentButton(
             ~isActive=gridMode == mode,
-          ) ++ " nth-[1]:rounded-t nth-[1]:col-span-2 nth-[4]:rounded-bl nth-[5]:rounded-br"}
+          ) ++ " py-1 nth-[1]:rounded-t-xl nth-[1]:col-span-2 nth-[4]:rounded-bl-xl nth-[5]:rounded-br-xl"}
           onClick={_ => setGridMode(_ => mode)}
           key={label}>
           {label->React.string}

@@ -32,7 +32,7 @@ function BrushOverlayControl(props) {
           let mode = param[0];
           return JsxRuntime.jsx("button", {
             children: label,
-            className: Styles.segmentButton(overlayMode === mode) + " first:rounded-l last:rounded-r",
+            className: Styles.segmentButton(overlayMode === mode) + " py-1 first:rounded-l-xl last:rounded-r-xl",
             type: "button",
             onClick: param => setOverlayMode(param => mode)
           }, label);

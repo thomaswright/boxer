@@ -30,7 +30,7 @@ let make = (
       </label>
       <button
         className={[
-          "rounded px-2 py-1 text-sm font-medium flex-1 h-fit",
+          "rounded-xl px-2 py-1 text-sm font-medium flex-1 h-fit",
           canExport
             ? "bg-[var(--accent)] text-[var(--plain-white)]"
             : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed",

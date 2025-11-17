@@ -11,7 +11,7 @@ let make = (~overlayMode, ~setOverlayMode) => {
           type_="button"
           className={Styles.segmentButton(
             ~isActive=overlayMode == mode,
-          ) ++ " first:rounded-l last:rounded-r"}
+          ) ++ " py-1 first:rounded-l-xl last:rounded-r-xl"}
           onClick={_ => setOverlayMode(_ => mode)}
           key={label}>
           {label->React.string}

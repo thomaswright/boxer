@@ -45,7 +45,7 @@ function SavedTileMasksPanel(props) {
       JsxRuntime.jsx("button", {
         children: JsxRuntime.jsx(Tb.TbPlus, {}),
         className: [
-          "rounded p-1 h-6 w-6 text-sm font-medium",
+          "rounded-lg h-8 w-8 text-lg font-medium flex items-center justify-center",
           canSaveTileMask ? "bg-[var(--accent)] text-[var(--plain-white)]" : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed"
         ].join(" "),
         disabled: canSaveTileMask,
@@ -54,7 +54,7 @@ function SavedTileMasksPanel(props) {
       JsxRuntime.jsx("button", {
         children: JsxRuntime.jsx(Tb.TbTrash, {}),
         className: [
-          "rounded p-1 h-6 w-6 text-sm font-medium",
+          "rounded-lg h-8 w-8 text-lg font-medium flex items-center justify-center",
           canDeleteSelectedTileMask ? "bg-[var(--accent)] text-[var(--plain-white)]" : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed"
         ].join(" "),
         disabled: !canDeleteSelectedTileMask,
