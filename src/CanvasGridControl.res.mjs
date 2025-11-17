@@ -11,7 +11,7 @@ function CanvasGridControl(props) {
     children: [
       JsxRuntime.jsx("div", {
         children: "Canvas Guides",
-        className: "font-medium"
+        className: "font-bold text-sm "
       }),
       JsxRuntime.jsx("div", {
         children: Belt_Array.map([

@@ -12,6 +12,14 @@ let make = (
   let buttonClass = "w-fit flex-none rounded p-1 text-lg transition-colors bg-[var(--plain-200)] text-[var(--plain-black)]"
 
   <div className="p-2 flex flex-row gap-2 w-full items-center">
+    <div className="flex-1 text-sm font-bold"> {"Background"->React.string} </div>
+    <button
+      className="w-6 h-6 border rounded"
+      style={{
+        backgroundColor: canvasBackgroundColor,
+      }}
+      onClick={_ => setCanvasBackgroundColor(_ => myColor)}
+    />
     {switch theme {
     | Light =>
       <button
@@ -32,14 +40,5 @@ let make = (
         <Icons.Moon />
       </button>
     }}
-
-    <div className="flex-1 text-right"> {"Background"->React.string} </div>
-    <button
-      className="w-6 h-6 border rounded"
-      style={{
-        backgroundColor: canvasBackgroundColor,
-      }}
-      onClick={_ => setCanvasBackgroundColor(_ => myColor)}
-    />
   </div>
 }

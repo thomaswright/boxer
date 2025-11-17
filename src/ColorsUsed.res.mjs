@@ -112,7 +112,7 @@ function ColorsUsed(props) {
         children: [
           JsxRuntime.jsx("span", {
             children: "Colors Used",
-            className: "font-medium flex-1"
+            className: "font-bold text-sm flex-1"
           }),
           JsxRuntime.jsx("span", {
             children: uniqueColorCount.toString(),

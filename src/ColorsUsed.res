@@ -114,7 +114,7 @@ let make = (
 
   <div className="p-2 flex flex-col gap-2 w-full">
     <div className="flex flex-row items-center justify-between">
-      <span className="font-medium flex-1"> {"Colors Used"->React.string} </span>
+      <span className="font-bold text-sm flex-1"> {"Colors Used"->React.string} </span>
 
       <span className="text-xs text-[var(--plain-500)] px-2">
         {uniqueColorCount->Int.toString->React.string}

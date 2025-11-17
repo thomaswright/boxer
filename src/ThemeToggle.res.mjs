@@ -27,10 +27,9 @@ function ThemeToggle(props) {
     });
   return JsxRuntime.jsxs("div", {
     children: [
-      tmp,
       JsxRuntime.jsx("div", {
         children: "Background",
-        className: "flex-1 text-right"
+        className: "flex-1 text-sm font-bold"
       }),
       JsxRuntime.jsx("button", {
         className: "w-6 h-6 border rounded",
@@ -38,7 +37,8 @@ function ThemeToggle(props) {
           backgroundColor: props.canvasBackgroundColor
         },
         onClick: param => setCanvasBackgroundColor(param => myColor)
-      })
+      }),
+      tmp
     ],
     className: "p-2 flex flex-row gap-2 w-full items-center"
   });

@@ -12,7 +12,7 @@ function CanvasSizeControl(props) {
     children: [
       JsxRuntime.jsx("div", {
         children: "Canvas Size",
-        className: ["flex flex-row items-center justify-between font-medium w-full"].join(" ")
+        className: ["flex flex-row items-center justify-between font-bold text-sm w-full"].join(" ")
       }),
       JsxRuntime.jsxs("div", {
         children: [

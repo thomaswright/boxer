@@ -3,7 +3,7 @@ open Types
 @react.component
 let make = (~overlayMode, ~setOverlayMode) => {
   <div className="p-2 flex flex-col gap-2 w-full">
-    <div className="font-medium"> {"Brush Overlay"->React.string} </div>
+    <div className="font-bold text-sm"> {"Brush Overlay"->React.string} </div>
     <div className="grid grid-cols-3">
       {[(OverlayNone, "None"), (OverlayDefault, "Shadow"), (OverlayColor, "Color")]
       ->Belt.Array.map(((mode, label)) =>

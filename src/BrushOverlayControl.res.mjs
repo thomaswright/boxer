@@ -11,7 +11,7 @@ function BrushOverlayControl(props) {
     children: [
       JsxRuntime.jsx("div", {
         children: "Brush Overlay",
-        className: "font-medium"
+        className: "font-bold text-sm"
       }),
       JsxRuntime.jsx("div", {
         children: Belt_Array.map([

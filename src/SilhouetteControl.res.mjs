@@ -9,7 +9,7 @@ function SilhouetteControl(props) {
     children: [
       JsxRuntime.jsx("div", {
         children: "Silhouette",
-        className: "font-medium"
+        className: "font-bold text-sm"
       }),
       JsxRuntime.jsx(Switch.make, {
         checked: props.isSilhouette,

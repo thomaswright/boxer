@@ -12,7 +12,7 @@ function ExportControl(props) {
     children: [
       JsxRuntime.jsx("span", {
         children: "Export PNG",
-        className: "font-medium"
+        className: "font-bold text-sm"
       }),
       JsxRuntime.jsxs("div", {
         children: [

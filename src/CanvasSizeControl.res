@@ -11,9 +11,9 @@ let make = (
 ) => {
   <div className=" p-2 flex flex-col gap-2 w-full">
     <div
-      className={["flex flex-row items-center justify-between font-medium w-full"]->Array.join(
-        " ",
-      )}>
+      className={[
+        "flex flex-row items-center justify-between font-bold text-sm w-full",
+      ]->Array.join(" ")}>
       {"Canvas Size"->React.string}
     </div>
     <div className="flex flex-col gap-2">

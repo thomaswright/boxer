@@ -9,7 +9,7 @@ function DotModeControl(props) {
     children: [
       JsxRuntime.jsx("div", {
         children: "Dot Mode",
-        className: "font-medium"
+        className: "font-bold text-sm"
       }),
       JsxRuntime.jsx(Switch.make, {
         checked: props.isDotMask,

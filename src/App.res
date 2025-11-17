@@ -1353,8 +1353,7 @@ let make = () => {
           onStartColorPick
           canvasBackgroundColor
         />
-        <div
-          className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-[var(--plain-300)]"}>
+        <div className={"overflow-y-scroll flex-1 flex flex-col py-2 divide-[var(--plain-300)]"}>
           <ColorsUsed myColor board onSelectUsedColor onReplaceUsedColor isMouseDown />
 
           <BrushOverlayControl overlayMode setOverlayMode />

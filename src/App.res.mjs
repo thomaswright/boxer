@@ -1450,7 +1450,7 @@ function App(props) {
                   onExport: handleExportPng
                 })
               ],
-              className: "overflow-y-scroll flex-1 flex flex-col py-2 divide-y divide-[var(--plain-300)]"
+              className: "overflow-y-scroll flex-1 flex flex-col py-2 divide-[var(--plain-300)]"
             })
           ],
           className: " h-full overflow-x-visible flex flex-col w-48 py-2"

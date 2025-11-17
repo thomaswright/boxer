@@ -3,7 +3,7 @@ open Types
 @react.component
 let make = (~gridMode, ~setGridMode) => {
   <div className="p-2 flex flex-col gap-2 w-full">
-    <div className="font-medium"> {"Canvas Guides"->React.string} </div>
+    <div className="font-bold text-sm "> {"Canvas Guides"->React.string} </div>
     <div className="grid grid-cols-2">
       {[
         (GridNone, "None"),

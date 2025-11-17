@@ -10,7 +10,7 @@ let make = (
   ~onExport,
 ) => {
   <div className=" p-2 flex flex-col gap-2 w-full">
-    <span className="font-medium"> {"Export PNG"->React.string} </span>
+    <span className="font-bold text-sm"> {"Export PNG"->React.string} </span>
     <div className="flex flex-row  gap-2 items-end">
       <label className="flex flex-col gap-1 text-sm">
         <span className="text-xs uppercase tracking-wide text-[var(--plain-500)]">
