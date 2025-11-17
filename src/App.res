@@ -284,7 +284,6 @@ let make = () => {
   let (cursorOverlayOff, setCursorOverlayOff) = React.useState(() => false)
   let (exportScaleInput, setExportScaleInput) = React.useState(() => "16")
   let (includeExportBackground, setIncludeExportBackground) = React.useState(() => true)
-  let (resizeMode, setResizeMode) = React.useState(() => Scale)
   let (isPickingColor, setIsPickingColor) = React.useState(() => false)
   let (hoveredPickColor, setHoveredPickColor) = React.useState(() => None)
   let clearHoverRef = React.useRef(() => ())
@@ -928,7 +927,7 @@ let make = () => {
   let exportScaleValue = parsePositiveFloat(exportScaleInput)
   let canExport = exportScaleValue->Option.isSome
 
-  let handleResizeSubmit = () =>
+  let handleResizeSubmit = resizeMode =>
     switch (parsePositiveInt(resizeRowsInput), parsePositiveInt(resizeColsInput)) {
     | (Some(nextRows), Some(nextCols)) =>
       switch resizeMode {
@@ -1376,8 +1375,6 @@ let make = () => {
             setResizeRowsInput
             resizeColsInput
             setResizeColsInput
-            resizeMode
-            setResizeMode
             canSubmitResize
             handleResizeSubmit
           />

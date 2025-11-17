@@ -336,13 +336,11 @@ function App(props) {
   let exportScaleInput = match$18[0];
   let match$19 = React.useState(() => true);
   let includeExportBackground = match$19[0];
-  let match$20 = React.useState(() => "Scale");
-  let resizeMode = match$20[0];
-  let match$21 = React.useState(() => false);
-  let setIsPickingColor = match$21[1];
-  let isPickingColor = match$21[0];
-  let match$22 = React.useState(() => {});
-  let setHoveredPickColor = match$22[1];
+  let match$20 = React.useState(() => false);
+  let setIsPickingColor = match$20[1];
+  let isPickingColor = match$20[0];
+  let match$21 = React.useState(() => {});
+  let setHoveredPickColor = match$21[1];
   let clearHoverRef = React.useRef(() => {});
   let showCursorOverlay;
   switch (overlayMode) {
@@ -518,9 +516,9 @@ function App(props) {
     currentCanvas = firstCanvas !== undefined ? firstCanvas : makeDefaultCanvas()[0];
   }
   let currentCanvasId = currentCanvas.id;
-  let match$23 = React.useState(() => currentCanvas.isDotMask);
-  let setIncludeExportDotMask = match$23[1];
-  let includeExportDotMask = match$23[0];
+  let match$22 = React.useState(() => currentCanvas.isDotMask);
+  let setIncludeExportDotMask = match$22[1];
+  let includeExportDotMask = match$22[0];
   React.useEffect(() => {
     setIncludeExportDotMask(prev => {
       if (prev === currentCanvas.isDotMask) {
@@ -828,22 +826,22 @@ function App(props) {
     let entry$4 = savedTileMasks[0];
     tileMask = entry$4 !== undefined ? entry$4.mask : fallbackTileMask;
   }
-  let match$24 = Board.dims(board);
-  let boardDimJ = match$24[1];
-  let boardDimI = match$24[0];
+  let match$23 = Board.dims(board);
+  let boardDimJ = match$23[1];
+  let boardDimI = match$23[0];
   let fitZoom = computeZoomToFitForDimensions(boardDimI, boardDimJ);
   let zoomPercent = fitZoom !== undefined ? (
       fitZoom <= 0 ? zoom * 100 : zoom / fitZoom * 100
     ) : zoom * 100;
   let lastAutoCenteredDimsRef = React.useRef(undefined);
-  let match$25 = Array2D.dims(brush);
-  let brushDimJ = match$25[1];
-  let brushDimI = match$25[0];
+  let match$24 = Array2D.dims(brush);
+  let brushDimJ = match$24[1];
+  let brushDimI = match$24[0];
   let brushCenterDimI = brushDimI / 2 | 0;
   let brushCenterDimJ = brushDimJ / 2 | 0;
-  let match$26 = Array2D.dims(tileMask);
-  let tileMaskDimJ = match$26[1];
-  let tileMaskDimI = match$26[0];
+  let match$25 = Array2D.dims(tileMask);
+  let tileMaskDimJ = match$25[1];
+  let tileMaskDimI = match$25[0];
   let centerCanvasForDimensions = (dimI, dimJ) => {
     let match = computeCenteredPan(dimI, dimJ, zoomRef.current);
     let nextPanY = match[1];
@@ -893,12 +891,12 @@ function App(props) {
     }
   };
   let fitCanvasToViewport = () => fitCanvasToViewportForDimensions(boardDimI, boardDimJ);
-  let match$27 = React.useState(() => boardDimI.toString());
-  let setResizeRowsInput = match$27[1];
-  let resizeRowsInput = match$27[0];
-  let match$28 = React.useState(() => boardDimJ.toString());
-  let setResizeColsInput = match$28[1];
-  let resizeColsInput = match$28[0];
+  let match$26 = React.useState(() => boardDimI.toString());
+  let setResizeRowsInput = match$26[1];
+  let resizeRowsInput = match$26[0];
+  let match$27 = React.useState(() => boardDimJ.toString());
+  let setResizeColsInput = match$27[1];
+  let resizeColsInput = match$27[0];
   React.useEffect(() => {
     setResizeRowsInput(param => boardDimI.toString());
     setResizeColsInput(param => boardDimJ.toString());
@@ -963,12 +961,12 @@ function App(props) {
       return mapped;
     }
   };
-  let match$29 = parsePositiveInt(resizeRowsInput);
-  let match$30 = parsePositiveInt(resizeColsInput);
-  let canSubmitResize = match$29 !== undefined && match$30 !== undefined ? match$29 !== boardDimI || match$30 !== boardDimJ : false;
+  let match$28 = parsePositiveInt(resizeRowsInput);
+  let match$29 = parsePositiveInt(resizeColsInput);
+  let canSubmitResize = match$28 !== undefined && match$29 !== undefined ? match$28 !== boardDimI || match$29 !== boardDimJ : false;
   let exportScaleValue = parsePositiveFloat(exportScaleInput);
   let canExport = Stdlib_Option.isSome(exportScaleValue);
-  let handleResizeSubmit = () => {
+  let handleResizeSubmit = resizeMode => {
     let match = parsePositiveInt(resizeRowsInput);
     let match$1 = parsePositiveInt(resizeColsInput);
     if (match === undefined) {
@@ -1395,7 +1393,7 @@ function App(props) {
               setBrushMode: setBrushMode,
               myColor: myColor,
               setMyColor: setMyColor,
-              hoveredPickColor: match$22[0],
+              hoveredPickColor: match$21[0],
               isPickingColor: isPickingColor,
               onStartColorPick: onStartColorPick,
               canvasBackgroundColor: canvasBackgroundColor
@@ -1438,8 +1436,6 @@ function App(props) {
                   setResizeRowsInput: setResizeRowsInput,
                   resizeColsInput: resizeColsInput,
                   setResizeColsInput: setResizeColsInput,
-                  resizeMode: resizeMode,
-                  setResizeMode: match$20[1],
                   canSubmitResize: canSubmitResize,
                   handleResizeSubmit: handleResizeSubmit
                 }),

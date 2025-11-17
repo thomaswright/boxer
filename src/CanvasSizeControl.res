@@ -6,8 +6,6 @@ let make = (
   ~setResizeRowsInput,
   ~resizeColsInput,
   ~setResizeColsInput,
-  ~resizeMode,
-  ~setResizeMode,
   ~canSubmitResize,
   ~handleResizeSubmit,
 ) => {
@@ -19,21 +17,6 @@ let make = (
       {"Canvas Size"->React.string}
     </div>
     <div className="flex flex-col gap-2">
-      <div className="flex flex-row">
-        {[(Scale, "Scale"), (Crop, "Crop")]
-        ->Belt.Array.map(((mode, label)) =>
-          <button
-            type_="button"
-            className={Styles.segmentButton(
-              ~isActive=resizeMode == mode,
-            ) ++ " first:rounded-l last:rounded-r"}
-            onClick={_ => setResizeMode(_ => mode)}
-            key={label}>
-            {label->React.string}
-          </button>
-        )
-        ->React.array}
-      </div>
       <div className="flex flex-row w-full gap-2 justify-between items-center">
         <input
           className="border border-[var(--plain-300)] rounded px-2 py-1 text-sm flex-none w-16 "
@@ -53,18 +36,30 @@ let make = (
           }}
         />
       </div>
-
-      <button
-        className={[
-          "rounded px-2 py-1 text-sm font-medium",
-          canSubmitResize
-            ? "bg-[var(--accent)] text-[var(--plain-white)]"
-            : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed",
-        ]->Array.join(" ")}
-        disabled={!canSubmitResize}
-        onClick={_ => handleResizeSubmit()}>
-        {"Save"->React.string}
-      </button>
+      <div className={"flex flex-row gap-2 w-full"}>
+        <button
+          className={[
+            "rounded px-1 py-1 text-xs font-medium flex-1",
+            canSubmitResize
+              ? "bg-[var(--accent)] text-[var(--plain-white)]"
+              : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed",
+          ]->Array.join(" ")}
+          disabled={!canSubmitResize}
+          onClick={_ => handleResizeSubmit(Crop)}>
+          {"Save (Scale)"->React.string}
+        </button>
+        <button
+          className={[
+            "rounded px-1 py-1 text-xs font-medium flex-1",
+            canSubmitResize
+              ? "bg-[var(--accent)] text-[var(--plain-white)]"
+              : "bg-[var(--plain-200)] text-[var(--plain-500)] cursor-not-allowed",
+          ]->Array.join(" ")}
+          disabled={!canSubmitResize}
+          onClick={_ => handleResizeSubmit(Scale)}>
+          {"Save (Crop)"->React.string}
+        </button>
+      </div>
     </div>
   </div>
 }
