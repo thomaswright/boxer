@@ -1,3 +1,10 @@
+import { convert, hexToRGB, sRGB, OKHSL } from "@texel/color";
+
+function isLight(color) {
+  let [_h, _s, l] = convert(hexToRGB(color), sRGB, OKHSL);
+  return l > 0.5;
+}
+
 const VERTEX_SHADER_SOURCE = `#version 300 es\nprecision highp float;\nin vec2 aPosition;\nout vec2 vUV;\nvoid main() {\n  vUV = aPosition * 0.5 + 0.5;\n  gl_Position = vec4(aPosition, 0.0, 1.0);\n}\n`;
 
 const FRAGMENT_SHADER_SOURCE = `#version 300 es
@@ -326,6 +333,8 @@ class CanvasRenderer {
   }
 
   updateBoard(board, backgroundColor, isSilhouette) {
+    const backgroundColorIsLight = isLight(backgroundColor);
+
     const isTypedBoard =
       board &&
       typeof board === "object" &&
@@ -335,15 +344,15 @@ class CanvasRenderer {
     const rows = isTypedBoard
       ? Math.max(0, board.rows | 0)
       : Array.isArray(board)
-        ? board.length
-        : 0;
+      ? board.length
+      : 0;
     const cols =
       rows > 0
         ? isTypedBoard
           ? Math.max(0, board.cols | 0)
           : Array.isArray(board?.[0])
-            ? board[0].length
-            : 0
+          ? board[0].length
+          : 0
         : 0;
     this.rows = rows;
     this.cols = cols;
@@ -395,6 +404,15 @@ class CanvasRenderer {
               data[idx] = 0;
               data[idx + 1] = 0;
               data[idx + 2] = 0;
+              if (backgroundColorIsLight) {
+                data[idx] = 0;
+                data[idx + 1] = 0;
+                data[idx + 2] = 0;
+              } else {
+                data[idx] = 255;
+                data[idx + 1] = 255;
+                data[idx + 2] = 255;
+              }
             } else {
               data[idx] = (value >> 16) & 0xff;
               data[idx + 1] = (value >> 8) & 0xff;
@@ -417,7 +435,9 @@ class CanvasRenderer {
           const idx = (flippedRow * cols + col) * 4;
           const cell = line[col];
           if (cell != null) {
-            const color = this.isSilhouette ? [0, 0, 0] : parseHexColor(cell, bg);
+            const color = this.isSilhouette
+              ? [0, 0, 0]
+              : parseHexColor(cell, bg);
             data[idx] = color[0];
             data[idx + 1] = color[1];
             data[idx + 2] = color[2];
