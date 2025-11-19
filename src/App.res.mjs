@@ -528,6 +528,16 @@ function App(props) {
       }
     });
   }, [currentCanvasId]);
+  React.useEffect(() => {
+    if (areBoardsLoaded) {
+      updateViewportCenter();
+    }
+    
+  }, [
+    areBoardsLoaded,
+    currentCanvasId,
+    selectedCanvasId
+  ]);
   let currentCanvasIdRef = React.useRef(currentCanvasId);
   currentCanvasIdRef.current = currentCanvasId;
   React.useEffect(() => {

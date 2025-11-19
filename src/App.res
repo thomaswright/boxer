@@ -518,6 +518,13 @@ let make = () => {
     )
     None
   }, [currentCanvasId])
+
+  React.useEffect3(() => {
+    if areBoardsLoaded {
+      updateViewportCenter()
+    }
+    None
+  }, (areBoardsLoaded, currentCanvasId, selectedCanvasId))
   let currentCanvasIdRef = React.useRef(currentCanvasId)
   currentCanvasIdRef.current = currentCanvasId
 
